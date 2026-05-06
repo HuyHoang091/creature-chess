@@ -1,0 +1,36 @@
+{
+	"private": true,
+	"name": "@creature-chess/gamemode",
+	"version": "0.0.1",
+	"description": "Creature Chess gamemode",
+	"keywords": [],
+	"license": "ISC",
+	"publishConfig": {
+		"access": "public"
+	},
+	"scripts": {
+		"build": "yarn run -T tsc -p ./tsconfig.json",
+		"test": "yarn run -T jest --passWithNoTests"
+	},
+	"dependencies": {
+		"@creature-chess/battle": "workspace:*",
+		"@creature-chess/models": "workspace:*",
+		"@reduxjs/toolkit": "^2.2.1",
+		"@shoki/board": "workspace:*",
+		"@shoki/card-deck": "workspace:*",
+		"@shoki/engine": "workspace:*",
+		"@types/lodash": "^4.14.178",
+		"@types/uuid": "^8.3.3",
+		"delay": "^4.4.1",
+		"lodash": "^4.17.21",
+		"p-defer": "^2.1.0",
+		"redux-saga-test-plan": "^4.0.6",
+		"typed-redux-saga": "^1.5.0",
+		"uuid": "^8.3.2",
+		"winston": "^3.3.3"
+	},
+	"peerDependencies": {
+		"redux": "^4.1.0",
+		"redux-saga": "^1.1.3"
+	}
+}

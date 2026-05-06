@@ -1,0 +1,17 @@
+{
+	"private": true,
+	"name": "@shoki/networking",
+	"version": "0.0.1",
+	"description": "Shoki networking toolset",
+	"license": "MIT",
+	"publishConfig": {
+		"access": "public"
+	},
+	"scripts": {
+		"build": "yarn run -T tsc -p ./tsconfig.json",
+		"test": "yarn run -T jest --passWithNoTests"
+	},
+	"peerDependencies": {
+		"redux-saga": "^1.1.3"
+	}
+}

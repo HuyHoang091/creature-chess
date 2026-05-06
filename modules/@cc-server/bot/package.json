@@ -1,0 +1,27 @@
+{
+	"private": true,
+	"name": "@cc-server/bot",
+	"version": "0.0.1",
+	"description": "Bot logic for Creature Chess",
+	"keywords": [],
+	"license": "ISC",
+	"publishConfig": {
+		"access": "public"
+	},
+	"scripts": {
+		"build": "yarn run -T tsc -p ./tsconfig.json",
+		"test": "yarn run -T jest --passWithNoTests"
+	},
+	"dependencies": {
+		"@cc-server/data": "workspace:*",
+		"@creature-chess/gamemode": "workspace:*",
+		"@creature-chess/models": "workspace:*",
+		"@shoki/board": "workspace:*",
+		"@shoki/engine": "workspace:*",
+		"delay": "^4.4.1"
+	},
+	"peerDependencies": {
+		"redux": "^4.1.0",
+		"redux-saga": "^1.1.3"
+	}
+}

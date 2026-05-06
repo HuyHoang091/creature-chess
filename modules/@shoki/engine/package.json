@@ -1,0 +1,30 @@
+{
+	"private": true,
+	"name": "@shoki/engine",
+	"version": "0.0.1",
+	"description": "Shoki game engine",
+	"keywords": [
+		"shoki",
+		"game",
+		"engine",
+		"redux",
+		"redux-saga"
+	],
+	"license": "MIT",
+	"publishConfig": {
+		"access": "public"
+	},
+	"scripts": {
+		"build": "yarn run -T tsc -p ./tsconfig.json",
+		"test": "yarn run -T jest --passWithNoTests"
+	},
+	"dependencies": {
+		"typed-redux-saga": "^1.5.0",
+		"winston": "^3.3.3"
+	},
+	"peerDependencies": {
+		"@reduxjs/toolkit": "^2.2.1",
+		"redux": "^4.1.0",
+		"redux-saga": "^1.1.3"
+	}
+}

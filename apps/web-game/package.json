@@ -4,23 +4,14 @@
 	"version": "0.0.1",
 	"description": "Web frontend for the game",
 	"keywords": [],
-	"author": "James Monger <jameskmonger@hotmail.co.uk>",
 	"license": "ISC",
 	"publishConfig": {
 		"access": "public"
-	},
-	"repository": {
-		"type": "git",
-		"url": "git+https://github.com/Jameskmonger/creature-chess.git"
 	},
 	"scripts": {
 		"build": "webpack",
 		"dev": "NODE_ENV=development webpack serve"
 	},
-	"bugs": {
-		"url": "https://github.com/Jameskmonger/creature-chess/issues"
-	},
-	"homepage": "https://github.com/Jameskmonger/creature-chess#readme",
 	"dependencies": {
 		"@auth0/auth0-react": "^1.10.2",
 		"@creature-chess/battle": "workspace:*",

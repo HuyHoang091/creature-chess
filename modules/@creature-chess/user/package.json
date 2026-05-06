@@ -1,0 +1,14 @@
+{
+	"private": true,
+	"name": "@creature-chess/user",
+	"version": "0.0.1",
+	"description": "User-related code",
+	"keywords": [],
+	"license": "ISC",
+	"publishConfig": {
+		"access": "public"
+	},
+	"scripts": {
+		"build": "yarn run -T tsc -p ./tsconfig.json"
+	}
+}

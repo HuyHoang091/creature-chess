@@ -1,0 +1,27 @@
+{
+	"name": "@shoki/card-deck",
+	"version": "1.0.0",
+	"description": "TypeScript deck of cards",
+	"keywords": [
+		"shoki",
+		"game",
+		"engine",
+		"cards",
+		"card deck",
+		"playing cards"
+	],
+	"license": "MIT",
+	"publishConfig": {
+		"access": "public"
+	},
+	"scripts": {
+		"build": "yarn run -T tsc -p ./tsconfig.json",
+		"test": "yarn run -T jest --passWithNoTests"
+	},
+	"dependencies": {
+		"lodash.shuffle": "^4.2.0"
+	},
+	"devDependencies": {
+		"@types/lodash.shuffle": "^4.2.7"
+	}
+}

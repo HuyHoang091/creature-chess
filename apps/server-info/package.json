@@ -1,0 +1,26 @@
+{
+	"private": true,
+	"name": "@creature-chess-app/server-info",
+	"version": "0.0.1",
+	"description": "HTTP info server",
+	"keywords": [],
+	"license": "ISC",
+	"publishConfig": {
+		"access": "public"
+	},
+	"scripts": {
+		"build": "yarn run -T tsc -p ./tsconfig.json",
+		"test": "yarn run -T jest --passWithNoTests"
+	},
+	"dependencies": {
+		"@cc-server/auth": "workspace:*",
+		"@cc-server/data": "workspace:*",
+		"@creature-chess/models": "workspace:*",
+		"@creature-chess/user": "workspace:*",
+		"@types/bad-words": "^3.0.1",
+		"bad-words": "^3.0.4",
+		"express": "^4.17.2",
+		"express-winston": "^4.2.0",
+		"winston": "^3.3.3"
+	}
+}

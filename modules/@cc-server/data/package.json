@@ -1,0 +1,25 @@
+{
+	"private": true,
+	"name": "@cc-server/data",
+	"version": "0.0.1",
+	"description": "Database connections for Creature Chess",
+	"keywords": [],
+	"license": "ISC",
+	"publishConfig": {
+		"access": "public"
+	},
+	"scripts": {
+		"prisma-db-pull": "prisma db pull",
+		"prisma-migrate": "prisma migrate",
+		"prisma-generate": "prisma generate",
+		"build": "yarn run -T tsc -p ./tsconfig.json"
+	},
+	"dependencies": {
+		"@creature-chess/models": "workspace:*",
+		"@prisma/client": "^4.11.0",
+		"winston": "^3.3.3"
+	},
+	"devDependencies": {
+		"prisma": "^4.11.0"
+	}
+}

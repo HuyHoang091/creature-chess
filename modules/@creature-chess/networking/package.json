@@ -1,0 +1,23 @@
+{
+	"private": true,
+	"name": "@creature-chess/networking",
+	"version": "0.0.1",
+	"description": "Shared network definitions for Creature Chess",
+	"license": "MIT",
+	"publishConfig": {
+		"access": "public"
+	},
+	"scripts": {
+		"build": "yarn run -T tsc -p ./tsconfig.json",
+		"test": "yarn run -T jest --passWithNoTests"
+	},
+	"dependencies": {
+		"@creature-chess/models": "workspace:*",
+		"@shoki/board": "workspace:*",
+		"@shoki/engine": "workspace:*",
+		"@types/redux-saga": "^0.10.5"
+	},
+	"peerDependencies": {
+		"redux-saga": "^1.1.3"
+	}
+}

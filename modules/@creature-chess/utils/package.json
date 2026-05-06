@@ -1,0 +1,18 @@
+{
+	"private": true,
+	"name": "@creature-chess/utils",
+	"version": "0.0.1",
+	"description": "Utility functions",
+	"keywords": [],
+	"license": "ISC",
+	"publishConfig": {
+		"access": "public"
+	},
+	"scripts": {
+		"build": "yarn run -T tsc -p ./tsconfig.json"
+	},
+	"dependencies": {
+		"@creature-chess/models": "workspace:*",
+		"@shoki/board": "workspace:*"
+	}
+}

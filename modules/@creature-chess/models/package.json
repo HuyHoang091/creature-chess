@@ -1,0 +1,14 @@
+{
+	"private": true,
+	"name": "@creature-chess/models",
+	"version": "0.0.1",
+	"description": "Shared models",
+	"keywords": [],
+	"license": "ISC",
+	"publishConfig": {
+		"access": "public"
+	},
+	"scripts": {
+		"build": "yarn run -T tsc -p ./tsconfig.json"
+	}
+}
