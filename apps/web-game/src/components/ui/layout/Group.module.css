@@ -1,0 +1,19 @@
+.group {
+	display: flex;
+	flex: 1;
+	box-sizing: border-box;
+	justify-content: center;
+	flex-direction: column;
+}
+
+@media (orientation: portrait) {
+	.spacer > *:not(:first-child) {
+		margin-top: 1em;
+	}
+}
+
+@media (orientation: landscape) {
+	.spacer > *:not(:first-child) {
+		margin-left: 1em;
+	}
+}

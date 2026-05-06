@@ -1,0 +1,277 @@
+/* ===== V3 JUICY ANIMATIONS ===== */
+
+/* 1. Đổ Gục (Dramatic Death) */
+@keyframes vfx-die-v3 {
+    0% {
+        transform: perspective(600px) rotateX(0deg) scale(1) translateY(0);
+        filter: brightness(1) grayscale(0);
+        opacity: 1;
+    }
+    30% {
+        filter: brightness(3) grayscale(0.2);
+        transform: perspective(600px) rotateX(0deg) scale(0.9) translateY(-20px);
+    }
+    100% {
+        filter: brightness(0.1) grayscale(1) blur(4px);
+        transform: perspective(600px) rotateX(85deg) scale(0.5) translateY(40px);
+        opacity: 0;
+    }
+}
+.dying {
+    transform-origin: bottom center;
+    animation: vfx-die-v3 1200ms cubic-bezier(0.5, 0, 0.2, 1) forwards !important;
+}
+
+/* 2. Cận chiến Máu Lửa (Juicy Basic Attack) */
+@keyframes vfx-attack-basic-v3 {
+    0% {
+        transform: translate(0, 0) scale(1) skewX(0);
+        filter: drop-shadow(0 0 0 transparent);
+    }
+    /* Anticipation: Cúi người, lùi lại, móp xuống */
+    15% {
+        transform: translate(calc(-15px * var(--attackXDirection)), calc(-15px * var(--attackYDirection))) scale(0.85, 0.95);
+        filter: drop-shadow(0 0 0 transparent);
+    }
+    /* Chờ nhịp (Hold) */
+    30% {
+        transform: translate(calc(-15px * var(--attackXDirection)), calc(-15px * var(--attackYDirection))) scale(0.85, 0.9);
+    }
+    /* Strike: Vút nhanh lên trước, dãn dọc ra tạo cảm giác nhanh */
+    50% {
+        transform: translate(calc(40px * var(--attackXDirection)), calc(40px * var(--attackYDirection))) scale(1.15, 1.05) skewX(calc(-10deg * var(--attackXDirection)));
+        filter: drop-shadow(0 0 20px rgba(255, 230, 100, 0.8));
+    }
+    /* Impact/Hit-stop: Chạm mục tiêu móp người lại dữ dội */
+    55% {
+        transform: translate(calc(35px * var(--attackXDirection)), calc(35px * var(--attackYDirection))) scale(0.9, 1.2);
+        filter: drop-shadow(0 0 30px rgba(255, 50, 0, 0.9));
+    }
+    /* Elastic Return: Lùi lại lố 1 chút do độ nẩy */
+    70% {
+        transform: translate(calc(-5px * var(--attackXDirection)), calc(-5px * var(--attackYDirection))) scale(1.05, 0.95);
+        filter: drop-shadow(0 0 0 transparent);
+    }
+    100% {
+        transform: translate(0, 0) scale(1) skewX(0);
+    }
+}
+.attackBasic {
+    animation: vfx-attack-basic-v3 600ms cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards !important;
+    z-index: 99 !important;
+}
+
+/* 3. Đạn Cầu Ánh Sáng (Dynamic Shoot) */
+@keyframes vfx-shoot-projectile-v3 {
+    0% {
+        transform: translate(0, 0) scale(0);
+        filter: hue-rotate(0) brightness(1);
+        opacity: 0;
+    }
+    20% {
+        transform: translate(0, 0) scale(2);
+        filter: hue-rotate(90deg) brightness(2);
+        opacity: 1;
+    }
+    100% {
+        transform: translate(
+            calc(var(--attackDistance) * var(--attackXDirection) * 120px),
+            calc(var(--attackDistance) * var(--attackYDirection) * 120px)
+        ) scale(1);
+        filter: hue-rotate(0) brightness(1.5);
+        opacity: 1;
+    }
+}
+.projectile {
+    display: none;
+    position: absolute;
+    width: 24px;
+    height: 24px;
+    top: calc(50% - 12px);
+    left: calc(50% - 12px);
+    background: radial-gradient(circle at 30% 30%, #ffffff 0%, #00ffff 30%, #0066ff 100%);
+    border-radius: 50%;
+    box-shadow: 
+        0 0 10px #00ffff, 
+        0 0 20px #00ffff, 
+        0 0 30px #00ffff, 
+        inset -5px -5px 10px rgba(0,0,0,0.5);
+    z-index: 100;
+}
+.attackShoot .projectile {
+    display: block;
+    animation: vfx-shoot-projectile-v3 500ms cubic-bezier(0.8, 0, 0.2, 1) forwards !important;
+}
+
+/* 4. Trúng Đòn Đau Đớn (Brutal Hit Reaction) */
+@keyframes vfx-hit-react-v3 {
+    0% {
+        transform: translate(0, 0) rotate(0deg) scale(1);
+        filter: brightness(1) saturate(1) contrast(1);
+    }
+    /* Cú sốc đầu tiên: Lệch màu RGB Split, móp thân */
+    5% {
+        transform: translate(
+            calc(15px * var(--hitXDirection, 1)), 
+            calc(15px * var(--hitYDirection, 1))
+        ) rotate(calc(-15deg * var(--hitXDirection, 1))) scale(0.9, 1.1);
+        filter: brightness(3) saturate(5) hue-rotate(-50deg) contrast(1.5) drop-shadow(10px 0 0 rgba(255,0,0,0.6)) drop-shadow(-10px 0 0 rgba(0,255,255,0.6));
+    }
+    /* Đẩy ngược lên 1 tí, chớp đỏ đỏ sậm */
+    20% {
+        transform: translate(
+            calc(5px * var(--hitXDirection, 1)), 
+            calc(5px * var(--hitYDirection, 1))
+        ) rotate(calc(10deg * var(--hitXDirection, 1))) scale(1.05, 0.95);
+        filter: brightness(0.5) saturate(3) drop-shadow(0 0 20px red);
+    }
+    /* Dư chấn lại (Screen-shake nhỏ) */
+    40% {
+        transform: translate(
+            calc(-5px * var(--hitXDirection, 1)), 
+            calc(-5px * var(--hitYDirection, 1))
+        ) scale(1);
+        filter: brightness(1.2) drop-shadow(0 0 5px red);
+    }
+    100% {
+        transform: translate(0, 0) rotate(0deg) scale(1);
+        filter: brightness(1) saturate(1) contrast(1);
+    }
+}
+.receiveHit {
+    animation: vfx-hit-react-v3 500ms cubic-bezier(0.36, 0, 0.66, -0.56) forwards !important;
+}
+
+
+/* CÁC THÀNH PHẦN KHUNG GIAO DIỆN CỦA STORYBOOK */
+
+.storybookContainer {
+    width: 100vw;
+    height: 100vh;
+    background: #111;
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-family: sans-serif;
+}
+.header {
+    background: #222;
+    width: 100%;
+    padding: 20px;
+    text-align: center;
+    border-bottom: 2px solid #444;
+}
+.header h1 {
+    margin: 0;
+    color: #0ac8b9;
+    text-shadow: 0 0 10px rgba(10, 200, 185, 0.5);
+}
+.header p {
+    color: #999;
+    margin: 5px 0 0;
+}
+.content {
+    display: flex;
+    flex: 1;
+    width: 100%;
+    max-width: 1200px;
+    margin-top: 20px;
+    gap: 20px;
+    padding: 0 20px;
+}
+.controlsPanel {
+    flex: 0 0 300px;
+    background: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 8px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+.controlsPanel h2 {
+    margin: 0 0 10px;
+    font-size: 18px;
+    border-bottom: 1px solid #333;
+    padding-bottom: 10px;
+}
+.buttonGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.btn {
+    background: linear-gradient(180deg, #333, #222);
+    border: 1px solid #444;
+    color: #fff;
+    padding: 10px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    text-transform: uppercase;
+    transition: all 0.2s;
+}
+.btn:hover {
+    background: linear-gradient(180deg, #444, #333);
+    border-color: #666;
+}
+.btn.primary {
+    background: linear-gradient(180deg, #0ac8b9, #038b80);
+    border-color: #20e8d8;
+}
+.btn.danger {
+    background: linear-gradient(180deg, #e74c3c, #c0392b);
+    border-color: #ff7675;
+}
+.btn.warning {
+    background: linear-gradient(180deg, #f1c40f, #f39c12);
+    border-color: #f1c40f;
+}
+.stage {
+    flex: 1;
+    background: radial-gradient(circle at center, #2a2a35 0%, #15151e 100%);
+    border: 2px dashed #444;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+}
+.gridOverlay {
+    position: absolute;
+    inset: 0;
+    background-size: 50px 50px;
+    background-image: linear-gradient(to right, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+                      linear-gradient(to bottom, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+    pointer-events: none;
+}
+.pieceContainer {
+	position: relative;
+	z-index: 50;
+	width: 100px;
+	height: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.dummyPieceVisual {
+    width: 80px;
+    height: 80px;
+    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+    border: 3px solid #6dd5ed;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-weight: bold;
+    box-shadow: 0 10px 15px rgba(0,0,0,0.5), inset 0 3px 6px rgba(255,255,255,0.3);
+    position: relative;
+}
+.dummyPieceVisual::after {
+    content: "CREATURE";
+    font-size: 11px;
+    letter-spacing: 1px;
+}

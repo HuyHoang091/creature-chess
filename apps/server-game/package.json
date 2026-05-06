@@ -1,0 +1,60 @@
+{
+	"private": true,
+	"name": "@creature-chess-app/server-game",
+	"version": "0.0.1",
+	"description": "Websocket gameserver",
+	"keywords": [],
+	"author": "James Monger <jameskmonger@hotmail.co.uk>",
+	"license": "ISC",
+	"publishConfig": {
+		"access": "public"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/Jameskmonger/creature-chess.git"
+	},
+	"bugs": {
+		"url": "https://github.com/Jameskmonger/creature-chess/issues"
+	},
+	"homepage": "https://github.com/Jameskmonger/creature-chess#readme",
+	"scripts": {
+		"build": "yarn run -T tsc -p ./tsconfig.json",
+		"test": "yarn run -T jest --passWithNoTests"
+	},
+	"dependencies": {
+		"@cc-server/auth": "workspace:*",
+		"@cc-server/bot": "workspace:*",
+		"@cc-server/data": "workspace:*",
+		"@creature-chess/gamemode": "workspace:*",
+		"@creature-chess/models": "workspace:*",
+		"@creature-chess/networking": "workspace:*",
+		"@reduxjs/toolkit": "^2.2.1",
+		"@shoki/board": "workspace:*",
+		"@shoki/engine": "workspace:*",
+		"@shoki/networking": "workspace:*",
+		"@socket.io/admin-ui": "^0.5.1",
+		"@socket.io/redis-adapter": "^8.3.0",
+		"@types/auth0": "^2.34.9",
+		"@types/lodash": "^4.14.178",
+		"@types/uuid": "^8.3.3",
+		"auth0": "^2.37.0",
+		"delay": "^4.4.1",
+		"discord.js": "^12.5.1",
+		"express": "^4.17.2",
+		"express-winston": "^4.2.0",
+		"lodash": "^4.17.21",
+		"pm2": "^6.0.14",
+		"prom-client": "^15.1.3",
+		"redis": "^5.11.0",
+		"socket.io": "^4.5.1",
+		"socket.io-msgpack-parser": "^3.0.2",
+		"tslib": "^2.3.1",
+		"typed-redux-saga": "^1.5.0",
+		"uuid": "^8.3.2",
+		"winston": "^3.3.3"
+	},
+	"peerDependencies": {
+		"redux": "^4.1.0",
+		"redux-saga": "^1.1.3"
+	}
+}

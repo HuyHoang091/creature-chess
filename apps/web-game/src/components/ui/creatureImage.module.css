@@ -1,0 +1,11 @@
+.image {
+	width: 100%;
+	height: 100%;
+	image-rendering: pixelated;
+	/* Fallbacks for image-rendering */
+	image-rendering: -webkit-optimize-contrast;
+	image-rendering: -o-crisp-edges;
+	image-rendering: -moz-crisp-edges;
+	image-rendering: optimizeSpeed;
+	-ms-interpolation-mode: nearest-neighbor;
+}

@@ -1,0 +1,124 @@
+@keyframes piece-dying-anim {
+	0% {
+		filter: brightness(1) drop-shadow(0 0 0 transparent);
+		transform: scale(1) translateY(0);
+		opacity: 1;
+	}
+	50% {
+		filter: brightness(0.5) sepia(1) hue-rotate(-50deg);
+		transform: scale(0.9) translateY(-10px);
+		opacity: 0.8;
+	}
+	100% {
+		filter: brightness(0);
+		transform: scale(0.1) translateY(-50px) rotate(15deg);
+		opacity: 0;
+	}
+}
+.dying {
+	animation-name: piece-dying-anim;
+	animation-duration: 800ms;
+	animation-timing-function: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+	animation-fill-mode: forwards;
+	animation-iteration-count: 1;
+}
+
+@keyframes piece-attack-basic-anim {
+	0% {
+		transform: translate(0, 0);
+	}
+	15% {
+		transform: translate(calc(-5px * var(--attackXDirection)), calc(-5px * var(--attackYDirection)));
+	}
+	25% {
+		transform: translate(calc(-7px * var(--attackXDirection)), calc(-7px * var(--attackYDirection)));
+	}
+	50% {
+		transform: translate(calc(12px * var(--attackXDirection)), calc(12px * var(--attackYDirection))) scale(1.05);
+        filter: drop-shadow(0 0 10px rgba(255,255,255,0.8));
+	}
+	60% {
+		transform: translate(calc(10px * var(--attackXDirection)), calc(10px * var(--attackYDirection))) scale(1.05);
+        filter: drop-shadow(0 0 15px rgba(255,0,0,0.5));
+	}
+	100% {
+		transform: translate(0, 0);
+	}
+}
+.attackBasic {
+	animation-name: piece-attack-basic-anim;
+	animation-duration: 400ms;
+	animation-timing-function: ease-in-out;
+}
+
+@keyframes piece-attack-shoot-anim {
+	0% {
+		transform: translate(calc(50% - 10px), calc(50% - 10px)) scale(0);
+        opacity: 0;
+	}
+    10% {
+        transform: translate(calc(50% - 10px), calc(50% - 10px)) scale(1.5);
+        opacity: 1;
+    }
+	100% {
+		transform: translate(
+            calc(((100% * var(--attackDistance) * var(--attackXDirection)) + 50%) - 10px),
+            calc(((100% * var(--attackDistance) * var(--attackYDirection)) + 50%) - 10px)
+        ) scale(1);
+        opacity: 1;
+	}
+}
+.projectile {
+	display: none;
+	position: absolute;
+    width: 20px;
+    height: 20px;
+	top: 0; 
+	left: 0;
+    background: radial-gradient(circle at center, #fff 0%, #0ff 50%, transparent 100%);
+    border-radius: 50%;
+    box-shadow: 0 0 10px #0ff, 0 0 20px #0ff, inset 0 0 5px #fff;
+    z-index: 99;
+}
+.attackShoot .projectile {
+	display: block;
+	animation-name: piece-attack-shoot-anim;
+	animation-duration: 300ms;
+	animation-timing-function: cubic-bezier(0.4, 0, 1, 1);
+}
+
+@keyframes piece-receive-hit-anim {
+	0% {
+		transform: translate(0, 0) rotate(0deg);
+		filter: brightness(1) saturate(1);
+	}
+	10% {
+		transform: translate(
+            calc(4px * var(--hitXDirection, 1)), 
+            calc(4px * var(--hitYDirection, 1))
+        ) rotate(-3deg);
+		filter: brightness(2) saturate(2) hue-rotate(-20deg) drop-shadow(0 0 10px red);
+	}
+	30% {
+		transform: translate(
+            calc(1px * var(--hitXDirection, 1)), 
+            calc(-1px * var(--hitYDirection, 1))
+        ) rotate(3deg);
+	}
+	100% {
+		transform: translate(0, 0) rotate(0deg);
+		filter: brightness(1) saturate(1);
+	}
+}
+.receiveHit {
+	animation-name: piece-receive-hit-anim;
+	animation-duration: 300ms;
+    animation-timing-function: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.piece {
+	position: relative;
+	z-index: 50;
+	width: 100%;
+	height: 100%;
+}

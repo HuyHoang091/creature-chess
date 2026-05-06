@@ -1,0 +1,68 @@
+.player {
+	padding: 4px 8px;
+	box-sizing: border-box;
+	font-weight: 700;
+	text-align: right;
+	background: #59616b;
+	font-family:
+		"Roboto",
+		sans-serif;
+	color: #fff;
+	user-select: none;
+	container-name: player;
+	container-type: size;
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+}
+
+@media (orientation: portrait) and (min-width: 376px) {
+	.player {
+		padding: 8px 16px;
+	}
+}
+
+.bot {
+	font-style: italic;
+	color: #d0d0d0;
+}
+
+.avatar {
+	width: 16px;
+	height: 16px;
+}
+
+@media (orientation: portrait) and (min-width: 321px) and (max-width: 539px) {
+	.avatar {
+		width: 24px;
+		height: 24px;
+	}
+}
+
+@media (orientation: portrait) and (min-width: 540px) and (max-width: 800px) {
+	.avatar {
+		width: 32px;
+		height: 32px;
+	}
+}
+
+@media (orientation: portrait) and (min-width: 801px) {
+	.avatar {
+		width: 48px;
+		height: 48px;
+	}
+}
+
+@media (orientation: landscape) {
+	.avatar {
+		width: 48px;
+		height: 48px;
+	}
+}
+
+.avatarWrapper {
+	display: flex;
+	flex-direction: row;
+	justify-content: space-between;
+	align-items: center;
+}

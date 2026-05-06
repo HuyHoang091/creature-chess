@@ -1,0 +1,33 @@
+.register {
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+	padding: 1rem;
+	margin-top: 1em;
+	font-family: "Roboto", sans-serif;
+	color: #fff;
+	align-items: center;
+	justify-content: center;
+	text-align: center;
+	background: #566c86;
+}
+
+.register h1 {
+	margin-bottom: 1rem;
+	font-size: 2em;
+}
+
+.registerButton {
+	padding: 0.5rem 2rem;
+	font-size: 1.25rem;
+	color: #fff;
+	cursor: pointer;
+	background: #b13e53;
+	border: none;
+}
+
+.error {
+	padding: 0.5rem 1rem;
+	margin-bottom: 1rem;
+	border: 2px solid #a01515;
+}

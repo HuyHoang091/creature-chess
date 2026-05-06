@@ -1,0 +1,68 @@
+.findGameButtonContainer {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	width: 100%;
+}
+
+.findGameButton {
+	padding: 12px 16px;
+	margin-bottom: 8px;
+	font-size: 16px;
+	font-weight: 700;
+	color: #fff;
+	cursor: pointer;
+	background: #b13e53;
+	border: none;
+}
+
+@media (min-width: 400px) {
+	.findGameButton {
+		font-size: 24px;
+	}
+}
+
+.discordButton {
+	max-width: 12em;
+	cursor: pointer;
+}
+
+.discordButton img {
+	width: 100%;
+	height: auto;
+}
+
+.blurb {
+	margin-bottom: 0.5rem;
+}
+
+.blurb p:not(:last-child) {
+	margin-bottom: 0.5rem;
+}
+
+.blurb span {
+	font-style: italic;
+	font-weight: 700;
+	color: #bfbfbf;
+}
+
+.error {
+	padding: 1em 0.5em;
+	margin-bottom: 1em;
+	color: #db2828;
+	background: #ffe8e6;
+	box-shadow: 0 0 0 1px #db2828 inset, 0 0 0 0 transparent;
+}
+
+.footer {
+	width: 100%;
+	display: flex;
+	flex-direction: row;
+}
+
+.half {
+	width: 50%;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+}

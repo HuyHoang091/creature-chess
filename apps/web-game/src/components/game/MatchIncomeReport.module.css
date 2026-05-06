@@ -1,0 +1,47 @@
+.root {
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	gap: 8px;
+}
+
+@media (orientation: portrait) and (max-width: 430px) {
+	.root {
+		gap: 4px;
+	}
+}
+
+.total {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	justify-content: center;
+	gap: 24px;
+	font-size: 24px;
+}
+
+@media (orientation: portrait) and (max-width: 430px) {
+	.total {
+		font-size: 16px;
+		gap: 16px;
+	}
+}
+
+.incomeTable {
+	display: grid;
+	grid-template-columns: repeat(2, 1fr);
+	grid-row-gap: 4px;
+	grid-column-gap: 16px;
+	font-size: 16px;
+}
+
+.incomeTable > *:nth-child(odd) {
+	text-align: right;
+	color: #d4d4d4;
+}
+
+@media (orientation: portrait) and (max-width: 430px) {
+	.incomeTable {
+		font-size: 12px;
+	}
+}

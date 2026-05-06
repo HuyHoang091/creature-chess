@@ -1,0 +1,62 @@
+.gameWrapper {
+	position: relative;
+	width: 100vw;
+	height: 100vh;
+	overflow: hidden;
+}
+
+.portraitWarning {
+	display: none;
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	background: #0a0e13;
+	z-index: 9999;
+	color: #c8aa6e;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	text-align: center;
+}
+
+.portraitWarningContent {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 16px;
+	padding: 20px;
+}
+
+.portraitWarningContent p {
+	font-family: "Spiegel", "Segoe UI", sans-serif;
+	font-size: 18px;
+	font-weight: 700;
+	margin: 0;
+}
+
+.portraitWarningContent svg {
+	animation: rotatePhone 2s ease-in-out infinite;
+}
+
+@keyframes rotatePhone {
+	0% { transform: rotate(0deg); }
+	50% { transform: rotate(-90deg); }
+	100% { transform: rotate(-90deg); }
+}
+
+.gameContent {
+	width: 100%;
+	height: 100%;
+}
+
+/* Áp dụng cảnh báo màn hình dọc cho thiết bị di động/máy tính bảng */
+@media screen and (orientation: portrait) and (max-width: 900px) {
+	.portraitWarning {
+		display: flex;
+	}
+	.gameContent {
+		display: none;
+	}
+}

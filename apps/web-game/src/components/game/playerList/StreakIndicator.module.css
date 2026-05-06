@@ -1,0 +1,56 @@
+.indicator {
+	position: relative;
+	aspect-ratio: 1 / 1;
+	width: 26px;
+	height: auto;
+	overflow: hidden;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border: 2px solid darkgray;
+	box-sizing: border-box;
+	box-shadow: 1px 1px 3px #888888;
+}
+
+@media (orientation: portrait) and (max-width: 400px) {
+	.indicator {
+		width: 24px;
+	}
+}
+
+.spacer {
+	aspect-ratio: 1 / 1;
+	width: 26px;
+}
+
+@media (orientation: portrait) and (max-width: 400px) {
+	.spacer {
+		width: 24px;
+	}
+}
+
+.amount {
+	position: absolute;
+	top: 52%;
+	font-family: "Roboto", sans-serif;
+	font-size: 14px;
+	line-height: 0;
+	color: #fff;
+}
+
+@media (orientation: portrait) and (max-width: 400px) {
+	.amount {
+		font-size: 12px;
+	}
+}
+
+.sheen {
+	position: absolute;
+	top: -100%;
+	left: -125%;
+	width: 80%;
+	height: 200%;
+	background: linear-gradient(to right, rgba(255,255,255,0), rgba(255,255,255,0.6), rgba(255,255,255,0));
+	transform: rotate(45deg);
+	transition: left 1s ease-in-out, top 1s ease-in-out;
+}

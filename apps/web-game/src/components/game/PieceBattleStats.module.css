@@ -1,0 +1,42 @@
+.container {
+	padding: 0.5em 0.25em;
+	font-size: clamp(10px, 1.2vw, 13px);
+	container-type: inline-size;
+}
+
+.table {
+	width: 100%;
+	border-collapse: collapse;
+}
+
+.headerCell {
+	font-weight: bold;
+	padding: clamp(2px, 0.5vh, 6px) 0;
+	font-size: clamp(9px, 1vw, 11px);
+	letter-spacing: 1px;
+	text-transform: uppercase;
+	color: #785a28;
+}
+
+.cell {
+	padding-bottom: clamp(1px, 0.3vh, 4px);
+	vertical-align: middle;
+	font-size: clamp(9px, 1vw, 12px);
+	color: #c8aa6e;
+}
+
+.imageContainer {
+	width: 1px;
+	padding-right: 0.4em;
+}
+
+.image {
+	width: clamp(20px, 2.5vw, 32px);
+	height: clamp(20px, 2.5vw, 32px);
+	display: block;
+}
+
+.selected {
+	box-sizing: border-box;
+	outline: 2px solid #ff5200;
+}

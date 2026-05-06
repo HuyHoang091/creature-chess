@@ -1,0 +1,92 @@
+.root {
+	/* Glassmorphism */
+	background: rgba(0, 0, 0, 0.6);
+	backdrop-filter: blur(10px);
+	-webkit-backdrop-filter: blur(10px);
+	border: 1px solid rgba(255, 255, 255, 0.2);
+	border-radius: 8px; /* Slightly more rounded */
+	padding: 8px; /* Increase padding slightly */
+	color: #fff;
+	box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+	gap: 8px;
+	flex: 1;
+}
+
+.info {
+	display: flex;
+	flex-direction: row;
+	justify-content: space-between;
+}
+
+.nameContainer {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+}
+
+.hidden {
+	visibility: hidden;
+}
+
+.name {
+	font-family: "Caveat Brush", cursive;
+	font-size: 20px;
+}
+
+@media (orientation: portrait) and (max-width: 400px) {
+	.name {
+		font-size: 18px;
+	}
+}
+
+.price {
+	color: #ffcd75;
+	font-style: italic;
+}
+
+.stats {
+	display: flex;
+	flex-direction: row;
+	justify-content: space-between;
+}
+
+.stat {
+	font-size: 14px;
+}
+
+@media (orientation: portrait) and (max-width: 430px) {
+	.stat {
+		font-size: 10px;
+	}
+}
+
+.traits {
+	height: 48px;
+	padding-bottom: 8px;
+	display: flex;
+	flex-direction: row;
+}
+
+.traits > *:not(:last-child) {
+	margin-right: 8px;
+}
+
+@media (orientation: portrait) and (max-width: 430px) {
+	.traits {
+		height: 32px;
+	}
+}
+
+.balanceIcon {
+	/* Intentionally empty to match original if needed, or add styles */
+}
+
+@media (orientation: portrait) and (max-width: 430px) {
+	.balanceIcon {
+		font-size: 12px;
+	}
+}

@@ -1,0 +1,133 @@
+.profile {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: clamp(2px, 1.5vh, 8px);
+	width: 100%;
+	height: 100%;
+	padding: 4px;
+	box-sizing: border-box;
+	font-family: "Spiegel", sans-serif;
+	container-type: inline-size;
+	container-name: profile;
+}
+
+.levelBadge {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 4px;
+}
+
+.levelNumber {
+	font-size: clamp(14px, 2vh, 24px);
+	font-weight: 700;
+	color: #c8aa6e;
+	text-shadow: 0 0 6px rgba(200, 170, 110, 0.4);
+	line-height: 1;
+}
+
+.levelLabel {
+	font-size: 10px;
+	color: #785a28;
+	letter-spacing: 2px;
+	text-transform: uppercase;
+}
+
+.xpBarOuter {
+	width: 100%;
+	height: clamp(4px, 0.6vh, 8px);
+	background: #1a1a2e;
+	border-radius: 4px;
+	overflow: hidden;
+	border: 1px solid rgba(200, 170, 110, 0.2);
+}
+
+.xpBarInner {
+	height: 100%;
+	background: linear-gradient(90deg, #0ac8b9, #0397ab);
+	border-radius: 4px;
+	transition: width 0.3s ease;
+	box-shadow: 0 0 4px rgba(10, 200, 185, 0.4);
+}
+
+.xpText {
+	font-size: clamp(7px, 0.8vh, 9px);
+	color: #a09b8c;
+	font-weight: 700;
+	line-height: 1;
+}
+
+.buttonsRow {
+	display: flex;
+	gap: 6px;
+	width: 100%;
+}
+
+.btn {
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 2px;
+	padding: clamp(2px, 0.5vh, 6px) 4px;
+	border: 1px solid #463714;
+	border-radius: 4px;
+	background: rgba(0, 0, 0, 0.4);
+	color: #c8aa6e;
+	cursor: pointer;
+	font-size: clamp(9px, 0.9vh, 11px);
+	font-weight: 700;
+	transition: all 0.2s;
+	min-width: 0;
+	white-space: nowrap;
+	overflow: hidden;
+}
+
+.btn:hover:not(:disabled) {
+	background: rgba(200, 170, 110, 0.15);
+	border-color: #c8aa6e;
+	box-shadow: 0 0 8px rgba(200, 170, 110, 0.3);
+}
+
+.btn:disabled {
+	opacity: 0.4;
+	cursor: not-allowed;
+}
+
+.btnReroll {
+	color: #0ac8b9;
+	border-color: #0ac8b9;
+}
+
+.btnReroll:hover:not(:disabled) {
+	background: rgba(10, 200, 185, 0.15);
+	box-shadow: 0 0 8px rgba(10, 200, 185, 0.3);
+}
+
+.btnLock {
+	color: #e74c3c;
+	border-color: #e74c3c;
+}
+
+.btnCost {
+	font-size: 9px;
+	opacity: 0.8;
+}
+
+.goldDisplay {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	font-size: clamp(12px, 1.8vh, 18px);
+	font-weight: 700;
+	color: #ffd700;
+	text-shadow: 0 0 4px rgba(255, 215, 0, 0.4);
+	line-height: 1;
+}
+
+.goldIcon {
+	font-size: clamp(14px, 2vh, 20px);
+}

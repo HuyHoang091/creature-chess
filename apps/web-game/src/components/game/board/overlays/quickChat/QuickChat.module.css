@@ -1,0 +1,31 @@
+.root {
+	display: flex;
+	flex-direction: row;
+	justify-content: center;
+}
+
+.buttons {
+	background: #1d1d1d;
+	display: flex;
+	flex-direction: row;
+	gap: 12px;
+}
+
+@media (orientation: portrait) and (min-width: 431px) {
+	.buttons {
+		gap: 32px;
+		padding: 12px 24px;
+	}
+}
+
+.button {
+	font-size: 1em;
+}
+
+@media (orientation: portrait) and (min-width: 431px) {
+	.button {
+		gap: 32px;
+		padding: 12px 24px;
+		font-size: 1.5em;
+	}
+}

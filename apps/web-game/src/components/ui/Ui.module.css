@@ -1,0 +1,74 @@
+/* BalanceIcon */
+.balanceWrapper {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	gap: 4px;
+	letter-spacing: 2px;
+	color: #fff;
+}
+
+.balanceIcon {
+	color: #ddc160;
+}
+
+/* LevelIcon */
+.levelWrapper {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	gap: 4px;
+	letter-spacing: 2px;
+	font-size: 12px;
+	padding: 4px 6px;
+	background: #1d1d1d;
+	color: #fff;
+}
+
+/* progressBar */
+.progressContainer {
+	width: 100%;
+	height: 100%;
+	position: relative;
+	background: #636363;
+	box-sizing: border-box;
+}
+
+.progressFill {
+	position: absolute;
+	height: 100%;
+	width: 100%;
+	box-sizing: border-box;
+}
+
+.progressContents {
+	position: absolute;
+	top: 0;
+	right: 0.5em;
+	font-weight: 700;
+	line-height: 1.75em;
+}
+
+/* label */
+.labelDefault {
+	font-size: 0.8rem;
+	font-weight: 700;
+	color: #fff;
+}
+
+.labelHighlight {
+	font-size: 0.8rem;
+	font-weight: 700;
+	color: #ffcd75;
+}
+
+/* DiscordIcon */
+.discordButton {
+	max-width: 260px;
+	padding: 2em;
+	text-align: center;
+}
+
+.discordImage {
+	max-width: 260px;
+}

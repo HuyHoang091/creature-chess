@@ -1,0 +1,15 @@
+.debugBar {
+	display: flex;
+	flex-direction: row;
+	justify-content: flex-end;
+	align-items: center;
+	font-size: 12px;
+	background: rgba(0, 0, 0, 0.5);
+	padding: 4px 8px;
+	border-radius: 4px;
+}
+
+.ping {
+	color: #fff;
+	font-family: monospace;
+}

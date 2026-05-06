@@ -1,0 +1,36 @@
+.traitIcon {
+	position: relative;
+	margin: 0;
+	aspect-ratio: 1 / 1;
+	container-name: icon;
+	container-type: size;
+}
+
+.labelContainer {
+	position: absolute;
+	width: 100%;
+	display: flex;
+	flex-direction: row;
+	justify-content: center;
+	font-size: 14px;
+	bottom: -10px;
+}
+
+@container icon (max-width: 31px) {
+	.labelContainer {
+		display: none;
+	}
+}
+
+@container icon (max-width: 42px) {
+	.labelContainer {
+		bottom: -8px;
+		font-size: 10px;
+	}
+}
+
+.label {
+	color: #fff;
+	background: #1d1d1d;
+	padding: 2px 8px;
+}

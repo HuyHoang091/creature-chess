@@ -1,0 +1,189 @@
+.root {
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+	width: 100%;
+	height: 100%;
+	gap: clamp(8px, 1.5vh, 16px);
+	padding: 8px;
+	box-sizing: border-box;
+}
+@media (orientation: portrait) and (min-width: 431px) {
+	.root {
+		gap: 32px;
+	}
+}
+
+.desktopOnly {
+	display: none;
+	padding: 0px 20px;
+}
+@media (orientation: portrait) and (max-width: 431px) {
+	.desktopOnly {
+		display: inline;
+	}
+}
+
+.wrapper {
+	text-align: center;
+	width: min(600px, 90%);
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	background: #566c86;
+	border: 2px solid #b13e53;
+	font-family: "Roboto", sans-serif;
+	max-height: 80dvh;
+	overflow-y: auto;
+	border-radius: 8px;
+}
+
+.vsHeader {
+	border-top: 2px solid #b13e53;
+	border-bottom: 2px solid #b13e53;
+	padding: 8px 0;
+}
+.vsHeader > h2 {
+	margin: 0;
+}
+@media (orientation: portrait) and (max-width: 430px) {
+	.vsHeader {
+		padding: 2px 0;
+		display: none;
+	}
+}
+
+.badges {
+	display: flex;
+	flex-direction: row;
+	justify-content: space-between;
+	box-sizing: border-box;
+	align-items: center;
+}
+
+.cloneTag {
+	background: #333333;
+	margin-left: 0.5em;
+	padding: 0 0.5em;
+	font-style: italic;
+}
+
+.healthbar {
+	margin: 0;
+}
+
+.playerDetails {
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	flex: 2;
+	gap: 4px;
+}
+
+.playerAvatar {
+	flex: 1;
+}
+
+.opponent {
+	display: flex;
+	flex-direction: row;
+	padding: 8px;
+	border-bottom: 2px solid #b13e53;
+}
+@media (orientation: portrait) and (max-width: 430px) {
+	.opponent {
+		padding: 4px;
+	}
+}
+
+.nameWrapper {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	justify-content: center;
+	flex-wrap: wrap;
+	gap: 8px;
+}
+
+.playerName {
+	font-size: 12px;
+}
+
+.tags {
+	display: flex;
+	flex-direction: row;
+	gap: 4px;
+}
+
+.title {
+	text-align: left;
+	padding: 4px 8px;
+	font-family: "Caveat Brush", cursive;
+	font-size: clamp(18px, 3vw, 36px);
+}
+
+.income {
+	flex: 3;
+}
+
+.damage {
+	flex: 1;
+	display: flex;
+	flex-direction: row;
+	justify-content: center;
+	align-items: center;
+}
+.damage > span {
+	padding: clamp(4px, 0.8vh, 8px) clamp(8px, 1.5vw, 16px);
+	font-size: clamp(16px, 3vw, 36px);
+	font-weight: 700;
+	color: #ff6464;
+	background: #ffd2d2;
+	border: 2px solid #ff6464;
+}
+
+.outcomes {
+	background: #30364b;
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+}
+
+.deathMessage {
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	gap: 24px;
+	padding: 0 8px;
+	font-size: 18px;
+}
+@media (orientation: portrait) and (max-width: 430px) {
+	.deathMessage {
+		gap: 12px;
+		font-size: 14px;
+	}
+}
+
+.thankYou {
+	flex: 2;
+}
+
+.jkm {
+	background: #1d1d1d;
+	font-family: "Caveat Brush", cursive;
+	padding: 4px 8px;
+	font-style: italic;
+}
+
+.spectateReminder {
+	font-size: 14px;
+	font-style: italic;
+}
+@media (orientation: portrait) and (max-width: 430px) {
+	.spectateReminder {
+		font-size: 10px;
+	}
+}

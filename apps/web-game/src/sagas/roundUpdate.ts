@@ -1,0 +1,51 @@
+import { takeLatest, put } from "@redux-saga/core/effects";
+import { getPlayerSlices } from "~/store/sagaContext";
+
+import {
+	GameEvents,
+	PlayerCommands,
+	RoundInfoCommands,
+} from "@creature-chess/gamemode";
+import { BattleCommands } from "@creature-chess/battle";
+import { GamePhase } from "@creature-chess/models";
+import { setMatchBoard } from "~/store/game/match/state";
+
+export const roundUpdateSaga = function* () {
+	const { board } = yield* getPlayerSlices();
+
+	yield takeLatest<GameEvents.GamePhaseStartedEvent>(
+		GameEvents.gamePhaseStartedEvent.toString(),
+		function* ({ payload: packet }) {
+			const update = {
+				phase: packet.phase,
+				startedAt: packet.startedAt,
+				isOvertime: packet.isOvertime,
+				...(packet.phase === GamePhase.PREPARING
+					? { round: packet.round }
+					: undefined),
+			};
+
+			yield put(RoundInfoCommands.setRoundInfoCommand(update));
+
+			switch (packet.phase) {
+				case GamePhase.PREPARING: {
+					yield put(setMatchBoard(null));
+					yield put(BattleCommands.stopBattleCommand());
+					yield put(
+						PlayerCommands.playerInfoCommands.updateOpponentCommand({
+							id: null,
+						})
+					);
+					yield put(board.commands.unlockBoardCommand());
+					return;
+				}
+				case GamePhase.READY: {
+					yield put(board.commands.lockBoardCommand());
+					return;
+				}
+				default:
+					return;
+			}
+		}
+	);
+};

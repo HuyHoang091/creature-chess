@@ -1,0 +1,88 @@
+.panel {
+	display: flex;
+	flex-direction: column;
+	gap: clamp(3px, 0.5vh, 6px);
+	align-items: center;
+	width: 100%;
+	padding-top: 4px;
+}
+
+.synergyItem {
+	position: relative;
+	width: clamp(30px, 4.5vw, 44px);
+	height: clamp(30px, 4.5vw, 44px);
+	border-radius: 50%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border: 2px solid #463714;
+	background: rgba(0, 0, 0, 0.5);
+	cursor: default;
+	transition: all 0.3s;
+	flex-shrink: 0;
+}
+
+.synergyItem:hover {
+	border-color: #c8aa6e;
+	box-shadow: 0 0 8px rgba(200, 170, 110, 0.4);
+}
+
+.tierBronze {
+	border-color: #cd7f32 !important;
+	box-shadow: 0 0 6px rgba(205, 127, 50, 0.5);
+	background: radial-gradient(circle, rgba(205, 127, 50, 0.2) 0%, rgba(0,0,0,0.5) 70%);
+}
+
+.tierSilver {
+	border-color: #c0c0c0 !important;
+	box-shadow: 0 0 8px rgba(192, 192, 192, 0.5);
+	background: radial-gradient(circle, rgba(192, 192, 192, 0.15) 0%, rgba(0,0,0,0.5) 70%);
+}
+
+.tierGold {
+	border-color: #ffd700 !important;
+	box-shadow: 0 0 10px rgba(255, 215, 0, 0.6);
+	background: radial-gradient(circle, rgba(255, 215, 0, 0.2) 0%, rgba(0,0,0,0.5) 70%);
+}
+
+.tierChromatic {
+	border-color: #e338ff !important;
+	box-shadow: 0 0 12px rgba(227, 56, 255, 0.6);
+	background: radial-gradient(circle, rgba(227, 56, 255, 0.2) 0%, rgba(0,0,0,0.5) 70%);
+}
+
+.icon {
+	font-size: clamp(12px, 1.5vw, 18px);
+	color: #f0e6d2;
+}
+
+.countBadge {
+	position: absolute;
+	bottom: -2px;
+	right: -2px;
+	font-size: clamp(7px, 0.8vw, 9px);
+	font-weight: 700;
+	color: #f0e6d2;
+	background: #1a1a2e;
+	border: 1px solid #463714;
+	border-radius: 3px;
+	padding: 1px 3px;
+	line-height: 1;
+}
+
+.tooltip {
+	position: absolute;
+	left: 50px;
+	top: 50%;
+	transform: translateY(-50%);
+	background: rgba(10, 14, 19, 0.95);
+	border: 1px solid #463714;
+	border-radius: 4px;
+	padding: 6px 10px;
+	font-size: 11px;
+	color: #f0e6d2;
+	white-space: nowrap;
+	z-index: 100;
+	pointer-events: none;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+}

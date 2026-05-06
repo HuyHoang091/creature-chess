@@ -1,0 +1,70 @@
+/* avatar */
+.image {
+	height: 64px;
+}
+
+/* healthbar */
+.playerHealth {
+	position: relative;
+	display: block;
+	width: 100%;
+	height: 16px;
+}
+
+.healthFill {
+	background: #20b720;
+}
+
+.healthContent {
+	position: absolute;
+	top: -2px;
+	right: 8px;
+	font-size: 12px;
+	font-weight: 700;
+	color: #000;
+}
+
+/* CloneChip */
+.cloneChip {
+	background: #8fa3bd;
+	padding: 4px 8px;
+	font-family: "Roboto", sans-serif;
+	font-weight: 700;
+	color: #fff;
+	font-style: italic;
+	font-size: 16px;
+}
+
+@media (orientation: portrait) and (max-width: 400px) {
+	.cloneChip {
+		padding: 4px;
+		font-size: 12px;
+	}
+}
+
+/* PositionChip */
+.positionChip {
+	background: #333;
+	padding: 4px 8px;
+	font-family: "Roboto", sans-serif;
+	font-weight: 700;
+	color: #fff;
+	font-style: italic;
+	letter-spacing: 2px;
+	font-size: 16px;
+}
+
+@media (orientation: portrait) and (max-width: 400px) {
+	.positionChip {
+		padding: 4px;
+		font-size: 12px;
+	}
+}
+
+/* Title */
+.title {
+	font-size: 0.65rem;
+	font-weight: 700;
+	text-align: inherit;
+	text-transform: uppercase;
+}

@@ -1,0 +1,30 @@
+/* Header2 */
+.h2 {
+	font-size: 16px;
+	font-weight: bolder;
+	margin-bottom: 0.5em;
+}
+
+@media (min-width: 400px) {
+	.h2 {
+		font-size: 24px;
+	}
+}
+
+/* Header4 */
+.h4 {
+	font-size: 12px;
+	font-weight: bolder;
+	margin-bottom: 0.25em;
+}
+
+@media (min-width: 400px) {
+	.h4 {
+		font-size: 18px;
+	}
+}
+
+/* Text component base */
+.text {
+	font-family: "Roboto", sans-serif;
+}

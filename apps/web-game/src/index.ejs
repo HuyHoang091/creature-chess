@@ -1,0 +1,39 @@
+<!doctype html>
+<html>
+	<head>
+		<base href="./" />
+		<meta charset="utf-8" />
+		<meta
+			name="viewport"
+			content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0"
+		/>
+
+		<title>Creature Chess</title>
+
+		<link rel="preconnect" href="https://fonts.googleapis.com" />
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+		<link
+			href="https://fonts.googleapis.com/css2?family=Caveat+Brush&family=Roboto:ital,wght@0,100..900;1,100..900&display=swap"
+			rel="stylesheet"
+		/>
+
+		<!-- <link rel="preload" as="image" href="/images/ui/logo.png" /> -->
+	</head>
+
+	<body>
+		<div id="approot" class="approot"></div>
+	</body>
+
+	<script>
+		try {
+			new Function("var testObj = {}; return testObj?.b;");
+		} catch (err) {
+			document.getElementById("approot").innerHTML =
+				"<div style='padding: 20px; text-align: center; font-family: sans-serif; color: #333;'>" +
+					"<h2>Thiết bị / Trình duyệt không được hỗ trợ</h2>" +
+					"<p>Trình duyệt của bạn quá cũ và thiếu các tính năng cần thiết để chạy Game (yêu cầu từ Chrome 80 trở lên).</p>" +
+					"<p>Vui lòng cập nhật trình duyệt lên phiên bản mới nhất hoặc sử dụng thiết bị khác!</p>" +
+				"</div>";
+		}
+	</script>
+</html>

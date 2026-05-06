@@ -1,0 +1,71 @@
+.piece {
+	position: relative;
+	width: 100%;
+	height: 100%;
+	cursor: pointer;
+	container-name: piece;
+	container-type: size;
+}
+
+.image {
+	position: absolute;
+	bottom: 0;
+	right: 0;
+	width: 80%;
+	filter: drop-shadow(0 4px 4px rgba(0,0,0,0.4));
+	transition: transform var(--board-item-transition-dur, 0.2s) cubic-bezier(0.175, 0.885, 0.32, 1.275), filter var(--board-item-transition-dur, 0.2s);
+}
+
+.metaContainer {
+	position: absolute;
+	top: 0;
+	left: 0;
+	display: flex;
+	flex-direction: row;
+	width: 35%;
+	height: 100%;
+	box-sizing: border-box;
+	padding: 2%;
+}
+
+@container (max-width: 36px) {
+	.metaContainer {
+		width: 44%;
+		padding-top: 2px;
+		padding-left: 2px;
+	}
+}
+
+.imageContainer {
+	position: absolute;
+	bottom: 0;
+	left: 14%;
+	width: 80%;
+	height: 80%;
+	transition: transform var(--board-item-transition-dur, 0.2s) cubic-bezier(0.175, 0.885, 0.32, 1.275), filter var(--board-item-transition-dur, 0.2s) ease-out;
+}
+
+/* .piece:hover .imageContainer {
+	transform: translateY(-8%) scale(1.05);
+	filter: drop-shadow(0 8px 8px rgba(0,0,0,0.6));
+} */
+
+.healthbarContainer {
+	position: absolute;
+	right: 4%;
+	top: 4%;
+	height: 92%;
+	width: 28%;
+}
+
+.stage {
+	position: absolute;
+	top: 10%;
+	left: 7%;
+	width: 86%;
+	height: 80%;
+}
+
+.stage > img {
+	width: 100%;
+}

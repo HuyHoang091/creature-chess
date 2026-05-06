@@ -1,0 +1,80 @@
+.tooltip {
+	position: absolute;
+	bottom: 110%;
+	left: 50%;
+	transform: translateX(-50%);
+	z-index: 1000;
+	pointer-events: none;
+	min-width: 160px;
+	max-width: 220px;
+
+	background: linear-gradient(180deg, #1a1a2e 0%, #0f0f1a 100%);
+	border: 1px solid #c8aa6e;
+	border-radius: 6px;
+	padding: 8px 10px;
+	box-shadow: 0 4px 20px rgba(0, 0, 0, 0.8), 0 0 8px rgba(200, 170, 110, 0.3);
+	font-family: "Spiegel", sans-serif;
+	color: #f0e6d2;
+	font-size: 11px;
+	line-height: 1.4;
+}
+
+.name {
+	font-size: 13px;
+	font-weight: 700;
+	color: #c8aa6e;
+	margin-bottom: 4px;
+	letter-spacing: 0.5px;
+	border-bottom: 1px solid rgba(200, 170, 110, 0.3);
+	padding-bottom: 4px;
+}
+
+.row {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding: 1px 0;
+}
+
+.label {
+	color: #a09b8c;
+}
+
+.value {
+	font-weight: 700;
+}
+
+.hpGreen {
+	color: #2ecc71;
+}
+
+.atkRed {
+	color: #e74c3c;
+}
+
+.defBlue {
+	color: #3498db;
+}
+
+.traitTag {
+	display: inline-block;
+	background: rgba(200, 170, 110, 0.15);
+	border: 1px solid rgba(200, 170, 110, 0.3);
+	border-radius: 3px;
+	padding: 1px 5px;
+	margin-right: 3px;
+	margin-top: 3px;
+	font-size: 10px;
+	color: #c8aa6e;
+}
+
+.traitsRow {
+	margin-top: 4px;
+	display: flex;
+	flex-wrap: wrap;
+}
+
+.stageStars {
+	color: #ffd700;
+	letter-spacing: 2px;
+}

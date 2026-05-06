@@ -1,0 +1,40 @@
+.pieceType {
+	display: inline-block;
+	width: 24px;
+	height: 24px;
+	margin-right: 0.5rem;
+}
+
+.list {
+	margin-bottom: 1rem;
+	margin-left: 1.5rem;
+	list-style-type: disc;
+}
+
+.list > li {
+	font-size: 12px;
+	margin-bottom: 8px;
+}
+
+@media (min-width: 400px) {
+	.list > li {
+		font-size: 16px;
+		margin-bottom: 12px;
+	}
+}
+
+.help {
+	color: #fff;
+}
+
+.helpText {
+	font-size: 12px;
+	margin-bottom: 8px;
+}
+
+@media (min-width: 400px) {
+	.helpText {
+		font-size: 16px;
+		margin-bottom: 12px;
+	}
+}

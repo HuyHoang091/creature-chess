@@ -1,0 +1,10 @@
+.selectablePiece {
+	width: 100%;
+	height: 100%;
+	position: relative;
+}
+
+.selectablePiece:hover .tooltip {
+    opacity: 1;
+    visibility: visible;
+}

@@ -1,0 +1,39 @@
+.loadingArea {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 32px;
+	width: 100%;
+	height: 100%;
+}
+
+.spinner {
+	width: 48px;
+	height: 48px;
+	border: 8px solid #b13e53;
+	border-top-color: #555;
+	border-radius: 50%;
+	animation: spin 1.6s linear infinite;
+}
+
+.message {
+	font-family: "Roboto", "sans-serif";
+	font-size: 1.5em;
+	text-transform: uppercase;
+	letter-spacing: 4px;
+	color: #fff;
+	font-weight: 700;
+	text-align: center;
+}
+
+@media (orientation: portrait) and (max-width: 412px) {
+	.message {
+		font-size: 1.2em;
+	}
+}
+
+@keyframes spin {
+	from { transform: rotate(0deg); }
+	to { transform: rotate(360deg); }
+}
