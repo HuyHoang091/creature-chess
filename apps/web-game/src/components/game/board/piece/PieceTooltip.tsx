@@ -3,13 +3,15 @@ import { PieceModel } from "@creature-chess/models";
 
 import styles from "./PieceTooltip.module.css";
 
+import { getStats } from "@creature-chess/battle";
+
 type Props = {
     piece: PieceModel;
 };
 
 export function PieceTooltip({ piece }: Props) {
     const def = piece.definition;
-	const stats = def?.stages[piece.stage];
+	const stats = def ? getStats(piece) : undefined;
 
     return (
         <div className={styles.tooltip}>
@@ -25,7 +27,7 @@ export function PieceTooltip({ piece }: Props) {
             <div className={styles.row}>
                 <span className={styles.label}>HP</span>
                 <span className={`${styles.value} ${styles.hpGreen}`}>
-                    {piece.currentHealth} / {piece.maxHealth}
+                    {piece.currentHealth} / {stats?.hp || piece.maxHealth}
                 </span>
             </div>
 

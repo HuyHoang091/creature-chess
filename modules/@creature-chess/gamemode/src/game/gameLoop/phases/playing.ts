@@ -9,6 +9,7 @@ import {
 	playerFinishMatchEvent,
 } from "../../../entities/player/events";
 import { getMatches } from "../../../features/match/selectors";
+import { CreepMatch } from "../../creepRound";
 import { Match } from "../../match";
 import { RoundInfoCommands } from "../../roundInfo";
 import { GameSagaContextPlayers } from "../../sagas";
@@ -37,7 +38,7 @@ export const runPlayingPhase = function* (callbacks: Callbacks = {}) {
 	const matches = yield* call(getMatches, livingPlayers);
 
 	const uniqueMatches = [
-		...new Set(matches.filter((match): match is Match => match !== null)),
+		...new Set(matches.filter((match): match is Match | CreepMatch => match !== null)),
 	];
 	const finishMatchTasks = livingPlayers.map((p) =>
 		p.runSaga(waitForFinishMatchSaga)

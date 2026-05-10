@@ -3,6 +3,7 @@ import { createAction } from "@reduxjs/toolkit";
 import { GamePhase } from "@creature-chess/models";
 import { PlayerListPlayer } from "@creature-chess/models/game/playerList";
 
+import { CreepMatch } from "./creepRound";
 import { Match } from "./match";
 
 export type GamePhaseStartedEvent = ReturnType<typeof gamePhaseStartedEvent>;
@@ -47,7 +48,7 @@ export type PlayerRunReadyPhaseEvent = ReturnType<
 	typeof playerRunReadyPhaseEvent
 >;
 export const playerRunReadyPhaseEvent = createAction<
-	{ match: Match },
+	{ match: Match | CreepMatch },
 	"playerRunReadyPhaseEvent"
 >("playerRunReadyPhaseEvent");
 

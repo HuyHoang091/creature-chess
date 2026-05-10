@@ -7,6 +7,7 @@ import { PlayerActions } from "@creature-chess/gamemode";
 import { GamePhase } from "@creature-chess/models";
 
 import styles from "./Overlays.module.css";
+import { getGlobalDraggingItemId, subscribeToDragState } from "../../inventory/dragState";
 
 function TrashDropTarget({ className }: { className: string }) {
     const dispatch = useDispatch();
@@ -15,8 +16,9 @@ function TrashDropTarget({ className }: { className: string }) {
         (state) => state.game.roundInfo.phase === GamePhase.PREPARING
     );
 
-    const { isDragging } = useDragLayer((monitor) => ({
+    const { isDragging, itemType } = useDragLayer((monitor) => ({
         isDragging: monitor.isDragging(),
+        itemType: monitor.getItemType(),
     }));
 
     const [{ isOver }, drop] = useDrop<{ id: string }, void, { isOver: boolean }>({
@@ -32,7 +34,7 @@ function TrashDropTarget({ className }: { className: string }) {
         }),
     });
 
-    const isVisible = isDragging && inPreparingPhase;
+    const isVisible = isDragging && itemType === "BoardItem" && inPreparingPhase;
 
     const stateClass = isOver ? styles.trashZoneHovering : styles.trashZoneIdle;
     const visibilityClass = isVisible ? styles.trashZoneVisible : styles.trashZoneHidden;

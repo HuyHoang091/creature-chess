@@ -1,6 +1,6 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
-import { GamePhase, RoundInfoState } from "@creature-chess/models";
+import { GamePhase, RoundInfoState, RoundType } from "@creature-chess/models";
 
 const initialState: RoundInfoState = {
 	round: 1,
@@ -22,6 +22,7 @@ export const {
 				startedAt: number;
 				round?: number;
 				isOvertime?: boolean;
+				roundType?: RoundType;
 			}>
 		) => {
 			if (command.payload.round) {
@@ -31,6 +32,7 @@ export const {
 					phaseStartedAtSeconds: Math.floor(command.payload.startedAt),
 					round: command.payload.round,
 					isOvertime: command.payload.isOvertime,
+					roundType: command.payload.roundType,
 				};
 			}
 
@@ -39,6 +41,7 @@ export const {
 				phase: command.payload.phase,
 				phaseStartedAtSeconds: Math.floor(command.payload.startedAt),
 				isOvertime: command.payload.isOvertime,
+				roundType: command.payload.roundType ?? state.roundType,
 			};
 		},
 	},

@@ -9,6 +9,7 @@ import {
 	getDistance,
 	getRelativeDirection,
 	PieceModel,
+	getItemDefinition,
 } from "@creature-chess/models";
 
 import { getCooldownForSpeed } from "../../../utils/getCooldownForSpeed";
@@ -53,8 +54,40 @@ export function doHit(
 		return board;
 	}
 
-	const damage = getHitDamage(attacker, target);
+	const hasPassive = (p: PieceModel, passiveId: string) => {
+		return p.items?.some((item) => {
+			const def = getItemDefinition(item.itemId);
+			return def?.passive?.id === passiveId;
+		});
+	};
+
+	let damage = getHitDamage(attacker, target);
+	let isDodged = false;
+
+	// DODGE
+	if (hasPassive(target, "dodge") && Math.random() < 0.15) {
+		damage = 0;
+		isDodged = true;
+	}
+
 	const newDefenderHealth = Math.max(target.currentHealth - damage, 0);
+
+	// THORNMAIL
+	let reflectedDamage = 0;
+	if (!isDodged && hasPassive(target, "thornmail")) {
+		reflectedDamage = Math.floor(damage * 0.2); // 20%
+	}
+
+	// LIFESTEAL
+	let healAmount = 0;
+	if (!isDodged && hasPassive(attacker, "lifesteal")) {
+		healAmount = Math.floor(damage * 0.2);
+	}
+
+	const newAttackerHealth = Math.max(
+		Math.min(attacker.currentHealth - reflectedDamage + healAmount, attacker.maxHealth),
+		0
+	);
 
 	const MANA_ON_ATTACK = 10;
 	// Người chơi bị đánh cũng sẽ nhận lượng Mana bằng với lượng sát thương (cap tại MaxMana)
@@ -89,8 +122,41 @@ export function doHit(
 
 	combatStore.updatePiecePartial(target.id, { canBeAttackedAtTurn });
 
+	const attackerVisualEffects = [];
+	const defenderVisualEffects = [];
+
+	if (isDodged) {
+		defenderVisualEffects.push({
+			id: Math.random().toString(36).substring(7),
+			text: "Dodge!",
+			color: "#ffffff"
+		});
+	}
+
+	if (reflectedDamage > 0) {
+		defenderVisualEffects.push({
+			id: Math.random().toString(36).substring(7),
+			text: "Thorns",
+			color: "#ffaa00"
+		});
+		attackerVisualEffects.push({
+			id: Math.random().toString(36).substring(7),
+			text: `-${reflectedDamage}`,
+			color: "#ff0000"
+		});
+	}
+
+	if (healAmount > 0) {
+		attackerVisualEffects.push({
+			id: Math.random().toString(36).substring(7),
+			text: `+${healAmount}`,
+			color: "#00ff00"
+		});
+	}
+
 	const newAttacker: PieceModel = {
 		...attacker,
+		currentHealth: newAttackerHealth,
 		currentMana: newAttackerMana,
 		attacking: {
 			attackType: attackerStats.attackType,
@@ -103,6 +169,7 @@ export function doHit(
 			...attacker.lastBattleStats!,
 			damageDealt: attacker.lastBattleStats!.damageDealt + damage,
 		},
+		visualEffects: attackerVisualEffects,
 	};
 
 	const defender: PieceModel = {
@@ -117,6 +184,7 @@ export function doHit(
 			...target.lastBattleStats!,
 			damageTaken: target.lastBattleStats!.damageTaken + damage,
 		},
+		visualEffects: defenderVisualEffects,
 	};
 
 	return boardSlice.boardReducer(

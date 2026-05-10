@@ -90,6 +90,7 @@ const createPieceFromCard = (
 		maxMana: stats.maxMana || 100,
 		currentMana: 0,
 		traits: definition.traits,
+		items: [],
 		stage: 0,
 		lastBattleStats: null,
 	};

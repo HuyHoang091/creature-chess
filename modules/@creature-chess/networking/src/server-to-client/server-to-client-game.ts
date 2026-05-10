@@ -13,6 +13,7 @@ export type GameConnectionPacket = {
 	players: PlayerListPlayer[];
 	game: RoundInfoState;
 	settings: GamemodeSettings;
+	playerId: string;
 };
 
 export type AuthenticateResponse = {

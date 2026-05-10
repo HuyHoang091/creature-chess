@@ -45,6 +45,12 @@ export const sellPiecePlayerActionSaga = function* () {
 				)
 			);
 
+			if (piece.items && piece.items.length > 0) {
+				for (const item of piece.items) {
+					yield put(playerInfoCommands.addItemToInventoryCommand(item.itemId));
+				}
+			}
+
 			yield put(benchSlice.commands.removeBoardPiecesCommand([pieceId]));
 			yield put(boardSlice.commands.removeBoardPiecesCommand([pieceId]));
 

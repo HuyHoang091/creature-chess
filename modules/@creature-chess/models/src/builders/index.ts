@@ -28,6 +28,7 @@ export const buildPieceModel = (
 	stage: 0,
 	lastBattleStats: null,
 	traits: [],
+	items: [],
 	...piece,
 });
 

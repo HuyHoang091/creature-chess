@@ -17,6 +17,7 @@ import { simulateTurn } from "./simulator";
 import { PieceCombatState } from "./state/state";
 import { pieceInfoStore } from "./state/store";
 import { duration } from "./utils/duration";
+import { getStats } from "./utils/getStats";
 import { isATeamDefeated } from "./utils/isATeamDefeated";
 
 const runBattle = function* (
@@ -29,17 +30,23 @@ const runBattle = function* (
 	let board: BoardState<PieceModel> = {
 		id: initialBoard.id,
 		pieces: Object.fromEntries(
-			Object.entries(initialBoard.pieces).map(([id, piece]) => [
-				id,
-				{
-					...piece,
-					lastBattleStats: {
-						damageDealt: 0,
-						damageTaken: 0,
-						turnsSurvived: 0,
+			Object.entries(initialBoard.pieces).map(([id, piece]) => {
+				const stats = getStats(piece);
+				return [
+					id,
+					{
+						...piece,
+						maxHealth: stats.hp,
+						currentHealth: stats.hp, // Reset health to full at battle start (includes item bonus)
+						currentMana: "startingMana" in stats ? (stats as any).startingMana : 0, // Set starting mana from items
+						lastBattleStats: {
+							damageDealt: 0,
+							damageTaken: 0,
+							turnsSurvived: 0,
+						},
 					},
-				},
-			])
+				];
+			})
 		),
 		piecePositions: {
 			...initialBoard.piecePositions,

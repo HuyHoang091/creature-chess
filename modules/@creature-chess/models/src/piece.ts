@@ -1,5 +1,6 @@
 import { TraitId } from "../gamemode/traits";
 import { AttackType, CreatureDefinition } from "./creatureDefinition";
+import { ItemInstance } from "./item";
 import { TileCoordinates } from "./position";
 
 export interface AttackDetails {
@@ -30,6 +31,9 @@ export interface PieceModel {
 	definition: CreatureDefinition;
 
 	traits: TraitId[];
+
+	/** Equipped items (max 3 slots) */
+	items: ItemInstance[];
 
 	stage: number;
 
@@ -70,6 +74,15 @@ export interface PieceModel {
 		skillTarget: "single" | "aoe" | "bounce" | "line";
 		targets: TileCoordinates[]; // Điểm/vùng tác dụng
 	} | null;
+
+	/**
+	 * Temporary visual effects to render over the piece (e.g. floating combat text)
+	 */
+	visualEffects?: {
+		id: string;
+		text: string;
+		color: string;
+	}[];
 
 	/**
 	 * @deprecated Dữ liệu trạng thái/vị trí nên được lưu trữ riêng biệt với dữ liệu cốt lõi của quân cờ.

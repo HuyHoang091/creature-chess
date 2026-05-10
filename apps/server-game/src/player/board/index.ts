@@ -24,6 +24,7 @@ import {
 	PlayerCommands,
 	GameEvents,
 	Match,
+	CreepMatch, // Added to fix type error
 	PlayerEvents,
 } from "@creature-chess/gamemode";
 import { PieceModel } from "@creature-chess/models";
@@ -48,7 +49,7 @@ const getSpectatingPlayer = function* () {
 };
 
 const getMatch = () =>
-	getVariable<PlayerVariables, Match | null>((variables) => variables.match);
+	getVariable<PlayerVariables, Match | CreepMatch | null>((variables) => variables.match);
 
 const spectatePlayerBoard = function* (
 	registry: OutgoingRegistry<GameServerToClient.PacketSet>

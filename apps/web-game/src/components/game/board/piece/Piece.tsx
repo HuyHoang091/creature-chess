@@ -4,6 +4,7 @@ import classNames from "classnames";
 import styles from "./Piece.module.css";
 
 import { CreatureImage } from "../../../ui/creatureImage";
+import { getItemDefinition } from "@creature-chess/models";
 import { usePiece } from "./PieceContext";
 import { PieceMeta } from "./meta";
 import { PieceHealthbar } from "./meta/PieceHealthbar";
@@ -65,6 +66,20 @@ export function Piece(props: Props) {
 					facing={piece.facingAway ? "back" : "front"}
 				/>
 			</div>
+
+			{piece.items && piece.items.length > 0 && (
+				<div className={styles.itemsContainer}>
+					{piece.items.map((item, index) => {
+						const def = getItemDefinition(item.itemId);
+						if (!def) return null;
+						return (
+							<div key={index} className={styles.equippedItem} title={def.name}>
+								{def.icon}
+							</div>
+						);
+					})}
+				</div>
+			)}
 
 			{children}
 		</div>

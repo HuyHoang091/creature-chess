@@ -18,6 +18,7 @@ import { PlayerListTFT } from "../playerList/PlayerListTFT";
 import { PlayerGameProfile } from "../profile";
 import { Settings } from "../settings";
 import { SynergyPanel } from "../synergy/SynergyPanel";
+import { InventoryPanel } from "../inventory/InventoryPanel";
 import styles from "./DesktopGame.module.css";
 
 // Baseline game width — giao diện được thiết kế cho 1280px
@@ -128,6 +129,7 @@ const DesktopGame: React.FunctionComponent = () => {
 
 			{/* === BOTTOM-LEFT: Profile/Controls === */}
 			<div className={styles.shopControls}>
+				<InventoryPanel />
 				<PlayerGameProfile />
 			</div>
 

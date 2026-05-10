@@ -114,6 +114,24 @@ export const MatchPiece: React.FC = () => {
 		[lastRenderedPiece]
 	);
 
+	const [activeEffects, setActiveEffects] = React.useState<{ id: string; text: string; color: string }[]>([]);
+
+	React.useEffect(() => {
+		if (piece?.visualEffects && piece.visualEffects.length > 0) {
+			// Find new effects that we haven't seen yet
+			const newEffects = piece.visualEffects.filter(e => !activeEffects.find(a => a.id === e.id));
+			if (newEffects.length > 0) {
+				setActiveEffects(prev => [...prev, ...newEffects]);
+				// Each effect self-removes after 1.5 seconds
+				newEffects.forEach(e => {
+					setTimeout(() => {
+						setActiveEffects(prev => prev.filter(a => a.id !== e.id));
+					}, 1500);
+				});
+			}
+		}
+	}, [piece?.visualEffects, activeEffects]);
+
 	React.useEffect(() => {
 		if (piece) {
 			runAnimations(piece);
@@ -157,6 +175,15 @@ export const MatchPiece: React.FC = () => {
 		>
 			<Piece healthbar={getHealthbar(piece.ownerId, viewingPlayerId)}>
 				<Projectile className={animationStyles.projectile} />
+				{activeEffects.map((effect) => (
+					<div
+						key={effect.id}
+						className={animationStyles.floatingText}
+						style={{ color: effect.color }}
+					>
+						{effect.text}
+					</div>
+				))}
 			</Piece>
 		</div>
 	);

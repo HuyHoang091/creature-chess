@@ -10,7 +10,7 @@ import {
 
 import { BoardSlice } from "@shoki/board";
 
-import { RoundInfoCommands } from "@creature-chess/gamemode";
+import { RoundInfoCommands, PlayerCommands } from "@creature-chess/gamemode";
 import { PieceModel } from "@creature-chess/models";
 import { GameServerToClient } from "@creature-chess/networking";
 
@@ -35,8 +35,19 @@ export const gameSaga = function* (
 		players,
 		game: { phase, phaseStartedAtSeconds },
 		settings,
+		playerId,
 	} = payload;
 	yield put(PlayerListCommands.updatePlayerListCommand(players));
+
+	// Restore own inventory from playerList data after reconnect
+	const ownPlayer = players.find((p) => p.id === playerId);
+	if (ownPlayer?.inventory && ownPlayer.inventory.length > 0) {
+		for (const itemId of ownPlayer.inventory) {
+			yield put(
+				PlayerCommands.playerInfoCommands.addItemToInventoryCommand(itemId)
+			);
+		}
+	}
 
 	const update = { phase, startedAt: phaseStartedAtSeconds };
 	yield put(RoundInfoCommands.setRoundInfoCommand(update));
