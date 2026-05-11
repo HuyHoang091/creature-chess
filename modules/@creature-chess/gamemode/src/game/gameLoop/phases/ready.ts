@@ -34,10 +34,16 @@ export const runReadyPhase = function* (callbacks: Callbacks = {}) {
 	const roundType = getRoundType(round);
 
 	if (roundType === RoundType.PVE_CREEP || roundType === RoundType.PVE_BOSS) {
-		const creepWave = getCreepWave(round);
+		let creepWave = getCreepWave(round);
 		if (!creepWave) {
-			logger.error("No creep wave found for PvE round", { round });
-			return;
+			logger.warn("No creep wave found for PvE round, using fallback boss wave", { round });
+			creepWave = {
+				name: `Boss Round ${round}`,
+				count: round >= 40 ? 1 : 2,
+				statMultiplier: 0.5 + (round / 100),
+				dropChance: 1.0,
+				isBoss: true,
+			};
 		}
 
 		players.getLiving().forEach((homePlayer) => {

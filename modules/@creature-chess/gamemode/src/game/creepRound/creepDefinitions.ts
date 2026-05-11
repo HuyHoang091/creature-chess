@@ -36,6 +36,10 @@ export const CREEP_WAVES: Record<number, CreepWave> = {
 	20: { name: "Baron Nashor", count: 1, statMultiplier: 0.5, dropChance: 1.0, isBoss: true },
 	25: { name: "Ancient Golem", count: 2, statMultiplier: 0.45, dropChance: 1.0, isBoss: true },
 	30: { name: "World Boss", count: 1, statMultiplier: 0.5, dropChance: 1.0, isBoss: true },
+	35: { name: "Abyssal Horror", count: 2, statMultiplier: 0.55, dropChance: 1.0, isBoss: true },
+	40: { name: "Titan Lord", count: 1, statMultiplier: 0.6, dropChance: 1.0, isBoss: true },
+	45: { name: "Void Reaver", count: 2, statMultiplier: 0.6, dropChance: 1.0, isBoss: true },
+	50: { name: "Eldritch King", count: 1, statMultiplier: 0.65, dropChance: 1.0, isBoss: true },
 };
 
 /**

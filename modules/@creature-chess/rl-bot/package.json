@@ -1,0 +1,39 @@
+{
+  "name": "@creature-chess/rl-bot",
+  "version": "0.0.1",
+  "private": true,
+  "description": "RL Bot for Creature Chess using PPO algorithm",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "yarn run -T tsc -p ./tsconfig.json",
+    "test": "yarn run -T jest --passWithNoTests",
+    "train": "ts-node src/training/train.ts",
+    "evaluate": "ts-node src/training/evaluate.ts",
+    "monitor": "ts-node src/monitoring/dashboardServer.ts"
+  },
+  "dependencies": {
+    "@cc-server/data": "workspace:*",
+    "@creature-chess/battle": "workspace:*",
+    "@creature-chess/gamemode": "workspace:*",
+    "@creature-chess/models": "workspace:*",
+    "@reduxjs/toolkit": "^2.2.1",
+    "@shoki/board": "workspace:*",
+    "@shoki/engine": "workspace:*",
+    "express": "^4.17.2",
+    "ws": "^8.13.0"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/node": "^16.11.17",
+    "@types/ws": "^8.5.10",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.1.2",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.3.3"
+  },
+  "peerDependencies": {
+    "redux": "^4.1.0",
+    "redux-saga": "^1.1.3"
+  }
+}

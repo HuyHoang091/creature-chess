@@ -34,6 +34,15 @@ export type Path = { stepCount: number; firstStep: TileCoordinates };
 
 const pathNotNull = (path: Path | null): path is Path => path !== null;
 
+const isWithinBounds = (
+	grid: { weight: number }[][],
+	position: TileCoordinates
+) =>
+	position.x >= 0 &&
+	position.y >= 0 &&
+	position.x < grid.length &&
+	position.y < (grid[position.x]?.length ?? 0);
+
 export const getNextPiecePosition = (
 	pathfinder: Pathfinder,
 	attackerPosition: TileCoordinates,
@@ -131,6 +140,13 @@ export class Pathfinder {
 		end: TileCoordinates
 	): TileCoordinates[] | null {
 		this.setWeights(board);
+
+		if (
+			!isWithinBounds(this.graph.grid as { weight: number }[][], start) ||
+			!isWithinBounds(this.graph.grid as { weight: number }[][], end)
+		) {
+			return null;
+		}
 
 		// mark the start as walkable
 		this.graph.grid[start.x][start.y].weight = 1;
