@@ -161,9 +161,9 @@ function* handleMatchReward(
   }
 
   if (totalExperiences % effectiveSaveInterval === 0) {
-    const savePath = getCheckpointPath(totalExperiences);
-    yield call(() => agent.saveModel(savePath));
-    console.log(`RL Bot: Auto-saved model to ${savePath}`);
+    // const savePath = getCheckpointPath(totalExperiences);
+    // yield call(() => agent.saveModel(savePath));
+    // console.log(`RL Bot: Auto-saved model to ${savePath}`);
 
     const latestModelPath = getModelPath();
     yield call(() => agent.saveModel(latestModelPath));
