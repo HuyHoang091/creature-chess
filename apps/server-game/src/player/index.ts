@@ -9,8 +9,12 @@ import {
 } from "@creature-chess/gamemode";
 import { RoundInfoState } from "@creature-chess/models";
 import { PlayerListPlayer } from "@creature-chess/models/game/playerList";
+import { BoardState } from "@shoki/board";
+import { PieceModel } from "@creature-chess/models";
+import { PlayerStateSelectors } from "@creature-chess/gamemode";
 import { GamemodeSettings } from "@creature-chess/models/settings";
 import { ClientToServer, GameServerToClient } from "@creature-chess/networking";
+import { registerTacticalAIEvents } from "@creature-chess/tactical-ai";
 
 import { playerBoard } from "./board";
 import {
@@ -22,11 +26,12 @@ import {
 type Parameters = {
 	getRoundInfo: () => RoundInfoState;
 	getPlayers: () => PlayerListPlayer[];
+	getOpponentBoard: (playerId: string) => BoardState<PieceModel> | null;
 };
 
 export const playerNetworking = function* (
 	socket: Socket,
-	{ getRoundInfo, getPlayers }: Parameters,
+	{ getRoundInfo, getPlayers, getOpponentBoard }: Parameters,
 	settings: GamemodeSettings
 ) {
 	const registries = {
@@ -41,10 +46,10 @@ export const playerNetworking = function* (
 
 	yield* setPacketRegistries(registries);
 
-	const teardown = function* () {
-		socket!.removeAllListeners();
-		socket!.disconnect();
+	// Register Tactical AI socket events (Positioning Advisor + RAG Coach)
+	registerTacticalAIEvents(socket, { getOpponentBoard });
 
+	const teardown = function* () {
 		yield* setPacketRegistries(null);
 	};
 

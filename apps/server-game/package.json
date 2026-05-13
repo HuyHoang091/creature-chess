@@ -19,6 +19,7 @@
 		"@creature-chess/gamemode": "workspace:*",
 		"@creature-chess/models": "workspace:*",
 		"@creature-chess/networking": "workspace:*",
+		"@creature-chess/tactical-ai": "workspace:*",
 		"@reduxjs/toolkit": "^2.2.1",
 		"@shoki/board": "workspace:*",
 		"@shoki/engine": "workspace:*",

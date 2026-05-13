@@ -25,7 +25,8 @@
 		"modules/@shoki-web/*",
 		"modules/@tools/*",
 		"apps/*",
-		"modules/@creature-chess/rl-bot"
+		"modules/@creature-chess/rl-bot/*",
+		"modules/@creature-chess/tactical-ai/*"
 	],
 	"author": "",
 	"license": "ISC",

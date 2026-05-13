@@ -193,3 +193,14 @@ class PPOAgent {
 2. **Value Weights**: Hiện tại `estimateValue()` luôn trả về 0. Advantage = Return - 0 = Return. Điều này vẫn hoạt động nhưng kém ổn định hơn nếu có value baseline.
 3. **Model Size**: Policy weights có thể đạt 10k-50k entries tùy số lượng state đã gặp.
 4. **Checkpointing**: Auto-save mỗi `SAVE_INTERVAL` experiences. Checkpoints lưu trong thư mục `data/` cùng cấp với `RL_MODEL_PATH`.
+
+
+[@creature-chess/rl-bot]:     ┌─────────┬────────────────┬─────────┬─────────┬──────────┬───────────────────┬─────────────┬───────────┬───────────────┬────────────────────┬─────────────────┐
+[@creature-chess/rl-bot]:     │ (index) │ strategy       │ samples │ winRate │ drawRate │ avgSurvivorMargin │ avgHpMargin │ stompRate │ bestWinMargin │ leastBadLossMargin │ worstLossMargin │
+[@creature-chess/rl-bot]:     ├─────────┼────────────────┼─────────┼─────────┼──────────┼───────────────────┼─────────────┼───────────┼───────────────┼────────────────────┼─────────────────┤
+[@creature-chess/rl-bot]:     │ 0       │ 'rule_default' │ 360     │ '50.0%' │ '0.0%'   │ '0.00'
+│ '0.00'      │ '50.0%'   │ 5             │ -3                 │ -5              │
+[@creature-chess/rl-bot]:     │ 1       │ 'rl_model'     │ 360     │ '50.0%' │ '0.0%'   │ '0.36'
+│ '155.73'    │ '35.8%'   │ 5             │ -1                 │ -5              │
+[@creature-chess/rl-bot]:     └─────────┴────────────────┴─────────┴─────────┴──────────┴───────────────────┴─────────────┴───────────┴───────────────┴────────────────────┴─────────────────┘
+[@creature-chess/rl-bot]:

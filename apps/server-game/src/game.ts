@@ -1,0 +1,250 @@
+import { Task } from "redux-saga";
+import { put } from "typed-redux-saga";
+import { v4 as uuid } from "uuid";
+
+import {
+	Gamemode,
+	PlayerCommands,
+	PlayerEntity,
+} from "@creature-chess/gamemode";
+import { GameFinishEvent } from "@creature-chess/gamemode/src/game/events";
+import { PlayerStatus } from "@creature-chess/models/game/playerList";
+import { LobbyPlayer } from "@creature-chess/models/lobby";
+import { GamemodeSettings } from "@creature-chess/models/settings";
+
+import { botLogicSaga } from "@cc-server/bot";
+import { BotPersonality } from "@cc-server/data";
+
+import {
+	activeBattles,
+	activeGames,
+	battlesStarted,
+	gamesStarted,
+	turnDurationMs,
+} from "./Metrics";
+import { logger } from "./log";
+import { playerNetworking } from "./player";
+import { createPlayerEntity } from "./player/entity";
+import { AuthenticatedSocket } from "./player/socket";
+
+type GameMember = {
+	type: "BOT" | "PLAYER";
+	id: string;
+	name: string;
+	networkingSaga?: Task;
+	entity: PlayerEntity;
+};
+
+export type PlayerGameParticipant = {
+	player: LobbyPlayer;
+	socket: AuthenticatedSocket;
+};
+
+export type BotGameParticipant = {
+	player: LobbyPlayer;
+	personality: BotPersonality;
+};
+
+type Participants = {
+	players: PlayerGameParticipant[];
+	bots: BotGameParticipant[];
+};
+
+type GameOptions = {
+	onFinish: (event: GameFinishEvent["payload"]) => void;
+};
+
+export class Game {
+	private members: GameMember[] = [];
+	private gamemode: Gamemode;
+	private settings: GamemodeSettings;
+	private startedAt: Date;
+
+	public constructor(
+		_settings: GamemodeSettings,
+		{ players, bots }: Participants,
+		{ onFinish }: GameOptions
+	) {
+		this.settings = _settings;
+		this.startedAt = new Date();
+
+		const gameId = uuid();
+		this.gamemode = new Gamemode(gameId, logger, _settings, {
+			onTurnComplete(timeMs) {
+				turnDurationMs.observe(timeMs);
+			},
+			onMatchStart() {
+				activeBattles.inc();
+				battlesStarted.inc();
+			},
+			onMatchEnd() {
+				activeBattles.dec();
+			},
+		});
+
+		for (const player of players) {
+			this.registerPlayer(player);
+		}
+
+		for (const bot of bots) {
+			this.registerBot(bot);
+		}
+
+		this.gamemode.onFinish((event) => {
+			activeGames.dec();
+
+			onFinish(event);
+		});
+
+		const entities = this.members.map((m) => m.entity);
+		this.gamemode.start(entities);
+
+		activeGames.inc();
+		gamesStarted.inc();
+	}
+
+	public canJoinGame(playerId: string) {
+		const existing = this.gamemode.getPlayerById(playerId);
+
+		if (!existing) {
+			return false;
+		}
+
+		return existing.select(
+			(state) =>
+				state.playerInfo.health > 0 &&
+				state.playerInfo.status === PlayerStatus.CONNECTED
+		);
+	}
+
+	public connect(socket: AuthenticatedSocket) {
+		// TODO (James) id is a string but we need a number to preserve old Faunadb id type, convert in future
+		const socketIdAsString = socket.data.id.toString();
+		const existing = this.members.find((m) => m.id === socketIdAsString);
+
+		if (!existing) {
+			throw Error(
+				`GameMember couldn't be found when connecting to Game: ${socket.data.nickname}`
+			);
+		}
+
+		const entity = this.gamemode.getPlayerById(socketIdAsString);
+
+		if (!entity) {
+			throw Error(
+				`PlayerEntity couldn't be found when connecting to Game: ${socket.data.nickname}`
+			);
+		}
+
+		existing.networkingSaga?.cancel();
+
+		existing.networkingSaga = this.runPlayerNetworking(entity, socket);
+	}
+
+	private registerPlayer(player: PlayerGameParticipant) {
+		const {
+			player: { id, name, profile },
+			socket,
+		} = player;
+
+		// TODO (James) id is a string but we need a number to preserve old Faunadb id type, convert in future
+		const playerIdAsString = id.toString();
+
+		const entity = createPlayerEntity(
+			this.gamemode,
+			playerIdAsString,
+			name,
+			profile,
+			this.settings
+		);
+
+		this.initialisePlayer(entity);
+
+		this.members.push({
+			type: "PLAYER",
+			id: playerIdAsString,
+			name,
+			networkingSaga: this.runPlayerNetworking(entity, socket),
+			entity,
+		});
+	}
+
+	private registerBot(player: BotGameParticipant) {
+		const {
+			player: { id, name, profile },
+			personality,
+		} = player;
+
+		// TODO (James) id is a string but we need a number to preserve old Faunadb id type, convert in future
+		const playerIdAsString = id.toString();
+
+		const entity = createPlayerEntity(
+			this.gamemode,
+			playerIdAsString,
+			name,
+			profile,
+			this.settings
+		);
+
+		this.initialisePlayer(entity);
+
+		entity.runSaga(botLogicSaga, personality);
+
+		this.members.push({
+			type: "BOT",
+			id: playerIdAsString,
+			name,
+			entity,
+		});
+	}
+
+	public getStartedAt() {
+		return this.startedAt;
+	}
+
+	public getMembers() {
+		return this.members.map(({ entity, networkingSaga, ...member }) => member);
+	}
+
+	private initialisePlayer(entity: PlayerEntity) {
+		const settings = this.settings;
+
+		entity.runSaga(function* () {
+			yield put(
+				PlayerCommands.playerInfoCommands.updateMoneyCommand(
+					settings.startingMoney
+				)
+			);
+			yield put(
+				PlayerCommands.playerInfoCommands.updateLevelCommand({
+					level: settings.startingLevel,
+					xp: 0,
+				})
+			);
+		});
+	}
+
+	private runPlayerNetworking(
+		entity: PlayerEntity,
+		socket: AuthenticatedSocket
+	) {
+		return entity.runSaga(
+			playerNetworking,
+			socket,
+			{
+				getRoundInfo: this.gamemode.getRoundInfo,
+				getPlayers: this.gamemode.getPlayerListPlayers,
+				getOpponentBoard: (playerId: string) => {
+					const player = this.gamemode.getPlayerById(playerId);
+					if (!player) return null;
+					const opponentId = player.select((state) => state.playerInfo.opponentId);
+					if (!opponentId) return null;
+					const opponent = this.gamemode.getPlayerById(opponentId);
+					if (!opponent) return null;
+					return opponent.select((state) => state.board);
+				},
+			},
+			this.settings
+		);
+	}
+}

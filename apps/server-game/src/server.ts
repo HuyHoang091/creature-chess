@@ -1,7 +1,10 @@
 import { collectDefaultMetrics, register } from "prom-client";
 import { Server } from "socket.io";
 
-import { GamemodeSettings } from "@creature-chess/models/settings";
+import {
+	GamemodeSettings,
+	GamemodeSettingsPresets,
+} from "@creature-chess/models/settings";
 
 import { createDatabaseConnection, DatabaseConnection } from "@cc-server/data";
 
@@ -20,6 +23,10 @@ import { onHandshakeSuccess } from "./handshake";
 import { Lobby } from "./lobby";
 import { logger } from "./log";
 import { AuthenticatedSocket } from "./player/socket";
+import { FriendManager } from "./social/friendManager";
+import { PresenceManager } from "./social/presenceManager";
+import { PrivateRoomManager } from "./social/privateRoomManager";
+import { SocialUser, toPrivateRoomDto } from "./social/types";
 
 register.setDefaultLabels({
 	nodeId: process.env.NODE_APP_INSTANCE || "default",
@@ -27,25 +34,40 @@ register.setDefaultLabels({
 
 collectDefaultMetrics({ register });
 
-// TODO make these configurable
 const MAX_PLAYERS = 8;
 const LOBBY_WAIT_TIME = 6;
 
-const startGame = async (
-	database: DatabaseConnection,
-	settings: GamemodeSettings,
-	players: PlayerGameParticipant[],
-	onFinish: () => void
-) => {
-	const botsRequired = MAX_PLAYERS - players.length;
+type StartGameOptions = {
+	database: DatabaseConnection;
+	settings: GamemodeSettings;
+	players: PlayerGameParticipant[];
+	persistHistory: boolean;
+	onFinish: (game: Game) => void | Promise<void>;
+};
 
+const buildSocialUserFromSocket = (socket: AuthenticatedSocket): SocialUser => ({
+	userId: socket.data.id,
+	nickname: socket.data.nickname || "Unknown",
+	profilePicture: socket.data.profile?.picture ?? null,
+});
+
+const createGameRunner = async ({
+	database,
+	settings,
+	players,
+	persistHistory,
+	onFinish,
+}: StartGameOptions) => {
+	const botsRequired = Math.max(0, MAX_PLAYERS - players.length);
 	const bots = await getBots(database, botsRequired);
 
-	for (const {
-		player: { id, type },
-	} of players) {
-		if (type === "player") {
-			await database.user.addGamePlayed(id);
+	if (persistHistory) {
+		for (const {
+			player: { id, type },
+		} of players) {
+			if (type === "player") {
+				await database.user.addGamePlayed(id);
+			}
 		}
 	}
 
@@ -53,10 +75,50 @@ const startGame = async (
 		settings,
 		{ players, bots },
 		{
-			onFinish: () => {
-				logger.info("Game finished");
+			onFinish: async (event) => {
+				if (persistHistory) {
+					const members = game.getMembers();
+					const winner = event.players.find((player) => player.position === 1);
 
-				onFinish();
+					await database.matchHistory.createMatchSummary({
+						mode: "public_casual",
+						startedAt: game.getStartedAt(),
+						endedAt: new Date(),
+						playerCount: members.length,
+						winnerUserId:
+							winner &&
+							members.find((member) => member.id === winner.id)?.type === "PLAYER"
+								? winner.id
+								: null,
+						participants: event.players.map((player) => {
+							const member = members.find((item) => item.id === player.id);
+							return {
+								userId: member?.type === "PLAYER" ? member.id : null,
+								guestId:
+									member?.type === "PLAYER" && member.id.length <= 4 ? member.id : null,
+								displayName: member?.name || player.id,
+								placement: player.position,
+								isBot: member?.type === "BOT",
+								result:
+									player.position === 1
+										? "win"
+										: player.position <= 4
+											? "top4"
+											: "loss",
+							};
+						}),
+					});
+
+					if (winner) {
+						const winnerMember = members.find((member) => member.id === winner.id);
+						if (winnerMember?.type === "PLAYER" && winner.id.length > 4) {
+							await database.user.addWin(winner.id);
+						}
+					}
+				}
+
+				logger.info("Game finished");
+				await onFinish(game);
 			},
 		}
 	);
@@ -70,6 +132,9 @@ export const startServer = async ({ io }: { io: Server }) => {
 	const database = await createDatabaseConnection(logger);
 	logger.info("Database connection created");
 
+	const presenceManager = new PresenceManager();
+	const roomManager = new PrivateRoomManager();
+
 	let lobbies: Lobby[] = [];
 	let games: Game[] = [];
 
@@ -80,38 +145,105 @@ export const startServer = async ({ io }: { io: Server }) => {
 	socketInBytes.reset();
 	socketOutBytes.reset();
 
-	const matchmaking = (socket: AuthenticatedSocket) => {
-		logger.info(
-			`[Matchmaking (${socket.data.nickname})] Beginning matchmaking`
-		);
+	const emitToUser = (userId: string, event: string, payload: unknown) => {
+		for (const socket of presenceManager.getSockets(userId)) {
+			socket.emit(event, payload);
+		}
+	};
 
-		const matchingLobby = lobbies.find((l) => l.isInLobby(socket.data.id));
+	const friendManager = new FriendManager(database, presenceManager, emitToUser);
 
+	const emitRoomSnapshot = (userId: string) => {
+		const room = roomManager.getRoomForUser(userId);
+		emitToUser(userId, "roomSnapshot", {
+			room: room ? toPrivateRoomDto(room) : null,
+			invites: roomManager.getInvitesForUser(userId),
+		});
+	};
+
+	const emitRoomToMembers = (userIds: string[]) => {
+		for (const userId of userIds) {
+			emitRoomSnapshot(userId);
+		}
+	};
+
+	const updatePresence = async (
+		userId: string,
+		state: "online" | "in_room" | "in_game"
+	) => {
+		presenceManager.setState(userId, state);
+		await friendManager.emitSnapshotToFriendsOf(userId);
+	};
+
+	const onPublicGameFinished = async (game: Game) => {
+		games = games.filter((item) => item !== game);
+		for (const member of game.getMembers()) {
+			if (member.type === "PLAYER" && member.id.length > 4) {
+				await updatePresence(member.id, "online");
+			}
+		}
+	};
+
+	const onCustomGameFinished = async (game: Game, roomId: string) => {
+		games = games.filter((item) => item !== game);
+		const room = roomManager.markWaiting(roomId);
+		if (!room) {
+			return;
+		}
+		for (const member of room.members) {
+			await updatePresence(member.userId, "in_room");
+		}
+		emitRoomToMembers(room.members.map((member) => member.userId));
+	};
+
+	const buildRoomPlayers = (userIds: string[]) =>
+		userIds
+			.map((userId) => {
+				const socket = presenceManager.getPrimarySocket(userId);
+				if (!socket) {
+					return null;
+				}
+				const { nickname, profilePicture } = buildSocialUserFromSocket(socket);
+				return {
+					player: {
+						id: userId,
+						name: nickname,
+						profile: {
+							picture: profilePicture ?? 1,
+							title: null,
+						},
+						type: "player" as const,
+					},
+					socket,
+				};
+			})
+			.filter(Boolean) as PlayerGameParticipant[];
+
+	const matchmaking = async (socket: AuthenticatedSocket) => {
+		logger.info(`[Matchmaking (${socket.data.nickname})] Beginning matchmaking`);
+
+		if (socket.data.type === "player") {
+			await updatePresence(socket.data.id, "in_game");
+		}
+
+		const matchingLobby = lobbies.find((lobby) => lobby.isInLobby(socket.data.id));
 		if (matchingLobby) {
 			logger.info(`[Matchmaking (${socket.data.nickname})] Lobby found`);
-
 			matchingLobby.connect(socket);
 			return;
 		}
 
-		const matchingGame = games.find((l) => l.canJoinGame(socket.data.id));
-
+		const matchingGame = games.find((game) => game.canJoinGame(socket.data.id));
 		if (matchingGame) {
 			logger.info(`[Matchmaking (${socket.data.nickname})] Game found`);
-
 			matchingGame.connect(socket);
 			return;
 		}
 
-		const openLobby = lobbies.find((l) => l.getFreeSlotCount() > 0);
-
+		const openLobby = lobbies.find((lobby) => lobby.getFreeSlotCount() > 0);
 		if (openLobby) {
-			logger.info(
-				`[Matchmaking (${socket.data.nickname})] Joined existing lobby`
-			);
-
+			logger.info(`[Matchmaking (${socket.data.nickname})] Joined existing lobby`);
 			openLobby.connect(socket);
-
 			return;
 		}
 
@@ -120,21 +252,348 @@ export const startServer = async ({ io }: { io: Server }) => {
 			maxPlayers: MAX_PLAYERS,
 			onStart: async (settings, players) => {
 				lobbies = lobbies.filter((other) => other !== lobby);
-
-				const game = await startGame(database, settings, players, () => {
-					games = games.filter((other) => other !== game);
+				const game = await createGameRunner({
+					database,
+					settings,
+					players,
+					persistHistory: true,
+					onFinish: onPublicGameFinished,
 				});
-
 				games.push(game);
 			},
 		});
 
 		lobbies.push(lobby);
-
 		logger.info(`[Matchmaking (${socket.data.nickname})] New lobby created`);
-		// discordApi.startLobby();
 		lobby.connect(socket);
 	};
 
-	onHandshakeSuccess({ io, authClient, database }, matchmaking);
+	const ackError = (
+		ack: ((payload: unknown) => void) | undefined,
+		code: string,
+		message: string
+	) => ack?.({ ok: false, error: { code, message } });
+	const ackOk = (
+		ack: ((payload: unknown) => void) | undefined,
+		payload: Record<string, unknown> = {}
+	) => ack?.({ ok: true, ...payload });
+
+	const registerSocialHandlers = (socket: AuthenticatedSocket) => {
+		if (socket.data.type !== "player") {
+			socket.on("queue:joinPublic", () => {
+				matchmaking(socket).catch((error) => {
+					logger.error("Failed to join public queue", error);
+				});
+			});
+			return;
+		}
+
+		const userId = socket.data.id;
+		const socialUser = buildSocialUserFromSocket(socket);
+
+		socket.on("socialBootstrap", async (_payload, ack?: (payload: unknown) => void) => {
+			await friendManager.emitSnapshot(userId);
+			emitRoomSnapshot(userId);
+			ackOk(ack);
+		});
+
+		socket.on("queue:joinPublic", async () => {
+			await matchmaking(socket);
+		});
+
+		socket.on("friendsRequestSend", async (payload: { targetUserId?: string }, ack?: (payload: unknown) => void) => {
+			const targetUserId = payload?.targetUserId;
+			if (!targetUserId) {
+				return ackError(ack, "BAD_REQUEST", "Missing targetUserId");
+			}
+			if (targetUserId === userId) {
+				return ackError(ack, "SELF", "Cannot add yourself");
+			}
+
+			const [targetUser, blocked, existingFriendship, existingRequest] =
+				await Promise.all([
+					database.user.getById(targetUserId),
+					database.block.existsEitherDirection(userId, targetUserId),
+					database.friendship.exists(userId, targetUserId),
+					database.friendRequest.findBetweenUsers(userId, targetUserId),
+				]);
+
+			if (!targetUser) {
+				return ackError(ack, "TARGET_NOT_FOUND", "Target user not found");
+			}
+			if (blocked) {
+				return ackError(ack, "BLOCKED", "Blocked users cannot become friends");
+			}
+			if (existingFriendship) {
+				return ackError(ack, "ALREADY_FRIEND", "Already friends");
+			}
+			if (existingRequest) {
+				return ackError(ack, "REQUEST_EXISTS", "A pending request already exists");
+			}
+
+			const created = await database.friendRequest.create(userId, targetUserId);
+			if (!created.ok) {
+				return ackError(
+					ack,
+					created.reason === "conflict" ? "REQUEST_EXISTS" : "SERVER_ERROR",
+					created.reason === "conflict"
+						? "A pending request already exists"
+						: "Failed to create friend request"
+				);
+			}
+
+			await friendManager.emitSnapshot(userId);
+			await friendManager.emitSnapshot(targetUserId);
+			ackOk(ack, { requestId: created.value.id });
+		});
+
+		socket.on("friendsRequestAccept", async (payload: { requestId?: string }, ack?: (payload: unknown) => void) => {
+			if (!payload?.requestId) {
+				return ackError(ack, "BAD_REQUEST", "Missing requestId");
+			}
+			const request = await database.friendRequest.accept(payload.requestId, userId);
+			if (!request) {
+				return ackError(ack, "NOT_FOUND", "Request not found");
+			}
+			await database.friendship.createPair(request.sender_id, request.receiver_id);
+			await friendManager.emitSnapshot(request.sender_id);
+			await friendManager.emitSnapshot(request.receiver_id);
+			ackOk(ack);
+		});
+
+		socket.on("roomCreate", (_payload, ack?: (payload: unknown) => void) => {
+			const room = roomManager.createRoom(socialUser);
+			updatePresence(userId, "in_room").catch((error) =>
+				logger.error("Failed to update room presence", error)
+			);
+			emitRoomSnapshot(userId);
+			ackOk(ack, { room: toPrivateRoomDto(room) });
+		});
+
+		socket.on("roomJoinByCode", async (payload: { code?: string }, ack?: (payload: unknown) => void) => {
+			const code = payload?.code?.trim().toUpperCase();
+			if (!code) {
+				return ackError(ack, "BAD_REQUEST", "Missing room code");
+			}
+			const result = roomManager.joinRoomByCode(socialUser, code);
+			if (!result.ok) {
+				return ackError(ack, result.reason, "Unable to join room");
+			}
+			await updatePresence(userId, "in_room");
+			emitRoomToMembers(result.room.members.map((member) => member.userId));
+			ackOk(ack, { room: toPrivateRoomDto(result.room) });
+		});
+
+		socket.on("roomGetSnapshot", (_payload, ack?: (payload: unknown) => void) => {
+			const room = roomManager.getRoomForUser(userId);
+			ackOk(ack, {
+				room: room ? toPrivateRoomDto(room) : null,
+				invites: roomManager.getInvitesForUser(userId),
+			});
+		});
+
+		socket.on("roomLeave", (_payload, ack?: (payload: unknown) => void) => {
+			const currentRoom = roomManager.getRoomForUser(userId);
+			const room = roomManager.leaveRoom(userId);
+			updatePresence(userId, "online").catch((error) =>
+				logger.error("Failed to set presence online", error)
+			);
+			if (currentRoom) {
+				emitRoomToMembers(
+					currentRoom.members.map((member) => member.userId).concat(userId)
+				);
+			}
+			ackOk(ack, { room: room ? toPrivateRoomDto(room) : null });
+		});
+
+		socket.on("roomInvite", (payload: { targetUserId?: string }, ack?: (payload: unknown) => void) => {
+			const targetUserId = payload?.targetUserId;
+			if (!targetUserId) {
+				return ackError(ack, "BAD_REQUEST", "Missing targetUserId");
+			}
+			const result = roomManager.createInvite(socialUser, targetUserId);
+			if (!result.ok) {
+				return ackError(ack, result.reason, "Unable to create invite");
+			}
+			emitRoomSnapshot(targetUserId);
+			emitToUser(targetUserId, "roomInviteReceived", result.invite);
+			ackOk(ack, { invite: result.invite });
+		});
+
+		socket.on("roomInviteAccept", (payload: { inviteId?: string }, ack?: (payload: unknown) => void) => {
+			if (!payload?.inviteId) {
+				return ackError(ack, "BAD_REQUEST", "Missing inviteId");
+			}
+			const result = roomManager.acceptInvite(socialUser, payload.inviteId);
+			if (!result.ok) {
+				return ackError(ack, result.reason, "Unable to accept invite");
+			}
+			updatePresence(userId, "in_room").catch((error) =>
+				logger.error("Failed to update invite presence", error)
+			);
+			emitRoomToMembers(result.room.members.map((member) => member.userId));
+			ackOk(ack, { room: toPrivateRoomDto(result.room) });
+		});
+
+		socket.on("roomInviteDecline", (payload: { inviteId?: string }, ack?: (payload: unknown) => void) => {
+			if (!payload?.inviteId) {
+				return ackError(ack, "BAD_REQUEST", "Missing inviteId");
+			}
+			const removed = roomManager.declineInvite(userId, payload.inviteId);
+			if (!removed) {
+				return ackError(ack, "INVITE_NOT_FOUND", "Invite not found");
+			}
+			emitRoomSnapshot(userId);
+			ackOk(ack);
+		});
+
+		socket.on("roomRequestJoin", (payload: { targetUserId?: string }, ack?: (payload: unknown) => void) => {
+			const targetUserId = payload?.targetUserId;
+			if (!targetUserId) {
+				return ackError(ack, "BAD_REQUEST", "Missing targetUserId");
+			}
+			const result = roomManager.requestJoin(targetUserId, socialUser);
+			if (!result.ok) {
+				return ackError(ack, result.reason, "Room not available");
+			}
+			emitRoomToMembers(result.room.members.map((member) => member.userId));
+			emitToUser(result.room.ownerUserId, "roomJoinRequestReceived", result.request);
+			ackOk(ack, { requestId: result.request.id });
+		});
+
+		socket.on(
+			"roomJoinRequestAccept",
+			async (payload: { requestId?: string }, ack?: (payload: unknown) => void) => {
+				if (!payload?.requestId) {
+					return ackError(ack, "BAD_REQUEST", "Missing requestId");
+				}
+				const room = roomManager.getRoomForUser(userId);
+				const request = room?.pendingJoinRequests.find((item) => item.id === payload.requestId);
+				if (!request) {
+					return ackError(ack, "REQUEST_NOT_FOUND", "Request not found");
+				}
+				const requesterSocket = presenceManager.getPrimarySocket(request.requesterUserId);
+				if (!requesterSocket) {
+					return ackError(ack, "REQUESTER_OFFLINE", "Requester is offline");
+				}
+				const result = roomManager.acceptJoinRequest(
+					userId,
+					payload.requestId,
+					buildSocialUserFromSocket(requesterSocket)
+				);
+				if (!result.ok) {
+					return ackError(ack, result.reason, "Unable to accept request");
+				}
+				await updatePresence(request.requesterUserId, "in_room");
+				emitRoomToMembers(result.room.members.map((member) => member.userId));
+				emitToUser(request.requesterUserId, "roomJoinRequestResolved", {
+					requestId: payload.requestId,
+					status: "accepted",
+				});
+				ackOk(ack, { room: toPrivateRoomDto(result.room) });
+			}
+		);
+
+		socket.on(
+			"roomJoinRequestDecline",
+			(payload: { requestId?: string }, ack?: (payload: unknown) => void) => {
+				if (!payload?.requestId) {
+					return ackError(ack, "BAD_REQUEST", "Missing requestId");
+				}
+				const result = roomManager.declineJoinRequest(userId, payload.requestId);
+				if (!result.ok) {
+					return ackError(ack, result.reason, "Unable to decline request");
+				}
+				emitRoomToMembers(result.room.members.map((member) => member.userId));
+				emitToUser(result.request.requesterUserId, "roomJoinRequestResolved", {
+					requestId: payload.requestId,
+					status: "declined",
+				});
+				ackOk(ack);
+			}
+		);
+
+		socket.on("roomReadyToggle", (payload, ack?: (payload: unknown) => void) => {
+			const result = roomManager.toggleReady(userId);
+			if (!result.ok) {
+				return ackError(ack, result.reason, "Unable to toggle ready");
+			}
+			emitRoomToMembers(result.room.members.map((member) => member.userId));
+			ackOk(ack, { room: toPrivateRoomDto(result.room) });
+		});
+
+		socket.on("roomStart", async (_payload, ack?: (payload: unknown) => void) => {
+			const result = roomManager.startRoom(userId);
+			if (!result.ok) {
+				return ackError(ack, result.reason, "Cannot start room");
+			}
+
+			const memberIds = result.room.members.map((member) => member.userId);
+			const players = buildRoomPlayers(memberIds);
+			if (players.length !== memberIds.length) {
+				return ackError(ack, "MEMBER_OFFLINE", "A room member is offline");
+			}
+
+			roomManager.markInGame(result.room.id);
+			for (const memberId of memberIds) {
+				await updatePresence(memberId, "in_game");
+			}
+			emitRoomToMembers(memberIds);
+
+			const game = await createGameRunner({
+				database,
+				settings: {
+					...GamemodeSettingsPresets["default"],
+				},
+				players,
+				persistHistory: false,
+				onFinish: async (finishedGame) => {
+					await onCustomGameFinished(finishedGame, result.room.id);
+				},
+			});
+
+			games.push(game);
+			ackOk(ack);
+		});
+	};
+
+	onHandshakeSuccess({ io, authClient, database }, async (socket, request) => {
+		registerSocialHandlers(socket);
+
+		if (socket.data.type === "player") {
+			presenceManager.connect(socket);
+			const existingRoom = roomManager.getRoomForUser(socket.data.id);
+			if (existingRoom) {
+				await updatePresence(
+					socket.data.id,
+					existingRoom.status === "in_game" ? "in_game" : "in_room"
+				);
+			} else {
+				await updatePresence(socket.data.id, "online");
+			}
+			socket.emit("socialReady", { userId: socket.data.id });
+			await friendManager.emitSnapshot(socket.data.id);
+			emitRoomSnapshot(socket.data.id);
+		}
+
+		socket.on("disconnect", () => {
+			presenceManager.disconnect(socket, (userId) => {
+				friendManager.emitSnapshotToFriendsOf(userId).catch((error) => {
+					logger.error("Failed to emit offline snapshot", error);
+				});
+			});
+		});
+
+		const shouldRestoreExistingRuntime =
+			lobbies.some((lobby) => lobby.isInLobby(socket.data.id)) ||
+			games.some((game) => game.canJoinGame(socket.data.id));
+
+		if (
+			shouldRestoreExistingRuntime ||
+			request.data.intent === "matchmake" ||
+			(request.type === "guest" && !request.data.intent)
+		) {
+			await matchmaking(socket);
+		}
+	});
 };
