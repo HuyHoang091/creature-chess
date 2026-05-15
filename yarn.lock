@@ -1684,6 +1684,7 @@ __metadata:
     bad-words: "npm:^3.0.4"
     express: "npm:^4.17.2"
     express-winston: "npm:^4.2.0"
+    socket.io: "npm:^4.8.1"
     winston: "npm:^3.3.3"
   languageName: unknown
   linkType: soft
@@ -17444,7 +17445,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"socket.io@npm:^4.5.1":
+"socket.io@npm:^4.5.1, socket.io@npm:^4.8.1":
   version: 4.8.3
   resolution: "socket.io@npm:4.8.3"
   dependencies:

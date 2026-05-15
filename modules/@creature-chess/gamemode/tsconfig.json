@@ -1,0 +1,12 @@
+{
+	"extends": "../../../tsconfig.json",
+	"include": ["./src/**/*", "./src/*", "./index.ts"],
+	"compilerOptions": {
+		"typeRoots": [
+			"../../../node_modules/@types",
+			"./node_modules/@types",
+			"../battle/types",
+			"./types"
+		]
+	}
+}

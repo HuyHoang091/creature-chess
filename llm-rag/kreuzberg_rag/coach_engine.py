@@ -2,9 +2,13 @@
 
 import os
 from typing import List, Dict, Any
+
+from dotenv import load_dotenv
 import openai
 
 from .retriever import Retriever
+
+load_dotenv()
 
 
 SYSTEM_PROMPT = """You are the Tactical Coach for Creature Chess, an auto-battler game.
@@ -24,10 +28,10 @@ class CoachEngine:
     def __init__(self, retriever: Retriever):
         self.retriever = retriever
         self.client = openai.OpenAI(
-            base_url=os.getenv("OPENROUTER_BASE_URL", "http://localhost:5001/v1"),
-            api_key=os.getenv("OPENROUTER_API_KEY", "your-api-key-1"),
+            base_url=os.getenv("OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1"),
+            api_key=os.getenv("OPENROUTER_API_KEY", "...."),
         )
-        self.model = os.getenv("COACH_MODEL", "deepseek-v4-flash-nothinking")
+        self.model = os.getenv("COACH_MODEL", "minimax/minimax-m2.5:free")
 
     def _build_messages(self, question: str, context: Dict[str, Any] = None, top_k: int = 5):
         """Build messages with RAG context."""

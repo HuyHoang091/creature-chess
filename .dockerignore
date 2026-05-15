@@ -1,0 +1,15 @@
+node_modules
+npm-debug.log
+.faunadb/
+./images/
+
+**/*.md
+
+**/Dockerfile
+**/*.Dockerfile
+**/docker-compose.yml
+**/docker-compose.*.yml
+
+apps/**/dist/
+
+modules/**/*.js

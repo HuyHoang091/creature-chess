@@ -1,0 +1,9 @@
+**/*.{ts,coffee}.js
+lib/*.js
+lib/*.d.ts
+# this seems to be the one that works
+packages/**/lib/*
+packages/ui/stories
+
+.eslintignore
+.eslintrc.js
