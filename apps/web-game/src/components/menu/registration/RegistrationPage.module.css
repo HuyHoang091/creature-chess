@@ -5,29 +5,44 @@
 	padding: 1rem;
 	margin-top: 1em;
 	font-family: "Roboto", sans-serif;
-	color: #fff;
+	color: #f0e6d2;
 	align-items: center;
 	justify-content: center;
 	text-align: center;
-	background: #566c86;
+	background: transparent;
+	gap: 12px;
 }
 
 .register h1 {
 	margin-bottom: 1rem;
-	font-size: 2em;
+	font-size: 1.6em;
+	color: #c8aa6e;
+	letter-spacing: 1px;
 }
 
 .registerButton {
-	padding: 0.5rem 2rem;
-	font-size: 1.25rem;
+	padding: 0.6rem 2rem;
+	font-size: 1.1rem;
 	color: #fff;
 	cursor: pointer;
-	background: #b13e53;
+	background: linear-gradient(180deg, #4d6bff, #3a54d0);
 	border: none;
+	border-radius: 12px;
+	font-weight: 700;
+	transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.registerButton:hover {
+	transform: translateY(-1px);
+	box-shadow: 0 8px 20px rgba(77, 107, 255, 0.3);
 }
 
 .error {
 	padding: 0.5rem 1rem;
 	margin-bottom: 1rem;
-	border: 2px solid #a01515;
+	border: 1px solid #a01515;
+	border-radius: 10px;
+	background: rgba(160, 21, 21, 0.12);
+	color: #ff8b8b;
+	font-size: 14px;
 }

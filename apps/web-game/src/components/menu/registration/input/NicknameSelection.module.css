@@ -1,4 +1,15 @@
 .nameInput {
-	padding: 0.5rem 1rem;
+	padding: 12px 14px;
 	margin-bottom: 1em;
+	border-radius: 12px;
+	border: 1px solid rgba(143, 165, 255, 0.25);
+	background: #101625;
+	color: white;
+	font-size: 15px;
+	outline: none;
+	transition: border-color 0.2s ease;
+}
+
+.nameInput:focus {
+	border-color: #c8aa6e;
 }

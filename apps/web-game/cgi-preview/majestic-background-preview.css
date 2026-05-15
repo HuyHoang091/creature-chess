@@ -1,0 +1,173 @@
+:root {
+  --bg-top: #03070d;
+  --bg-mid: #0d1b2d;
+  --bg-bottom: #274446;
+  --mist: rgba(133, 188, 173, 0.15);
+  --text-main: #eef6f6;
+  --text-dim: rgba(228, 241, 241, 0.72);
+  --stroke: rgba(255, 255, 255, 0.12);
+  --panel: rgba(5, 11, 18, 0.52);
+  --aurora-a: rgba(86, 225, 191, 0.14);
+  --aurora-b: rgba(107, 147, 255, 0.12);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+  background:
+    radial-gradient(circle at top, rgba(108, 162, 255, 0.08), transparent 32%),
+    linear-gradient(180deg, var(--bg-top) 0%, var(--bg-mid) 48%, var(--bg-bottom) 100%);
+  color: var(--text-main);
+  font-family: Georgia, "Times New Roman", serif;
+}
+
+body {
+  overflow: hidden;
+}
+
+.scene-shell {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  background:
+    radial-gradient(circle at 50% 60%, rgba(133, 212, 198, 0.12), transparent 22%),
+    radial-gradient(circle at 18% 20%, var(--aurora-a), transparent 24%),
+    radial-gradient(circle at 74% 14%, var(--aurora-b), transparent 22%);
+}
+
+#scene {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.vignette {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at center, transparent 44%, rgba(0, 0, 0, 0.52) 100%),
+    linear-gradient(180deg, rgba(0, 0, 0, 0.36), transparent 28%, transparent 68%, rgba(0, 0, 0, 0.4));
+  pointer-events: none;
+}
+
+.grain {
+  position: absolute;
+  inset: -100px;
+  opacity: 0.08;
+  background-image:
+    radial-gradient(circle, rgba(255, 255, 255, 0.9) 0.6px, transparent 0.7px);
+  background-size: 10px 10px;
+  mix-blend-mode: soft-light;
+  animation: grain-drift 12s linear infinite;
+  pointer-events: none;
+}
+
+.godray {
+  position: absolute;
+  top: -10%;
+  bottom: -10%;
+  width: 34vw;
+  background: linear-gradient(180deg, rgba(124, 208, 189, 0.14), rgba(124, 208, 189, 0));
+  filter: blur(56px);
+  transform-origin: top center;
+  opacity: 0.34;
+  pointer-events: none;
+}
+
+.godray-left {
+  left: 12%;
+  transform: rotate(14deg);
+}
+
+.godray-right {
+  right: 10%;
+  transform: rotate(-11deg);
+}
+
+.hud {
+  position: absolute;
+  left: clamp(20px, 4vw, 52px);
+  top: clamp(20px, 4vw, 44px);
+  width: min(540px, calc(100vw - 40px));
+  padding: 24px 26px;
+  border: 1px solid var(--stroke);
+  border-radius: 24px;
+  background: linear-gradient(180deg, rgba(8, 16, 24, 0.72), var(--panel));
+  backdrop-filter: blur(12px);
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.42);
+}
+
+.eyebrow {
+  margin: 0 0 8px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  font-size: 0.76rem;
+  color: rgba(162, 227, 213, 0.92);
+}
+
+.hud h1 {
+  margin: 0;
+  font-size: clamp(2rem, 5vw, 4.4rem);
+  line-height: 0.94;
+  max-width: 10ch;
+  text-wrap: balance;
+}
+
+.description {
+  margin: 14px 0 0;
+  max-width: 48ch;
+  line-height: 1.55;
+  font-size: clamp(0.98rem, 1.6vw, 1.14rem);
+  color: var(--text-dim);
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.legend span {
+  padding: 8px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(154, 225, 210, 0.08);
+  font-size: 0.82rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+@keyframes grain-drift {
+  from {
+    transform: translate(0, 0);
+  }
+
+  to {
+    transform: translate(-60px, 40px);
+  }
+}
+
+@media (max-width: 720px) {
+  .hud {
+    top: auto;
+    bottom: 20px;
+    padding: 18px;
+    border-radius: 20px;
+  }
+
+  .description {
+    max-width: none;
+  }
+
+  .godray {
+    width: 52vw;
+  }
+}

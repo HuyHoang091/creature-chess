@@ -20,6 +20,4 @@ export const gameNetworking = function* (
 			yield take(GameEvents.gameFinishEvent.toString());
 		}),
 	]);
-
-	socket.close();
 };

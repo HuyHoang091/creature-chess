@@ -66,6 +66,11 @@ export function LobbyPage() {
 	return (
 		<Page hasBackground>
 			<div className={styles.lobbyInfo}>
+				<div className={styles.header}>
+					<div className={styles.headerTitle}>Match Lobby</div>
+					<div className={styles.headerSub}>{lobbyInfo.players.filter(Boolean).length} / {maxPlayers} players</div>
+				</div>
+
 				{startTimestamp && (
 					<Countdown
 						countdownToSeconds={startTimestamp / 1000}
@@ -75,14 +80,8 @@ export function LobbyPage() {
 
 				<div className={styles.players}>{playerItems}</div>
 
-				<p>
-					The game will start immediately when there are {maxPlayers} players
-				</p>
-
 				{menuOpen && <SettingsMenu />}
 			</div>
-
-			<Footer />
 		</Page>
 	);
 }

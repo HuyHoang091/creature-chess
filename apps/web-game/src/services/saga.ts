@@ -1,19 +1,25 @@
 import { createAction } from "@reduxjs/toolkit";
 import { eventChannel } from "redux-saga";
 import { Socket } from "socket.io-client";
-import { all, call, cancel, fork, put, take } from "typed-redux-saga";
+import { all, call, cancel, delay, fork, put, select, take } from "typed-redux-saga";
 import { gameSaga } from "~/sagas";
+import { AUTH0_ENABLED } from "~/auth/auth0/config";
+import { AppShellCommands } from "~/store/appShell/state";
+import { FriendsCommands } from "~/store/friends/state";
+import { LobbyCommands } from "~/store/lobby/state";
 import { MenuCommands } from "~/store/menu/state";
+import { NotificationCommands } from "~/store/notifications/state";
+import { PrivateLobbyCommands } from "~/store/privateLobby/state";
+import { RoomInviteCommands } from "~/store/roomInvites/state";
+import { JoinRequestToastCommands } from "~/store/joinRequestToasts/state";
+import { AppState } from "~/store/state";
 import { getCookieValue } from "~/utils/getCookieValue";
 
 import { BoardSlice } from "@shoki/board";
 
-import { PieceModel } from "@creature-chess/models";
-import {
-	LobbyServerToClient,
-	GameServerToClient,
-} from "@creature-chess/networking";
-import { HandshakeRequest } from "@creature-chess/networking/handshake";
+import { PieceModel, RoomSnapshotDto } from "@creature-chess/models";
+import { GameServerToClient, LobbyServerToClient } from "@creature-chess/networking";
+import { HandshakeIntent, HandshakeRequest } from "@creature-chess/networking/handshake";
 
 import { gameNetworking } from "./game";
 import { lobbyNetworking } from "./lobby/networking";
@@ -27,6 +33,10 @@ type ConnectionResult =
 	| {
 			type: "game";
 			payload: GameServerToClient.GameConnectionPacket;
+	  }
+	| {
+			type: "action";
+			payload: any;
 	  };
 
 type BoardSlices = {
@@ -38,24 +48,70 @@ const listenForConnection = function* (socket: Socket, slices: BoardSlices) {
 	const channel = eventChannel<ConnectionResult>((emit) => {
 		const onLobbyConnected = (
 			payload: LobbyServerToClient.LobbyConnectionPacket
-		) => {
-			console.log("Lobby connected");
-			emit({ type: "lobby", payload });
-		};
+		) => emit({ type: "lobby", payload });
 		const onGameConnected = (
 			payload: GameServerToClient.GameConnectionPacket
-		) => {
-			console.log("Game connected");
-			emit({ type: "game", payload });
-		};
+		) => emit({ type: "game", payload });
+		const onFriendsSnapshot = (payload: AppState["friends"]) =>
+			emit({ type: "action", payload: FriendsCommands.setPayload(payload) });
+		const onRoomSnapshot = (payload: RoomSnapshotDto) =>
+			emit({ type: "action", payload: PrivateLobbyCommands.setSnapshot(payload) });
+		const onJoinRequestResolved = (payload: {
+			requestId: string;
+			status: "accepted" | "declined";
+		}) =>
+			emit({
+				type: "action",
+				payload: NotificationCommands.pushNotification({
+					id: payload.requestId,
+					message:
+						payload.status === "accepted"
+							? "Join request accepted"
+							: "Join request declined",
+				}),
+			});
+		const onJoinRequestReceived = (payload: {
+			id: string;
+			requesterNickname: string;
+		}) =>
+			emit({
+				type: "action",
+				payload: JoinRequestToastCommands.addJoinRequestToast({
+					id: payload.id,
+					requestId: payload.id,
+					requesterNickname: payload.requesterNickname,
+					createdAt: Date.now(),
+					durationMs: 10000,
+				}),
+			});
+		const onRoomInviteReceived = (payload: { id: string; fromNickname: string }) =>
+			emit({
+				type: "action",
+				payload: RoomInviteCommands.addInviteToast({
+					id: payload.id,
+					inviteId: payload.id,
+					fromNickname: payload.fromNickname,
+					createdAt: Date.now(),
+					durationMs: 10000,
+				}),
+			});
 
 		socket.on("connected", onLobbyConnected);
 		socket.on("gameConnected", onGameConnected);
+		socket.on("friendsSnapshot", onFriendsSnapshot);
+		socket.on("roomSnapshot", onRoomSnapshot);
+		socket.on("roomJoinRequestResolved", onJoinRequestResolved);
+		socket.on("roomJoinRequestReceived", onJoinRequestReceived);
+		socket.on("roomInviteReceived", onRoomInviteReceived);
 
 		return () => {
-			console.log("Cleaning up listeners");
 			socket.off("connected", onLobbyConnected);
 			socket.off("gameConnected", onGameConnected);
+			socket.off("friendsSnapshot", onFriendsSnapshot);
+			socket.off("roomSnapshot", onRoomSnapshot);
+			socket.off("roomJoinRequestResolved", onJoinRequestResolved);
+			socket.off("roomJoinRequestReceived", onJoinRequestReceived);
+			socket.off("roomInviteReceived", onRoomInviteReceived);
 		};
 	});
 
@@ -65,15 +121,21 @@ const listenForConnection = function* (socket: Socket, slices: BoardSlices) {
 		const connection = yield* take(channel);
 		if (connection.type === "lobby") {
 			lobbyTask = yield* fork(lobbyNetworking, socket, connection.payload);
-		} else if (connection.type === "game") {
+			continue;
+		}
+
+		if (connection.type === "game") {
 			if (lobbyTask) {
-				yield cancel(lobbyTask); // Cancel the lobby networking task
+				yield cancel(lobbyTask);
 			}
 			yield all([
 				call(gameNetworking, socket, connection.payload),
 				call(gameSaga, connection.payload, slices),
 			]);
+			continue;
 		}
+
+		yield put(connection.payload);
 	}
 };
 
@@ -89,51 +151,100 @@ async function getGuestSession() {
 	}
 
 	const { id } = await response.json();
-
 	return id as string;
 }
 
-// todo: add auth0 back ?
 export const openConnection = createAction("openConnection");
+export const ensureConnection = createAction("ensureConnection");
+
+const buildHandshakeRequest = async (
+	state: AppState,
+	intent: HandshakeIntent
+): Promise<HandshakeRequest | null> => {
+	if (state.auth.mode === "account" && state.auth.accessToken) {
+		return {
+			type: AUTH0_ENABLED ? "auth0" : "local",
+			data: {
+				accessToken: state.auth.accessToken,
+				intent,
+			},
+		};
+	}
+
+	if (state.auth.mode === "guest" && intent === "matchmake") {
+		const session = await getGuestSession();
+		const token = getCookieValue("guest-token");
+		if (!session || !token) {
+			return null;
+		}
+		return {
+			type: "guest",
+			data: {
+				accessToken: token,
+				intent,
+			},
+		};
+	}
+
+	return null;
+};
 
 export const networkingSaga = function* (slices: BoardSlices) {
-	yield* take(openConnection.toString());
+	let listenerTask = null;
+	let activeSocket: Socket | null = null;
 
-	yield put(MenuCommands.setLoadingMessage("Connecting..."));
+	while (true) {
+		const action = yield* take([
+			openConnection.toString(),
+			ensureConnection.toString(),
+		]);
+		const state = yield* select((appState: AppState) => appState);
+		const shouldJoinMatch = action.type === openConnection.toString();
 
-	yield put(MenuCommands.setLoadingMessage("Opening guest session..."));
+		if (shouldJoinMatch) {
+			yield put(MenuCommands.setLoadingMessage("Connecting..."));
+			yield put(AppShellCommands.setScreen("public-queue"));
+		}
 
-	const session = yield* call(getGuestSession);
+		if (!activeSocket?.connected) {
+			const request = (yield* call(() =>
+				buildHandshakeRequest(
+					state,
+					shouldJoinMatch && state.auth.mode !== "account"
+						? "matchmake"
+						: "social"
+				)
+			)) as HandshakeRequest | null;
 
-	const token = getCookieValue("guest-token");
+			if (!request) {
+				if (shouldJoinMatch) {
+					yield put(MenuCommands.setLoadingMessage("Missing authentication request"));
+					yield put(AppShellCommands.setScreen("landing"));
+				}
+				continue;
+			}
 
-	if (!session) {
-		yield put(MenuCommands.setLoadingMessage("ERROR: Failed to open session!"));
-		return;
+			try {
+				activeSocket = (yield* call(getSocket as any, request)) as Socket;
+			} catch (error) {
+				yield put(MenuCommands.setLoadingMessage("Failed to connect"));
+				yield put(AppShellCommands.setScreen("landing"));
+				continue;
+			}
+
+			if (listenerTask) {
+				yield cancel(listenerTask);
+			}
+			listenerTask = yield* fork(listenForConnection, activeSocket, slices);
+			yield* delay(0);
+
+			if (state.auth.mode === "account") {
+				activeSocket.emit("socialBootstrap", {});
+			}
+		}
+
+		if (shouldJoinMatch && activeSocket) {
+			activeSocket.emit("queue:joinPublic");
+		}
 	}
-
-	if (!token) {
-		yield put(MenuCommands.setLoadingMessage("ERROR: No guest token!"));
-		return;
-	}
-
-	let socket: Socket;
-
-	const request: HandshakeRequest = {
-		type: "guest",
-		data: {
-			accessToken: token,
-		},
-	};
-
-	try {
-		console.log("Getting socket");
-		socket = yield* call(getSocket, request);
-	} catch (error) {
-		console.error("error getting socket", error);
-		return;
-	}
-
-	console.log("Listening for connection");
-	yield* call(listenForConnection, socket, slices);
 };

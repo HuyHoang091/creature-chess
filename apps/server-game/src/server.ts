@@ -534,25 +534,18 @@ export const startServer = async ({ io }: { io: Server }) => {
 				return ackError(ack, "MEMBER_OFFLINE", "A room member is offline");
 			}
 
-			roomManager.markInGame(result.room.id);
+			// Remove members from private room and send them to public matchmaking
 			for (const memberId of memberIds) {
-				await updatePresence(memberId, "in_game");
+				roomManager.leaveRoom(memberId);
 			}
-			emitRoomToMembers(memberIds);
 
-			const game = await createGameRunner({
-				database,
-				settings: {
-					...GamemodeSettingsPresets["default"],
-				},
-				players,
-				persistHistory: false,
-				onFinish: async (finishedGame) => {
-					await onCustomGameFinished(finishedGame, result.room.id);
-				},
-			});
+			for (const memberId of memberIds) {
+				const memberSocket = presenceManager.getPrimarySocket(memberId);
+				if (memberSocket) {
+					await matchmaking(memberSocket);
+				}
+			}
 
-			games.push(game);
 			ackOk(ack);
 		});
 	};

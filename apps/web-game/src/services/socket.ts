@@ -5,22 +5,33 @@ const customParser = require("socket.io-msgpack-parser");
 import { GameServerToClient } from "@creature-chess/networking";
 import { HandshakeRequest } from "@creature-chess/networking/handshake";
 
+let currentSocket: Socket | null = null;
+export const getCurrentSocket = (): Socket | null => currentSocket;
+export const clearCurrentSocket = () => {
+	if (currentSocket) {
+		currentSocket.disconnect();
+		currentSocket = null;
+	}
+};
+
 export const getSocket = (request: HandshakeRequest) => {
+	if (currentSocket?.connected) {
+		return Promise.resolve(currentSocket);
+	}
+
 	const socket = (io as any)(
 		{
 			path: "/game/socket.io",
-		// },
-		// {
-			// use websocket first if available
 			transports: ["websocket"],
-
-			// new
-			parser: customParser
+			parser: customParser,
+			reconnection: true,
+			reconnectionAttempts: Infinity,
+			reconnectionDelay: 1000,
+			reconnectionDelayMax: 5000,
 		}
 	);
 
 	return new Promise<Socket>((resolve, reject) => {
-		console.log(request);
 		socket.on("connect", () => {
 			socket.emit("authenticate", request);
 		});
@@ -29,19 +40,21 @@ export const getSocket = (request: HandshakeRequest) => {
 			error,
 		}: GameServerToClient.AuthenticateResponse) => {
 			if (!error) {
-				socket.off("authenticate_response", onAuthenticated);
-
+				currentSocket = socket;
 				resolve(socket);
-
 				return;
 			}
 
 			socket.disconnect();
-
-			// todo improve this
 			reject(error);
 		};
 
 		socket.on("authenticate_response", onAuthenticated);
+
+		socket.on("disconnect", () => {
+			if (currentSocket === socket) {
+				currentSocket = null;
+			}
+		});
 	});
 };

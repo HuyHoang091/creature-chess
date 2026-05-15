@@ -1,0 +1,83 @@
+.dock {
+	position: fixed;
+	bottom: 0;
+	left: 50%;
+	transform: translateX(-50%);
+	display: flex;
+	gap: 6px;
+	padding: 8px 16px;
+	background: linear-gradient(180deg, rgba(10, 10, 16, 0.95), rgba(20, 16, 10, 0.98));
+	border: 1px solid rgba(200, 170, 110, 0.18);
+	border-radius: 20px 20px 0 0;
+	border-bottom: none;
+	box-shadow:
+		inset 0 1px 0 rgba(200, 170, 110, 0.08),
+		0 -8px 30px rgba(0, 0, 0, 0.4);
+	z-index: 100;
+}
+
+.dockItem {
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 4px;
+	padding: 8px 14px;
+	background: transparent;
+	border: none;
+	border-radius: 14px;
+	color: rgba(240, 230, 210, 0.55);
+	cursor: pointer;
+	transition: color 0.2s ease, background 0.2s ease, transform 0.15s ease;
+	min-width: 56px;
+}
+
+.dockItem:hover {
+	color: rgba(240, 230, 210, 0.9);
+	background: rgba(200, 170, 110, 0.08);
+	transform: translateY(-2px);
+}
+
+.active {
+	color: #c8aa6e !important;
+	background: rgba(200, 170, 110, 0.12) !important;
+}
+
+.iconWrap {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.label {
+	font-size: 10px;
+	font-weight: 600;
+	letter-spacing: 0.5px;
+	text-transform: uppercase;
+}
+
+.indicator {
+	position: absolute;
+	bottom: 4px;
+	width: 20px;
+	height: 3px;
+	background: #c8aa6e;
+	border-radius: 2px;
+	box-shadow: 0 0 8px rgba(200, 170, 110, 0.5);
+}
+
+@media (max-width: 640px) {
+	.dock {
+		padding: 6px 10px;
+		gap: 4px;
+	}
+
+	.dockItem {
+		padding: 6px 10px;
+		min-width: 48px;
+	}
+
+	.label {
+		font-size: 9px;
+	}
+}

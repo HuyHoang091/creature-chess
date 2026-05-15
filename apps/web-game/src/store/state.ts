@@ -1,0 +1,33 @@
+import { AppShellState } from "./appShell/state";
+import { AuthState } from "./auth/state";
+import { FriendsState } from "./friends/state";
+import { GameState } from "./game/state";
+import { HistoryState } from "./history/state";
+import { LobbyState } from "./lobby/state";
+import { MatchmakingState } from "./matchmaking/state";
+import { MenuState } from "./menu/state";
+import { NotificationState } from "./notifications/state";
+import { PartyState } from "./party/state";
+import { PresenceStoreState } from "./presence/state";
+import { PrivateLobbyState } from "./privateLobby/state";
+import { ProfileState } from "./profile/state";
+import { RoomInvitesState } from "./roomInvites/state";
+import { JoinRequestToastsState } from "./joinRequestToasts/state";
+
+export type AppState = {
+	appShell: AppShellState;
+	auth: AuthState;
+	profile: ProfileState;
+	friends: FriendsState;
+	party: PartyState;
+	presence: PresenceStoreState;
+	notifications: NotificationState;
+	privateLobby: PrivateLobbyState;
+	roomInvites: RoomInvitesState;
+	joinRequestToasts: JoinRequestToastsState;
+	matchmaking: MatchmakingState;
+	history: HistoryState;
+	lobby: LobbyState;
+	game: GameState;
+	menu: MenuState;
+};

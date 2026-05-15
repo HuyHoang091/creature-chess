@@ -19,6 +19,8 @@ import { PlayerGameProfile } from "../profile";
 import { Settings } from "../settings";
 import { SynergyPanel } from "../synergy/SynergyPanel";
 import { InventoryPanel } from "../inventory/InventoryPanel";
+import { TacticalAIPanel, BattleReportOverlay } from "../../tactical-ai";
+import { BattleAnalysis } from "~/services/tacticalAI";
 import styles from "./DesktopGame.module.css";
 
 // Baseline game width — giao diện được thiết kế cho 1280px
@@ -66,6 +68,7 @@ const DesktopGame: React.FunctionComponent = () => {
 
 	const [showStats, setShowStats] = React.useState(false);
 	const [showSettingsModal, setShowSettingsModal] = React.useState(false);
+	const [battleAnalysis, setBattleAnalysis] = React.useState<BattleAnalysis | null>(null);
 
 	const ownedPieces = useSelector<AppState, PieceModel[]>((state) =>
 		[...BoardSelectors.getAllPieces(state.game.board)].filter(
@@ -170,6 +173,15 @@ const DesktopGame: React.FunctionComponent = () => {
 					</div>
 				</div>
 			)}
+
+			{/* Tactical AI */}
+			<TacticalAIPanel />
+
+			{/* Post-Battle Report */}
+			<BattleReportOverlay
+				analysis={battleAnalysis}
+				onClose={() => setBattleAnalysis(null)}
+			/>
 		</div>
 	);
 };

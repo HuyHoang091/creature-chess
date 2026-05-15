@@ -1,0 +1,124 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model bots {
+  id           String @id @default(uuid())
+  nickname     String @db.VarChar(20)
+  games_played Int    @default(0)
+  wins         Int    @default(0)
+  ambition     Int
+  composure    Int
+  vision       Int
+}
+
+model users {
+  id           	  String  @id @default(uuid())
+  auth_id         String  @db.VarChar(64)
+  email           String? @unique @db.VarChar(191)
+  password_hash   String? @db.VarChar(255)
+  nickname        String? @db.VarChar(20)
+  profile_title   Int?
+  profile_picture Int?
+  games_played    Int     @default(0)
+  wins            Int     @default(0)
+}
+
+model user_sessions {
+  id         String   @id @default(uuid())
+  user_id    String
+  token      String   @unique
+  expires_at DateTime
+  created_at DateTime @default(now())
+  updated_at DateTime @default(now()) @updatedAt
+
+  @@index([user_id])
+}
+
+model guests {
+  id           		String @id @default(uuid())
+  created_at    	DateTime @default(now())
+  updated_at    	DateTime @default(now()) @updatedAt
+
+  token        		String @unique
+  expires_at    	DateTime
+
+  profile_picture 	Int?
+}
+
+model friend_requests {
+  id          String   @id @default(uuid())
+  sender_id   String
+  receiver_id String
+  status      String   @default("pending")
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+
+  @@unique([sender_id, receiver_id])
+  @@index([receiver_id, status])
+  @@index([sender_id, status])
+}
+
+model friendships {
+  id           String   @id @default(uuid())
+  user_low_id  String
+  user_high_id String
+  created_at   DateTime @default(now())
+
+  @@unique([user_low_id, user_high_id])
+  @@index([user_low_id])
+  @@index([user_high_id])
+}
+
+model blocks {
+  id              String   @id @default(uuid())
+  blocker_user_id String
+  blocked_user_id String
+  created_at      DateTime @default(now())
+
+  @@unique([blocker_user_id, blocked_user_id])
+  @@index([blocker_user_id])
+}
+
+model matches {
+  id             String   @id @default(uuid())
+  mode           String
+  started_at     DateTime
+  ended_at       DateTime
+  player_count   Int
+  winner_user_id String?
+  persisted      Boolean  @default(true)
+
+  @@index([mode, ended_at])
+}
+
+model match_participants {
+  id           String   @id @default(uuid())
+  match_id     String
+  user_id      String?
+  guest_id     String?
+  display_name String
+  placement    Int
+  is_bot       Boolean  @default(false)
+  result       String
+  created_at   DateTime @default(now())
+
+  @@index([match_id])
+  @@index([user_id, created_at])
+}
+
+model reports {
+  id               String   @id @default(uuid())
+  reporter_user_id String
+  target_user_id   String
+  match_id         String?
+  reason           String
+  created_at       DateTime @default(now())
+
+  @@index([target_user_id, created_at])
+}

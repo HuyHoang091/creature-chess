@@ -52,3 +52,17 @@ export {
 export { findRecipe, getAllRecipes } from "./src/itemRecipes";
 
 export * as Builders from "./src/builders";
+export type { UserDTO } from "./dto/user";
+export type {
+	PresenceState,
+	FriendDto,
+	FriendRequestDto,
+	BlockedUserDto,
+	FriendsResponseDto,
+	PrivateRoomDto,
+	RoomInviteDto,
+	RoomJoinRequestDto,
+	RoomSnapshotDto,
+	MatchHistoryItemDto,
+	MatchHistoryResponseDto,
+} from "./dto/social";

@@ -14,13 +14,6 @@ export function Page(props: Props) {
 			{props.hasBackground && <PageBoardBackground />}
 
 			<div className={styles.page}>
-				<div className={styles.header}>
-					{/* <img
-						src={`${APP_IMAGE_ROOT}/ui/logo.png`}
-						alt="Creature Chess"
-						className={styles.logo}
-					/> */}
-				</div>
 				<div className={styles.content}>{props.children}</div>
 			</div>
 		</div>

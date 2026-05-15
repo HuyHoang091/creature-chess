@@ -1,68 +1,115 @@
-.findGameButtonContainer {
+.root {
+	width: 100vw;
+	height: 100vh;
 	display: flex;
-	justify-content: center;
 	align-items: center;
-	width: 100%;
+	justify-content: center;
+	background:
+		radial-gradient(circle at top, rgba(72, 105, 255, 0.25), transparent 35%),
+		linear-gradient(160deg, #070b16, #121a2d 55%, #070b16);
+	color: #f5f7ff;
+	font-family: Arial, sans-serif;
+	overflow: hidden;
 }
 
-.findGameButton {
-	padding: 12px 16px;
-	margin-bottom: 8px;
+.panel {
+	width: min(92vw, 960px);
+	padding: 32px;
+	border-radius: 24px;
+	border: 1px solid rgba(143, 165, 255, 0.22);
+	background: rgba(9, 12, 20, 0.84);
+	backdrop-filter: blur(14px);
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+	gap: 24px;
+}
+
+.title {
+	font-size: 32px;
+	font-weight: 700;
+	color: #c8aa6e;
+	margin: 0 0 12px;
+	letter-spacing: 1px;
+}
+
+.muted {
+	opacity: .74;
+	line-height: 1.6;
+	font-size: 15px;
+}
+
+.form {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+}
+
+.input {
+	padding: 14px 16px;
+	border-radius: 14px;
+	border: 1px solid rgba(143, 165, 255, 0.25);
+	background: #101625;
+	color: white;
+	font-size: 15px;
+	outline: none;
+	transition: border-color 0.2s ease;
+}
+
+.input:focus {
+	border-color: #c8aa6e;
+}
+
+.primaryBtn {
+	width: 100%;
+	border: none;
+	border-radius: 14px;
+	padding: 14px 16px;
+	cursor: pointer;
 	font-size: 16px;
 	font-weight: 700;
-	color: #fff;
-	cursor: pointer;
-	background: #b13e53;
-	border: none;
+	background: linear-gradient(180deg, #4d6bff, #3a54d0);
+	color: white;
+	transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
-@media (min-width: 400px) {
-	.findGameButton {
-		font-size: 24px;
-	}
+.primaryBtn:hover {
+	transform: translateY(-1px);
+	box-shadow: 0 8px 20px rgba(77, 107, 255, 0.3);
 }
 
-.discordButton {
-	max-width: 12em;
-	cursor: pointer;
-}
-
-.discordButton img {
+.secondaryBtn {
 	width: 100%;
-	height: auto;
+	border: none;
+	border-radius: 14px;
+	padding: 14px 16px;
+	cursor: pointer;
+	font-size: 16px;
+	font-weight: 600;
+	background: #1f2945;
+	color: white;
+	border: 1px solid rgba(143, 165, 255, 0.25);
+	transition: transform 0.15s ease, border-color 0.15s ease, color 0.15s ease;
 }
 
-.blurb {
-	margin-bottom: 0.5rem;
-}
-
-.blurb p:not(:last-child) {
-	margin-bottom: 0.5rem;
-}
-
-.blurb span {
-	font-style: italic;
-	font-weight: 700;
-	color: #bfbfbf;
+.secondaryBtn:hover {
+	border-color: #c8aa6e;
+	color: #c8aa6e;
+	transform: translateY(-1px);
 }
 
 .error {
-	padding: 1em 0.5em;
-	margin-bottom: 1em;
-	color: #db2828;
-	background: #ffe8e6;
-	box-shadow: 0 0 0 1px #db2828 inset, 0 0 0 0 transparent;
+	color: #ff8b8b;
+	font-size: 14px;
+	margin-top: 4px;
 }
 
-.footer {
-	width: 100%;
-	display: flex;
-	flex-direction: row;
-}
+@media (max-width: 640px) {
+	.panel {
+		padding: 20px;
+		gap: 18px;
+	}
 
-.half {
-	width: 50%;
-	display: flex;
-	justify-content: center;
-	align-items: center;
+	.title {
+		font-size: 24px;
+	}
 }

@@ -23,7 +23,7 @@ const LobbyPlayerBanner: React.FunctionComponent<Props> = ({ player }) => {
 						alt="no player image"
 						className={styles.avatar}
 					/>
-					<span>empty</span>
+					<span className={styles.name}>Empty</span>
 				</div>
 			</div>
 		);
@@ -33,7 +33,7 @@ const LobbyPlayerBanner: React.FunctionComponent<Props> = ({ player }) => {
 		<div className={styles.player}>
 			<div className={styles.avatarWrapper}>
 				<PlayerAvatar player={player} className={styles.avatar} />
-				<span>{player.name}</span>
+				<span className={styles.name}>{player.name}</span>
 			</div>
 			<Title title={player.profile?.title} />
 		</div>

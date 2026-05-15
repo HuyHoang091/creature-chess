@@ -97,6 +97,7 @@ module.exports = {
 			APP_AUTH0_ENABLED: JSON.stringify(process.env.AUTH0_ENABLED),
 			APP_AUTH0_DOMAIN: JSON.stringify(process.env.AUTH0_DOMAIN),
 			APP_AUTH0_SPA_CLIENT_ID: JSON.stringify(process.env.AUTH0_SPA_CLIENT_ID),
+			APP_AUTH0_API_AUDIENCE: JSON.stringify(process.env.AUTH0_API_AUDIENCE),
 		}),
 		new HtmlWebpackPlugin({
 			scriptLoading: "blocking",
@@ -131,6 +132,7 @@ module.exports = {
 			"/api": {
 				target: "http://localhost:3000",
 				changeOrigin: true,
+				ws: true,
 				// Không rewrite path vì server-info expect /api/...
 				// Nếu server-info không có /api prefix, thì dùng pathRewrite:
 				pathRewrite: { "^/api": "" },

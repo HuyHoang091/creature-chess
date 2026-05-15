@@ -1,48 +1,50 @@
 .player {
-	padding: 4px 8px;
+	padding: 8px 12px;
 	box-sizing: border-box;
 	font-weight: 700;
 	text-align: right;
-	background: #59616b;
-	font-family:
-		"Roboto",
-		sans-serif;
-	color: #fff;
+	background: linear-gradient(180deg, rgba(30, 25, 15, 0.9), rgba(15, 16, 24, 0.92));
+	border: 1px solid #463714;
+	border-radius: 10px;
+	font-family: "Roboto", sans-serif;
+	color: #f0e6d2;
 	user-select: none;
-	container-name: player;
-	container-type: size;
-	flex: 1;
 	display: flex;
 	flex-direction: column;
+	gap: 6px;
+	min-width: 0;
+	overflow: hidden;
 }
 
 @media (orientation: portrait) and (min-width: 376px) {
 	.player {
-		padding: 8px 16px;
+		padding: 10px 14px;
 	}
 }
 
 .bot {
 	font-style: italic;
-	color: #d0d0d0;
+	color: rgba(240, 230, 210, 0.55);
 }
 
 .avatar {
-	width: 16px;
-	height: 16px;
+	width: 32px;
+	height: 32px;
+	border-radius: 50%;
+	object-fit: cover;
 }
 
 @media (orientation: portrait) and (min-width: 321px) and (max-width: 539px) {
 	.avatar {
-		width: 24px;
-		height: 24px;
+		width: 36px;
+		height: 36px;
 	}
 }
 
 @media (orientation: portrait) and (min-width: 540px) and (max-width: 800px) {
 	.avatar {
-		width: 32px;
-		height: 32px;
+		width: 42px;
+		height: 42px;
 	}
 }
 
@@ -65,4 +67,17 @@
 	flex-direction: row;
 	justify-content: space-between;
 	align-items: center;
+	gap: 10px;
+	min-width: 0;
+}
+
+.name {
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	font-size: 14px;
+	font-weight: 700;
+	color: #f0e6d2;
+	text-align: right;
 }
