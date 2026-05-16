@@ -1,0 +1,853 @@
+:root {
+  --bg-top: #040810;
+  --bg-mid: #0a1722;
+  --bg-bottom: #101b20;
+  --accent-a: rgba(86, 236, 212, 0.78);
+  --accent-b: rgba(108, 126, 255, 0.46);
+  --panel: rgba(7, 12, 18, 0.72);
+  --panel-strong: rgba(7, 12, 18, 0.88);
+  --line: rgba(198, 170, 108, 0.18);
+  --soft-line: rgba(158, 229, 215, 0.12);
+  --gold: #c6aa6c;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+  overflow: hidden;
+  background: #050910;
+  font-family: Georgia, "Times New Roman", serif;
+}
+
+.shell {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  background:
+    radial-gradient(circle at 50% 50%, rgba(78, 216, 198, 0.08), transparent 18%),
+    radial-gradient(circle at top, rgba(105, 126, 255, 0.08), transparent 30%),
+    linear-gradient(180deg, var(--bg-top) 0%, var(--bg-mid) 42%, var(--bg-bottom) 100%);
+}
+
+.layout-grid {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: 56px 180px 1fr 220px;
+  grid-template-rows: 48px 1fr 160px;
+  grid-template-areas:
+    "topbar topbar topbar topbar"
+    "synergy board board players"
+    "control control shop shop";
+  pointer-events: none;
+}
+
+#board-scene {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.board-stage {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  will-change: transform;
+  transition: transform 340ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.board-stack {
+  --board-width: min(82vw, 800px);
+  --playfield-width: calc(var(--board-width) * 0.94);
+  /* --bench-width: calc(var(--playfield-width) * 0.82); */
+  position: relative;
+  width: var(--playfield-width);
+  max-width: calc(100vw - 340px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+}
+
+.shell[data-shop-state="expanded"] .board-stage {
+  transform: translateY(-30px);
+}
+
+.shell[data-shop-state="collapsed"] .board-stage {
+  transform: translateY(18px);
+}
+
+.board-shell {
+  position: relative;
+  width: fit-content;
+  max-width: 100%;
+  max-height: min(78vh, 760px);
+  padding: 12px 2px 8px;
+  border-radius: 42px;
+  border: 1px solid rgba(198, 170, 108, 0.12);
+  background:
+    linear-gradient(180deg, rgba(7, 12, 18, 0.5), rgba(7, 12, 18, 0.26)),
+    radial-gradient(circle at 50% 50%, rgba(71, 160, 170, 0.05), transparent 62%);
+  box-shadow:
+    0 24px 80px rgba(0, 0, 0, 0.28),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.02);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  overflow: hidden;
+}
+
+.board-frame {
+  position: relative;
+  width: var(--playfield-width);
+  max-width: 100%;
+  aspect-ratio: 560 / 396;
+  border-radius: 34px;
+  border: 1px solid rgba(198, 170, 108, 0.08);
+  background:
+    linear-gradient(180deg, rgba(9, 16, 23, 0.18), rgba(9, 16, 23, 0.08));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.03),
+    inset 0 -16px 28px rgba(0, 0, 0, 0.14);
+  overflow: hidden;
+}
+
+.board-frame::before {
+  content: "";
+  position: absolute;
+  inset: 6% 1% 8%;
+  border-radius: 999px;
+  background:
+    radial-gradient(circle at 50% 50%, rgba(101, 137, 158, 0.12), transparent 56%),
+    radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.05), transparent 72%);
+  filter: blur(18px);
+  opacity: 0.6;
+}
+
+.hex-board {
+  position: absolute;
+  inset: 3% 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hex-svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+  overflow: hidden;
+  filter: drop-shadow(0 18px 22px rgba(0, 0, 0, 0.2));
+}
+
+.hex-poly {
+  fill: url(#hexFill);
+  stroke: rgba(192, 224, 241, 0.3);
+  stroke-width: 1.9;
+  vector-effect: non-scaling-stroke;
+  filter:
+    drop-shadow(0 10px 12px rgba(0, 0, 0, 0.24))
+    drop-shadow(0 2px 0 rgba(228, 244, 255, 0.08));
+  opacity: 0.98;
+}
+
+.hex-poly:nth-child(odd) {
+  opacity: 0.92;
+}
+
+.hex-poly:nth-child(3n) {
+  opacity: 0.88;
+}
+
+.hex-poly:hover {
+  fill: rgba(48, 72, 88, 0.46);
+  stroke: rgba(224, 240, 250, 0.46);
+}
+
+.board-halo {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+}
+
+.halo-outer {
+  width: min(94vw, 1440px);
+  height: min(78vh, 860px);
+  border: 1px solid rgba(96, 215, 196, 0.11);
+  box-shadow:
+    0 0 60px rgba(79, 200, 182, 0.1),
+    inset 0 0 50px rgba(79, 200, 182, 0.04);
+}
+
+.halo-mid {
+  width: min(78vw, 1180px);
+  height: min(60vh, 640px);
+  border: 1px solid rgba(110, 124, 255, 0.12);
+  border-style: solid dashed;
+  box-shadow:
+    0 0 36px rgba(110, 124, 255, 0.08),
+    inset 0 0 28px rgba(110, 124, 255, 0.04);
+}
+
+.board-runes {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: min(82vw, 1240px);
+  height: min(64vh, 700px);
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background:
+    conic-gradient(
+      from 0deg,
+      transparent 0 8%,
+      rgba(106, 227, 203, 0.12) 8% 10%,
+      transparent 10% 22%,
+      rgba(111, 122, 255, 0.1) 22% 24%,
+      transparent 24% 38%,
+      rgba(106, 227, 203, 0.12) 38% 40%,
+      transparent 40% 58%,
+      rgba(111, 122, 255, 0.1) 58% 60%,
+      transparent 60% 78%,
+      rgba(106, 227, 203, 0.12) 78% 80%,
+      transparent 80% 100%
+    );
+  mask-image: radial-gradient(circle at center, transparent 0 61%, black 67%, transparent 74%);
+  filter: blur(4px);
+  opacity: 0.82;
+}
+
+.spawn {
+  position: absolute;
+  width: 24%;
+  height: 30%;
+  border-radius: 50%;
+  filter: blur(34px);
+}
+
+.spawn-top {
+  top: 12%;
+  right: 10%;
+  background: radial-gradient(circle, rgba(112, 126, 255, 0.18), transparent 72%);
+}
+
+.spawn-bottom {
+  left: 10%;
+  bottom: 12%;
+  background: radial-gradient(circle, rgba(86, 236, 212, 0.2), transparent 72%);
+}
+
+.bench-row {
+  position: relative;
+  width: var(--playfield-width);
+  max-width: 100%;
+  display: flex;
+  justify-content: center;
+  gap: 0;
+  min-height: 0;
+  padding: 0;
+}
+
+.enemy-bench {
+  margin-bottom: 6px;
+}
+
+.player-bench {
+  margin-top: 6px;
+}
+
+.bench-square {
+  width: calc(100% / 8);
+  aspect-ratio: 1 / 1;
+  display: block;
+  border-radius: 0;
+  border-top: 1px solid rgba(198, 170, 108, 0.18);
+  border-bottom: 1px solid rgba(198, 170, 108, 0.18);
+  border-left: 1px solid rgba(198, 170, 108, 0.18);
+  border-right: 1px solid rgba(198, 170, 108, 0.18);
+  background:
+    linear-gradient(180deg, rgba(44, 35, 26, 0.5), rgba(18, 14, 10, 0.62));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.025),
+    inset 0 -8px 10px rgba(0, 0, 0, 0.12);
+}
+
+.bench-square:first-child {
+  border-left: 1px solid rgba(198, 170, 108, 0.18);
+}
+
+.bench-square:last-child {
+  border-right: 1px solid rgba(198, 170, 108, 0.18);
+}
+
+.topbar {
+  grid-area: topbar;
+  align-self: start;
+  justify-self: stretch;
+  padding: 12px 16px 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  pointer-events: none;
+}
+
+.pill,
+.stack-card,
+.panel,
+.shop-card {
+  border: 1px solid var(--line);
+  background:
+    linear-gradient(180deg, rgba(14, 22, 30, 0.92), rgba(7, 12, 18, 0.78));
+  backdrop-filter: blur(14px);
+  box-shadow:
+    0 12px 28px rgba(0, 0, 0, 0.32),
+    inset 0 0 14px rgba(104, 210, 193, 0.04);
+}
+
+.pill {
+  height: 36px;
+  border-radius: 999px;
+}
+
+.pill.wide {
+  width: 340px;
+}
+
+.pill.short {
+  width: 128px;
+}
+
+.pill.icon {
+  width: 36px;
+}
+
+.synergy {
+  grid-area: synergy;
+  align-self: stretch;
+  justify-self: center;
+  width: 62px;
+  margin: 8px 0 8px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.stack-card.icon {
+  width: 54px;
+  height: 54px;
+  border-radius: 16px;
+}
+
+.center-spacer {
+  grid-area: board;
+}
+
+.players {
+  grid-area: players;
+  align-self: start;
+  justify-self: stretch;
+  width: 196px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: calc(100% - 12px);
+  overflow: hidden;
+  margin: 8px 12px 0 12px;
+  pointer-events: none;
+}
+
+.player-card {
+  height: 64px;
+  border-radius: 18px;
+}
+
+.profile {
+  grid-area: control;
+  align-self: end;
+  justify-self: start;
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  max-width: 280px;
+  margin: 0 0 12px 12px;
+  pointer-events: none;
+}
+
+.inventory {
+  width: 132px;
+  height: 64px;
+  border-radius: 20px;
+}
+
+.player-profile {
+  width: 132px;
+  height: 64px;
+  border-radius: 20px;
+}
+
+.shop {
+  grid-area: shop;
+  align-self: end;
+  justify-self: center;
+  width: min(52vw, 760px);
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 10px;
+  flex-wrap: nowrap;
+  margin-bottom: 12px;
+  pointer-events: auto;
+  transform-origin: bottom center;
+  will-change: transform;
+  transition: transform 340ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.shop-card {
+  width: clamp(84px, 9vw, 118px);
+  height: clamp(108px, 12vw, 132px);
+  border-radius: 22px;
+  flex: 0 0 auto;
+  will-change: transform, opacity;
+  transition:
+    opacity 260ms ease,
+    transform 340ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.shop-toggle {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border-radius: 999px;
+  border: 1px solid rgba(198, 170, 108, 0.22);
+  background:
+    linear-gradient(180deg, rgba(24, 32, 42, 0.92), rgba(11, 16, 22, 0.88));
+  cursor: pointer;
+  will-change: transform;
+  transition:
+    box-shadow 260ms ease,
+    transform 260ms ease,
+    background 260ms ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+}
+
+.shop-toggle-arrow {
+  width: 8px;
+  height: 8px;
+  border-right: 2px solid #c6aa6c;
+  border-bottom: 2px solid #c6aa6c;
+  transform: rotate(45deg) translateY(-1px);
+  transition: transform 260ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.shop-toggle:hover {
+  transform: translateY(-1px);
+}
+
+.shell[data-shop-state="expanded"] .shop {
+  transform: translateY(0);
+}
+
+.shell[data-shop-state="collapsed"] .shop {
+  transform: translateY(calc(100% - 30px));
+}
+
+.shell[data-shop-state="expanded"] .shop-card {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.shell[data-shop-state="collapsed"] .shop-card {
+  opacity: 0;
+  transform: translateY(10px) scale(0.96);
+}
+
+.shell[data-shop-state="expanded"] .shop-toggle {
+  box-shadow:
+    0 12px 28px rgba(0, 0, 0, 0.32),
+    inset 0 0 14px rgba(104, 210, 193, 0.04);
+}
+
+.shell[data-shop-state="collapsed"] .shop-toggle {
+  box-shadow:
+    0 10px 28px rgba(0, 0, 0, 0.34),
+    inset 0 0 14px rgba(104, 210, 193, 0.08);
+}
+
+.shell[data-shop-state="expanded"] .shop-toggle-arrow {
+  transform: rotate(45deg) translateY(-1px);
+}
+
+.shell[data-shop-state="collapsed"] .shop-toggle-arrow {
+  transform: rotate(-135deg) translate(-1px, 1px);
+}
+
+.tactical {
+  position: absolute;
+  z-index: 2;
+  right: 16px;
+  bottom: 18px;
+  pointer-events: none;
+  will-change: transform;
+  transition: transform 340ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.shell[data-shop-state="collapsed"] .tactical {
+  transform: translateY(18px);
+}
+
+.tactical-card {
+  width: 196px;
+  height: 86px;
+  border-radius: 20px;
+}
+
+.vignette,
+.grain {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.vignette {
+  background:
+    radial-gradient(circle at center, transparent 44%, rgba(0, 0, 0, 0.5) 100%),
+    linear-gradient(180deg, rgba(0, 0, 0, 0.28), transparent 24%, transparent 72%, rgba(0, 0, 0, 0.34));
+}
+
+.grain {
+  inset: -100px;
+  opacity: 0.07;
+  background-image: radial-gradient(circle, rgba(255, 255, 255, 0.9) 0.6px, transparent 0.7px);
+  background-size: 10px 10px;
+  mix-blend-mode: soft-light;
+  animation: grain-drift 12s linear infinite;
+}
+
+@keyframes grain-drift {
+  from { transform: translate(0, 0); }
+  to { transform: translate(-60px, 40px); }
+}
+
+@media (max-width: 1100px) {
+  .board-stack {
+    --board-width: min(78vw, 740px);
+    --playfield-width: calc(var(--board-width) * 0.94);
+    /* --bench-width: calc(var(--playfield-width) * 0.82); */
+  }
+
+  .layout-grid {
+    grid-template-columns: 48px 155px 1fr 190px;
+    grid-template-rows: 44px 1fr 145px;
+  }
+
+  .board-frame {
+    border-radius: 30px;
+  }
+
+  .hex-board {
+    inset: 4% 2%;
+  }
+
+  .synergy {
+    width: 54px;
+    gap: 8px;
+    margin: 8px 0;
+  }
+
+  .stack-card.icon {
+    width: 46px;
+    height: 46px;
+    border-radius: 14px;
+  }
+
+  .players {
+    width: 164px;
+    max-height: calc(100% - 8px);
+    margin: 8px 10px 0 10px;
+  }
+
+  .player-card {
+    height: 48px;
+  }
+
+  .profile {
+    gap: 10px;
+    max-width: 240px;
+    margin: 0 0 10px 10px;
+  }
+
+  .inventory {
+    width: 114px;
+    height: 56px;
+  }
+
+  .player-profile {
+    width: 114px;
+    height: 56px;
+  }
+
+  .shop {
+    width: min(48vw, 560px);
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+
+  .shop-card {
+    width: 86px;
+    height: 108px;
+  }
+
+  .tactical {
+    right: 12px;
+    bottom: 12px;
+  }
+
+  .tactical-card {
+    width: 164px;
+    height: 74px;
+  }
+}
+
+@media (max-width: 820px) {
+  .board-stack {
+    --board-width: min(74vw, 620px);
+    --playfield-width: calc(var(--board-width) * 0.93);
+    --bench-width: calc(var(--playfield-width) * 0.82);
+  }
+
+  .layout-grid {
+    grid-template-columns: 40px 140px 1fr 155px;
+    grid-template-rows: 40px 1fr 130px;
+  }
+
+  .board-frame {
+    aspect-ratio: 560 / 396;
+    border-radius: 26px;
+  }
+
+  .board-shell {
+    max-height: min(72vh, 640px);
+    padding: 8px 2px 6px;
+    border-radius: 30px;
+  }
+
+  .halo-outer {
+    width: 110vw;
+    height: 78vh;
+  }
+
+  .board-stack {
+    width: min(82vw, 620px);
+    gap: 10px;
+  }
+
+  .halo-mid,
+  .board-runes {
+    width: 94vw;
+  }
+
+  .topbar {
+    padding: 10px 10px 0;
+    justify-content: flex-start;
+    gap: 8px;
+  }
+
+  .pill {
+    height: 32px;
+  }
+
+  .pill.wide {
+    width: min(46vw, 220px);
+  }
+
+  .pill.short {
+    width: 88px;
+  }
+
+  .synergy {
+    width: 48px;
+    flex-direction: column;
+    gap: 8px;
+    margin: 8px 0;
+  }
+
+  .players {
+    width: 124px;
+    max-height: calc(100% - 8px);
+    gap: 8px;
+    margin: 8px 8px 0 8px;
+  }
+
+  .player-card {
+    height: 38px;
+    border-radius: 14px;
+  }
+
+  .profile {
+    max-width: 108px;
+    margin: 0 0 8px 8px;
+  }
+
+  .inventory {
+    width: 108px;
+    height: 48px;
+  }
+
+  .player-profile {
+    width: 108px;
+    height: 48px;
+  }
+
+  .shop {
+    width: min(54vw, 286px);
+    justify-content: center;
+    overflow: visible;
+    margin-bottom: 8px;
+  }
+
+  .shop-card {
+    width: 52px;
+    height: 76px;
+    border-radius: 16px;
+  }
+
+  .shop-toggle {
+    width: 26px;
+    height: 26px;
+  }
+
+  .bench-row {
+    min-height: 0;
+  }
+
+  .bench-square {
+    width: calc(100% / 8);
+  }
+
+  .tactical {
+    right: 10px;
+    bottom: 10px;
+  }
+
+  .tactical-card {
+    width: 124px;
+    height: 58px;
+    border-radius: 16px;
+  }
+}
+
+@media (max-width: 560px) {
+  .board-stack {
+    --board-width: min(70vw, 420px);
+    --playfield-width: calc(var(--board-width) * 0.92);
+    --bench-width: calc(var(--playfield-width) * 0.8);
+  }
+
+  .layout-grid {
+    grid-template-columns: 34px 96px 1fr 96px;
+    grid-template-rows: 66px 1fr 102px;
+  }
+
+  .board-frame {
+    border-radius: 20px;
+  }
+
+  .hex-board {
+    inset: 4% 2%;
+  }
+
+  .board-stack {
+    width: calc(100vw - 110px);
+    max-width: calc(100vw - 110px);
+    gap: 8px;
+  }
+
+  .board-shell {
+    max-height: min(68vh, 520px);
+    padding: 6px 1px 4px;
+    border-radius: 22px;
+  }
+
+  .topbar {
+    padding: 6px 6px 0;
+    gap: 6px;
+  }
+
+  .pill.wide {
+    width: 100%;
+  }
+
+  .pill.short {
+    width: calc(50% - 24px);
+  }
+
+  .pill.icon {
+    width: 32px;
+  }
+
+  .players {
+    width: 96px;
+    margin: 6px 6px 0 6px;
+  }
+
+  .profile {
+    max-width: 92px;
+    gap: 8px;
+    margin: 0 0 6px 6px;
+  }
+
+  .inventory,
+  .player-profile {
+    width: 92px;
+    height: 42px;
+  }
+
+  .shop {
+    width: min(56vw, 230px);
+    gap: 6px;
+    margin-bottom: 6px;
+  }
+
+  .shop-card {
+    width: 40px;
+    height: 64px;
+  }
+
+  .shop-toggle {
+    width: 24px;
+    height: 24px;
+  }
+
+  .tactical-card {
+    width: 96px;
+    height: 48px;
+  }
+
+  .bench-row {
+    min-height: 0;
+  }
+
+  .bench-square {
+    width: calc(100% / 8);
+  }
+}

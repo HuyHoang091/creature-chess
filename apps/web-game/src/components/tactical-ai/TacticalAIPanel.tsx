@@ -13,6 +13,7 @@ import {
   CoachResponse,
 } from "~/services/tacticalAI";
 
+import { CoachMessageRenderer } from "./CoachMessageRenderer";
 import styles from "./tactical-ai.module.css";
 
 const TacticalAIPanel: React.FC = () => {
@@ -321,7 +322,11 @@ const TacticalAIPanel: React.FC = () => {
                         msg.role === "user" ? styles.userMessage : styles.aiMessage
                       }
                     >
-                      {msg.text}
+                      {msg.role === "ai" ? (
+                        <CoachMessageRenderer text={msg.text} />
+                      ) : (
+                        msg.text
+                      )}
                     </div>
                   ))}
                   {loading && <div className={styles.typing}>Coach đang trả lời...</div>}

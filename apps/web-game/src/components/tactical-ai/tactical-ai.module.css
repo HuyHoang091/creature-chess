@@ -24,8 +24,8 @@
   position: fixed;
   bottom: 88px;
   right: 20px;
-  width: 320px;
-  max-height: 480px;
+  width: 400px;
+  max-height: 560px;
   background: #010a13;
   border: 1px solid #c8aa6e;
   border-radius: 8px;
@@ -182,6 +182,7 @@
   white-space: pre-wrap !important;
   word-break: break-word;
   line-height: 1.5;
+  overflow: visible;
 }
 .aiMessage {
   align-self: flex-start;
@@ -195,6 +196,7 @@
   white-space: pre-wrap !important;
   word-break: break-word;
   line-height: 1.6;
+  overflow: visible;
 }
 .typing {
   color: #a09b8c;
@@ -351,4 +353,279 @@
   font-size: 10px;
   color: #a09b8c;
   margin-top: 2px;
+}
+
+/* ─── Rich Coach Message Cards ─── */
+
+.sectionCards {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sectionCard,
+.sectionCardSingle {
+  background: #0f1419;
+  border: 1px solid #1e2328;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.sectionCardSingle {
+  padding: 10px 12px;
+}
+
+.sectionTitle {
+  background: linear-gradient(90deg, #1e2328, #0f1419);
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: bold;
+  color: #c8aa6e;
+  border-bottom: 1px solid #1e2328;
+}
+
+.sectionBody {
+  padding: 8px 12px;
+  font-size: 12px;
+  line-height: 1.7;
+  color: #cdd0d4;
+}
+
+/* Piece badge (inline image + name) */
+.pieceBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(10, 200, 185, 0.1);
+  border: 1px solid rgba(10, 200, 185, 0.25);
+  border-radius: 4px;
+  padding: 2px 6px 2px 2px;
+  margin: 0 2px;
+  vertical-align: middle;
+  white-space: normal;
+}
+
+.pieceBadgeImg {
+  width: 32px;
+  height: 32px;
+  border-radius: 3px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.pieceBadgeName {
+  font-weight: bold;
+  color: #0ac8b9;
+  font-size: 12px;
+}
+
+/* Item badge (inline icon + name + tier) */
+.itemBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  background: rgba(200, 170, 110, 0.1);
+  border: 1px solid rgba(200, 170, 110, 0.3);
+  border-radius: 4px;
+  padding: 2px 6px;
+  margin: 2px;
+  vertical-align: middle;
+  white-space: normal;
+}
+
+.itemBadgeIcon {
+  font-size: 16px;
+}
+
+.itemBadgeName {
+  font-weight: bold;
+  color: #c8aa6e;
+  font-size: 11px;
+}
+
+.itemBadgeTier {
+  font-size: 9px;
+  background: #463714;
+  color: #c8aa6e;
+  border-radius: 2px;
+  padding: 1px 4px;
+}
+
+/* ─── Trait badge (inline icon + name) ─── */
+
+.traitBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  background: rgba(70, 55, 20, 0.2);
+  border: 1px solid rgba(70, 55, 20, 0.4);
+  border-radius: 4px;
+  padding: 2px 6px;
+  margin: 2px;
+  vertical-align: middle;
+  white-space: normal;
+}
+
+.traitBadgeIcon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+.traitBadgeName {
+  font-weight: bold;
+  color: #cdbe91;
+  font-size: 11px;
+}
+
+/* ─── Tooltip system ─── */
+
+.tooltipAnchor {
+  display: inline;
+}
+
+.tooltip {
+  animation: tooltipFadeIn 0.12s ease-out;
+}
+
+@keyframes tooltipFadeIn {
+  from { opacity: 0; transform: translate(-50%, calc(-100% + 4px)); }
+  to   { opacity: 1; transform: translate(-50%, -100%); }
+}
+
+.tooltipInner {
+  background: #010a13;
+  border: 1px solid #c8aa6e;
+  border-radius: 6px;
+  padding: 10px 12px;
+  min-width: 140px;
+  max-width: 220px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.7);
+  text-align: center;
+  white-space: nowrap;
+}
+
+/* Piece tooltip */
+.tooltipPieceImgWrap {
+  position: relative;
+  display: inline-block;
+  width: 48px;
+  height: 48px;
+  border-radius: 4px;
+  margin-bottom: 4px;
+  border: 2px solid #808080;
+}
+
+.tooltipPieceImg {
+  width: 100%;
+  height: 100%;
+  border-radius: 3px;
+  object-fit: cover;
+}
+
+.tooltipCostBadge {
+  position: absolute;
+  bottom: -6px;
+  right: -6px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  color: #fff;
+  font-size: 10px;
+  font-weight: bold;
+  line-height: 18px;
+  text-align: center;
+  background: #808080;
+  text-shadow: 0 1px 1px rgba(0,0,0,0.4);
+}
+
+.tooltipPieceName {
+  font-weight: bold;
+  color: #f0e6d2;
+  font-size: 13px;
+}
+
+.tooltipTraits {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px solid #1e2328;
+}
+
+.tooltipTraitRow {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  color: #a09b8c;
+  font-size: 11px;
+}
+
+.tooltipTraitIcon {
+  width: 18px;
+  height: 18px;
+}
+
+/* Item tooltip */
+.tooltipItemHeader {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  justify-content: center;
+  margin-bottom: 6px;
+}
+
+.tooltipItemIcon {
+  font-size: 20px;
+}
+
+.tooltipItemName {
+  font-weight: bold;
+  color: #c8aa6e;
+  font-size: 13px;
+}
+
+.tooltipStats {
+  color: #cdd0d4;
+  font-size: 10px;
+  margin-bottom: 4px;
+  white-space: normal;
+  line-height: 1.5;
+}
+
+.tooltipDesc {
+  color: #a09b8c;
+  font-size: 10px;
+  font-style: italic;
+  white-space: normal;
+}
+
+.tooltipRecipe {
+  margin-top: 8px;
+  padding-top: 6px;
+  border-top: 1px solid #1e2328;
+}
+
+.tooltipRecipeLabel {
+  color: #a09b8c;
+  font-size: 10px;
+  margin-bottom: 4px;
+}
+
+.tooltipRecipeRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  justify-content: center;
+}
+
+.tooltipRecipeItem {
+  color: #f0e6d2;
+  font-size: 11px;
+}
+
+.tooltipRecipePlus {
+  color: #a09b8c;
+  font-size: 11px;
 }

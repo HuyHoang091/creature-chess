@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Creature Chess Fullscreen Board Layout Preview</title>
+  <link rel="stylesheet" href="./desktop-fullscreen-board-preview.css" />
+</head>
+<body>
+  <main class="shell" data-shop-state="expanded">
+    <canvas id="board-scene" aria-label="Fullscreen board layout preview"></canvas>
+
+    <section class="board-stage" aria-hidden="true">
+      <div class="board-stack">
+        <div class="board-halo halo-outer"></div>
+        <div class="board-halo halo-mid"></div>
+        <div class="board-runes"></div>
+        <div class="board-shell">
+          <div class="bench-row enemy-bench">
+            <span class="bench-square"></span>
+            <span class="bench-square"></span>
+            <span class="bench-square"></span>
+            <span class="bench-square"></span>
+            <span class="bench-square"></span>
+            <span class="bench-square"></span>
+            <span class="bench-square"></span>
+            <span class="bench-square"></span>
+          </div>
+          <div class="board-frame">
+            <div class="hex-board">
+              <svg class="hex-svg" viewBox="0 0 560 396" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+              <defs>
+                <linearGradient id="hexFill" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="rgba(128, 166, 188, 0.34)" />
+                  <stop offset="16%" stop-color="rgba(82, 116, 138, 0.28)" />
+                  <stop offset="58%" stop-color="rgba(24, 42, 55, 0.36)" />
+                  <stop offset="100%" stop-color="rgba(10, 20, 28, 0.52)" />
+                </linearGradient>
+                <linearGradient id="hexSheen" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0%" stop-color="rgba(230, 246, 255, 0.34)" />
+                  <stop offset="24%" stop-color="rgba(230, 246, 255, 0.12)" />
+                  <stop offset="100%" stop-color="rgba(230, 246, 255, 0)" />
+                </linearGradient>
+                <filter id="softGlow">
+                  <feDropShadow dx="0" dy="10" stdDeviation="10" flood-color="rgba(0,0,0,0.22)" />
+                </filter>
+              </defs>
+
+              <g class="hex-group" filter="url(#softGlow)">
+                <polygon class="hex-poly" points="35,8 70,28 70,68 35,88 0,68 0,28" />
+                <polygon class="hex-poly" points="105,8 140,28 140,68 105,88 70,68 70,28" />
+                <polygon class="hex-poly" points="175,8 210,28 210,68 175,88 140,68 140,28" />
+                <polygon class="hex-poly" points="245,8 280,28 280,68 245,88 210,68 210,28" />
+                <polygon class="hex-poly" points="315,8 350,28 350,68 315,88 280,68 280,28" />
+                <polygon class="hex-poly" points="385,8 420,28 420,68 385,88 350,68 350,28" />
+                <polygon class="hex-poly" points="455,8 490,28 490,68 455,88 420,68 420,28" />
+
+                <polygon class="hex-poly" points="70,68 105,88 105,128 70,148 35,128 35,88" />
+                <polygon class="hex-poly" points="140,68 175,88 175,128 140,148 105,128 105,88" />
+                <polygon class="hex-poly" points="210,68 245,88 245,128 210,148 175,128 175,88" />
+                <polygon class="hex-poly" points="280,68 315,88 315,128 280,148 245,128 245,88" />
+                <polygon class="hex-poly" points="350,68 385,88 385,128 350,148 315,128 315,88" />
+                <polygon class="hex-poly" points="420,68 455,88 455,128 420,148 385,128 385,88" />
+                <polygon class="hex-poly" points="490,68 525,88 525,128 490,148 455,128 455,88" />
+
+                <polygon class="hex-poly" points="35,128 70,148 70,188 35,208 0,188 0,148" />
+                <polygon class="hex-poly" points="105,128 140,148 140,188 105,208 70,188 70,148" />
+                <polygon class="hex-poly" points="175,128 210,148 210,188 175,208 140,188 140,148" />
+                <polygon class="hex-poly" points="245,128 280,148 280,188 245,208 210,188 210,148" />
+                <polygon class="hex-poly" points="315,128 350,148 350,188 315,208 280,188 280,148" />
+                <polygon class="hex-poly" points="385,128 420,148 420,188 385,208 350,188 350,148" />
+                <polygon class="hex-poly" points="455,128 490,148 490,188 455,208 420,188 420,148" />
+
+                <polygon class="hex-poly" points="70,188 105,208 105,248 70,268 35,248 35,208" />
+                <polygon class="hex-poly" points="140,188 175,208 175,248 140,268 105,248 105,208" />
+                <polygon class="hex-poly" points="210,188 245,208 245,248 210,268 175,248 175,208" />
+                <polygon class="hex-poly" points="280,188 315,208 315,248 280,268 245,248 245,208" />
+                <polygon class="hex-poly" points="350,188 385,208 385,248 350,268 315,248 315,208" />
+                <polygon class="hex-poly" points="420,188 455,208 455,248 420,268 385,248 385,208" />
+                <polygon class="hex-poly" points="490,188 525,208 525,248 490,268 455,248 455,208" />
+
+                <polygon class="hex-poly" points="35,248 70,268 70,308 35,328 0,308 0,268" />
+                <polygon class="hex-poly" points="105,248 140,268 140,308 105,328 70,308 70,268" />
+                <polygon class="hex-poly" points="175,248 210,268 210,308 175,328 140,308 140,268" />
+                <polygon class="hex-poly" points="245,248 280,268 280,308 245,328 210,308 210,268" />
+                <polygon class="hex-poly" points="315,248 350,268 350,308 315,328 280,308 280,268" />
+                <polygon class="hex-poly" points="385,248 420,268 420,308 385,328 350,308 350,268" />
+                <polygon class="hex-poly" points="455,248 490,268 490,308 455,328 420,308 420,268" />
+
+                <polygon class="hex-poly" points="70,308 105,328 105,368 70,388 35,368 35,328" />
+                <polygon class="hex-poly" points="140,308 175,328 175,368 140,388 105,368 105,328" />
+                <polygon class="hex-poly" points="210,308 245,328 245,368 210,388 175,368 175,328" />
+                <polygon class="hex-poly" points="280,308 315,328 315,368 280,388 245,368 245,328" />
+                <polygon class="hex-poly" points="350,308 385,328 385,368 350,388 315,368 315,328" />
+                <polygon class="hex-poly" points="420,308 455,328 455,368 420,388 385,368 385,328" />
+                <polygon class="hex-poly" points="490,308 525,328 525,368 490,388 455,368 455,328" />
+              </g>
+            </svg>
+            </div>
+            <div class="spawn spawn-top"></div>
+            <div class="spawn spawn-bottom"></div>
+          </div>
+          <div class="bench-row player-bench">
+            <span class="bench-square"></span>
+            <span class="bench-square"></span>
+            <span class="bench-square"></span>
+            <span class="bench-square"></span>
+            <span class="bench-square"></span>
+            <span class="bench-square"></span>
+            <span class="bench-square"></span>
+            <span class="bench-square"></span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="layout-grid">
+      <header class="topbar">
+        <div class="pill wide"></div>
+        <div class="pill short"></div>
+        <div class="pill short"></div>
+        <div class="pill icon"></div>
+      </header>
+
+      <aside class="synergy">
+        <div class="stack-card icon"></div>
+        <div class="stack-card icon"></div>
+        <div class="stack-card icon"></div>
+        <div class="stack-card icon"></div>
+        <div class="stack-card icon"></div>
+        <div class="stack-card icon"></div>
+      </aside>
+
+      <section class="center-spacer"></section>
+
+      <aside class="players">
+        <div class="panel player-card"></div>
+        <div class="panel player-card"></div>
+        <div class="panel player-card"></div>
+        <div class="panel player-card"></div>
+        <div class="panel player-card"></div>
+      </aside>
+
+      <section class="profile">
+        <div class="panel inventory"></div>
+        <div class="panel player-profile"></div>
+      </section>
+
+      <section class="shop">
+        <button class="shop-toggle" type="button" aria-expanded="true" aria-label="Toggle shop">
+          <span class="shop-toggle-arrow" aria-hidden="true"></span>
+        </button>
+        <div class="shop-card"></div>
+        <div class="shop-card"></div>
+        <div class="shop-card"></div>
+        <div class="shop-card"></div>
+        <div class="shop-card"></div>
+      </section>
+    </div>
+
+    <section class="tactical">
+      <div class="panel tactical-card"></div>
+    </section>
+
+    <div class="vignette"></div>
+    <div class="grain"></div>
+  </main>
+
+  <script src="./desktop-fullscreen-board-preview.js"></script>
+</body>
+</html>

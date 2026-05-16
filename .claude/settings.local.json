@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(Get-*)",
+      "Bash(ls*)",
+      "Bash(dir*)",
+      "Bash(cat*)",
+      "Bash(type*)",
+      "Bash(where*)",
+      "Bash(pwd*)",
+      "Bash(echo*)",
+      "Bash(git status*)",
+      "Bash(git diff*)",
+      "Bash(py -0*)",
+      "Bash(python --version*)"
+    ]
+  }
+}

@@ -11,5 +11,6 @@ Files:
 - `desktop-battlefield-preview.js`: animated arena background for the board scene
 - `desktop-battlefield-*-preview.html`: trait variants for fire, earth, wood, metal, arcane, valiant, cunning
 - `desktop-battlefield-gallery.html`: quick launcher page for all trait variants
+- `desktop-fullscreen-board-preview.html`: layout concept where board/background fills the screen and the rest floats as overlay cards
 
 This preview is intentionally separate from the game so the background can be reviewed before integration.
