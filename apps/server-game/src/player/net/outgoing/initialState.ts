@@ -38,4 +38,17 @@ export const sendInitialState = function* () {
 			isClone: opponentIsClone,
 		})
 	);
+
+	const potentialOpponentId = yield* select(
+		PlayerStateSelectors.getPotentialOpponentId
+	);
+	const potentialOpponentIsClone = yield* select(
+		PlayerStateSelectors.getPotentialOpponentIsClone
+	);
+	yield put(
+		PlayerCommands.playerInfoCommands.updatePotentialOpponentCommand({
+			id: potentialOpponentId,
+			isClone: potentialOpponentIsClone,
+		})
+	);
 };

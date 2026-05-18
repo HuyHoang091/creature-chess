@@ -243,6 +243,15 @@ export class Game {
 					if (!opponent) return null;
 					return opponent.select((state) => state.board);
 				},
+				getPotentialOpponentBoard: (playerId: string) => {
+					const player = this.gamemode.getPlayerById(playerId);
+					if (!player) return null;
+					const potentialOpponentId = player.select((state) => state.playerInfo.potentialOpponentId);
+					if (!potentialOpponentId) return null;
+					const potentialOpponent = this.gamemode.getPlayerById(potentialOpponentId);
+					if (!potentialOpponent) return null;
+					return potentialOpponent.select((state) => state.board);
+				},
 			},
 			this.settings
 		);

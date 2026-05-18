@@ -55,6 +55,12 @@
     background: rgba(231, 76, 60, 0.06);
 }
 
+.playerItemPotentialOpponent {
+    border-color: rgba(243, 156, 18, 0.7) !important;
+    box-shadow: 0 0 10px rgba(243, 156, 18, 0.25), inset 0 0 6px rgba(243, 156, 18, 0.08);
+    background: rgba(243, 156, 18, 0.06);
+}
+
 .playerItemDead {
     opacity: 0.4;
     filter: grayscale(70%);
@@ -65,6 +71,12 @@
     font-size: 13px;
     margin-left: 4px;
     animation: pulse-swords 1.5s ease-in-out infinite;
+}
+
+.potentialOpponentIcon {
+    font-size: 12px;
+    margin-left: 4px;
+    opacity: 0.85;
 }
 
 @keyframes pulse-swords {

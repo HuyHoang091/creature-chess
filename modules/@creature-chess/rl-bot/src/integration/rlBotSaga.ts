@@ -7,6 +7,7 @@ import {
   PlayerVariables,
   PlayerEvents,
   GameEvents,
+  getPlayerEntityDependencies,
 } from "@creature-chess/gamemode";
 import { GamePhase } from "@creature-chess/models";
 import { BoardSelectors } from "@shoki/board";
@@ -190,18 +191,37 @@ export function* runRlPreparingPhase(config?: Partial<TrainingConfig>) {
   const stateEncoder = getStateEncoder();
   const actionDecoder = getActionDecoder();
   const name = yield* getVariable<PlayerVariables, string>((v) => v.name);
+  const deps = yield* getPlayerEntityDependencies();
 
   yield delay(500);
 
-  const state: PlayerState = yield select();
-  const round = state.playerInfo.health > 0
-    ? Math.floor(100 - state.playerInfo.health) + 1
-    : 1;
-  const rlState = stateEncoder.encode(state.board, undefined);
+  let currentState: PlayerState = yield select();
+  const round = currentState.roundInfo.round;
+
+  for (let i = 0; i < 5; i++) {
+    if (currentState.playerInfo.opponentId) {
+      break;
+    }
+    yield delay(100);
+    currentState = yield select();
+  }
+
+  // Fetch real opponent board
+  let enemyBoard: any = undefined;
+  const opponentId = currentState.playerInfo.opponentId;
+  if (opponentId && opponentId !== "creep") {
+    const opponent = deps.gamemode.getPlayerById(opponentId);
+    if (opponent) {
+      enemyBoard = opponent.select((s: PlayerState) => s.board);
+    }
+  }
+
+  const rlState = stateEncoder.encode(currentState.board, enemyBoard);
   const { action, logProb } = agent.act(rlState);
 
+  const isPvE = opponentId === "creep";
   console.log(
-    `- ${name} RL Bot [Round ${round}]: formation=${action.payload.formation}, adjustment=${action.payload.adjustment}`
+    `- ${name} RL Bot [Round ${round}]: formation=${action.payload.formation}, adjustment=${action.payload.adjustment} | realOpp=${opponentId ?? 'none'}${isPvE ? ' [PvE]' : ''}`
   );
 
   if (isTrainingEnabled()) {
@@ -214,14 +234,14 @@ export function* runRlPreparingPhase(config?: Partial<TrainingConfig>) {
     });
   }
 
-  const moves = actionDecoder.decodeAction(action, state.board);
+  const moves = actionDecoder.decodeAction(action, currentState.board);
   for (const move of moves) {
-    const piece = BoardSelectors.getPiece(state.board, move.pieceId);
+    const piece = BoardSelectors.getPiece(currentState.board, move.pieceId);
     if (!piece) {
       continue;
     }
 
-    const currentPos = BoardSelectors.getPiecePosition(state.board, move.pieceId);
+    const currentPos = BoardSelectors.getPiecePosition(currentState.board, move.pieceId);
     if (!currentPos) {
       continue;
     }
@@ -238,10 +258,10 @@ export function* runRlPreparingPhase(config?: Partial<TrainingConfig>) {
   }
 
   if (action.payload.adjustment) {
-    const adjustments = actionDecoder.applyAdjustment(action, state.board);
+    const adjustments = actionDecoder.applyAdjustment(action, currentState.board);
     for (const adjustment of adjustments) {
       const currentPos = BoardSelectors.getPiecePosition(
-        state.board,
+        currentState.board,
         adjustment.pieceId
       );
       if (!currentPos) {

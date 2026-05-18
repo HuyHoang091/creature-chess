@@ -3,7 +3,6 @@ import { getPlayerSlices } from "~/store/sagaContext";
 
 import {
 	GameEvents,
-	PlayerCommands,
 	RoundInfoCommands,
 } from "@creature-chess/gamemode";
 import { BattleCommands } from "@creature-chess/battle";
@@ -20,6 +19,7 @@ export const roundUpdateSaga = function* () {
 				phase: packet.phase,
 				startedAt: packet.startedAt,
 				isOvertime: packet.isOvertime,
+				roundType: packet.roundType,
 				...(packet.phase === GamePhase.PREPARING
 					? { round: packet.round }
 					: undefined),
@@ -31,11 +31,6 @@ export const roundUpdateSaga = function* () {
 				case GamePhase.PREPARING: {
 					yield put(setMatchBoard(null));
 					yield put(BattleCommands.stopBattleCommand());
-					yield put(
-						PlayerCommands.playerInfoCommands.updateOpponentCommand({
-							id: null,
-						})
-					);
 					yield put(board.commands.unlockBoardCommand());
 					return;
 				}

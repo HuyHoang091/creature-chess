@@ -25,6 +25,10 @@ export const getOpponentId = (state: PlayerState) =>
 	state.playerInfo.opponentId;
 export const getOpponentIsClone = (state: PlayerState) =>
 	state.playerInfo.opponentIsClone;
+export const getPotentialOpponentId = (state: PlayerState) =>
+	state.playerInfo.potentialOpponentId;
+export const getPotentialOpponentIsClone = (state: PlayerState) =>
+	state.playerInfo.potentialOpponentIsClone;
 
 export const isPlayerAlive = (state: PlayerState): boolean =>
 	state.playerInfo.health > 0;

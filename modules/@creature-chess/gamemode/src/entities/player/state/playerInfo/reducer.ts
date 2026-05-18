@@ -28,6 +28,8 @@ export interface PlayerInfoState {
 
 	opponentId: string | null;
 	opponentIsClone: boolean;
+	potentialOpponentId: string | null;
+	potentialOpponentIsClone: boolean;
 	money: number;
 	ready: boolean;
 	level: number;
@@ -48,6 +50,8 @@ const initialState: PlayerInfoState = {
 	matchRewards: null,
 	opponentId: null,
 	opponentIsClone: false,
+	potentialOpponentId: null,
+	potentialOpponentIsClone: false,
 	money: 0,
 	ready: false,
 	level: 0,
@@ -80,6 +84,16 @@ const playerInfoSlice = createSlice({
 		) => {
 			state.opponentId = action.payload.id;
 			state.opponentIsClone = action.payload.isClone ?? false;
+		},
+		updatePotentialOpponentCommand: (
+			state,
+			action: PayloadAction<{
+				id: string | null;
+				isClone?: boolean;
+			}>
+		) => {
+			state.potentialOpponentId = action.payload.id;
+			state.potentialOpponentIsClone = action.payload.isClone ?? false;
 		},
 		updateBattleCommand: (
 			state,

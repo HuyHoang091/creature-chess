@@ -11,10 +11,11 @@ export class StateEncoder {
   private boardSize = 8;
   private channels = 4; // creatureId, level, range, role
 
-  encode(myBoard: any, enemyBoard?: any): TacticalRLState {
+  encode(myBoard: any, enemyBoard?: any, potentialEnemyBoard?: any): TacticalRLState {
     return {
       myBoard: this.encodeBoard(myBoard),
       enemyBoard: this.encodeBoard(enemyBoard),
+      potentialEnemyBoard: this.encodeBoard(potentialEnemyBoard),
       unitClasses: this.encodeUnitClasses(myBoard),
       synergies: this.encodeSynergies(myBoard),
       threats: this.encodeThreats(myBoard, enemyBoard),
@@ -227,7 +228,8 @@ export class StateEncoder {
     return {
       ...state,
       myBoard: StateEncoder.flipBoardHorizontal(state.myBoard),
-      enemyBoard: StateEncoder.flipBoardHorizontal(state.enemyBoard)
+      enemyBoard: StateEncoder.flipBoardHorizontal(state.enemyBoard),
+      potentialEnemyBoard: StateEncoder.flipBoardHorizontal(state.potentialEnemyBoard)
     };
   }
 
@@ -235,7 +237,8 @@ export class StateEncoder {
     return {
       ...state,
       myBoard: StateEncoder.flipBoardVertical(state.myBoard),
-      enemyBoard: StateEncoder.flipBoardVertical(state.enemyBoard)
+      enemyBoard: StateEncoder.flipBoardVertical(state.enemyBoard),
+      potentialEnemyBoard: StateEncoder.flipBoardVertical(state.potentialEnemyBoard)
     };
   }
 
@@ -243,7 +246,8 @@ export class StateEncoder {
     return {
       ...state,
       myBoard: StateEncoder.rotateBoard180(state.myBoard),
-      enemyBoard: StateEncoder.rotateBoard180(state.enemyBoard)
+      enemyBoard: StateEncoder.rotateBoard180(state.enemyBoard),
+      potentialEnemyBoard: StateEncoder.rotateBoard180(state.potentialEnemyBoard)
     };
   }
 

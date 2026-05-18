@@ -53,6 +53,8 @@ export class Gamemode {
 
 		const { store, sagaMiddleware } = createGameStore({
 			getMatchups: this.opponentProvider.getMatchups,
+			peekMatchups: this.opponentProvider.peekMatchups,
+			getPotentialOpponent: this.opponentProvider.getPotentialOpponent,
 			players: {
 				getAll: this.getAllPlayers,
 				getLiving: this.getLivingPlayers,

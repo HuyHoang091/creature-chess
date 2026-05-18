@@ -7,8 +7,11 @@ export interface TacticalRLState {
   // My board (8x8) - core positioning data
   myBoard: Float32Array;    // 8x8x[creatureId+level+range+role]
 
-  // Enemy board (8x8) - threat assessment
+  // Enemy board (8x8) - real opponent threat assessment
   enemyBoard: Float32Array;  // 8x8x[creatureId+level+range+role]
+
+  // Potential enemy board (8x8) - second opponent preview
+  potentialEnemyBoard: Float32Array;  // 8x8x[creatureId+level+range+role]
 
   // Unit classes & synergies - tactical context
   unitClasses: Float32Array;  // [tank, carry, support, assassin] counts

@@ -26,3 +26,5 @@ coverage/
 !.env.example
 
 .faunadb/
+
+bao-cao/

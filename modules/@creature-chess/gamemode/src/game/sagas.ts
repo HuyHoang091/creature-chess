@@ -15,8 +15,14 @@ export type GetMatchupsFn = () => {
 	awayIsClone: boolean;
 }[];
 
+export type GetPotentialOpponentFn = (
+	playerId: string
+) => { opponentId: string; isClone: boolean } | null;
+
 export type GameSagaContext = {
 	getMatchups: GetMatchupsFn;
+	peekMatchups: GetMatchupsFn;
+	getPotentialOpponent: GetPotentialOpponentFn;
 	players: {
 		getAll: () => PlayerEntity[];
 		getLiving: () => PlayerEntity[];

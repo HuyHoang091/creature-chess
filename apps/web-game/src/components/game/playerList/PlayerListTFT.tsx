@@ -36,11 +36,14 @@ export function PlayerListTFT() {
     const opponentId = useSelector<AppState, string | null>(
         (state) => state.game.playerInfo.opponentId
     );
+    const potentialOpponentId = useSelector<AppState, string | null>(
+        (state) => state.game.playerInfo.potentialOpponentId
+    );
     const phase = useSelector<AppState, GamePhase | null>(
         (state) => state.game.roundInfo.phase
     );
     const showOpponent = opponentId !== null
-        && (phase === GamePhase.READY || phase === GamePhase.PLAYING);
+        && (phase === GamePhase.PREPARING || phase === GamePhase.READY || phase === GamePhase.PLAYING);
 
     const maxHealth = MAX_HEALTH;
 
@@ -65,7 +68,7 @@ export function PlayerListTFT() {
                 const isDead = player.status === PlayerStatus.DEAD;
                 const isQuit = player.status === PlayerStatus.QUIT;
                 const healthPercent = player.health / maxHealth;
-                const isOpponent = showOpponent && player.id === opponentId;
+                const isOpponent = showOpponent && (player.id === opponentId || player.id === potentialOpponentId);
 
                 let itemClass = styles.playerItem;
                 if (isLocal) itemClass += ` ${styles.playerItemLocal}`;

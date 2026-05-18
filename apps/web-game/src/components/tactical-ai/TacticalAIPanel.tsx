@@ -1,7 +1,8 @@
 import * as React from "react";
 import { useSelector } from "react-redux";
 import { BoardSelectors, BoardState } from "@shoki/board";
-import { PieceModel, GamePhase } from "@creature-chess/models";
+import { PieceModel, GamePhase, RoundType } from "@creature-chess/models";
+import { PlayerListPlayer } from "@creature-chess/models/game/playerList";
 import { AppState } from "~/store/state";
 import { useLocalPlayerId } from "~/auth/context";
 import {
@@ -30,9 +31,13 @@ const TacticalAIPanel: React.FC = () => {
   const board = useSelector<AppState, BoardState<PieceModel>>((state) => state.game.board);
   const myPieces = BoardSelectors.getAllPieces(board).filter((p) => p.ownerId === localPlayerId);
   const opponentId = useSelector<AppState, string | null>((state) => state.game.playerInfo.opponentId);
+  const potentialOpponentId = useSelector<AppState, string | null>((state) => state.game.playerInfo.potentialOpponentId);
   const phase = useSelector<AppState, GamePhase>((state) => state.game.roundInfo.phase);
-  const canUsePositioning = opponentId !== null && phase !== GamePhase.PREPARING;
+  const roundType = useSelector<AppState, RoundType | undefined>((state) => state.game.roundInfo.roundType);
+  const isPvE = roundType === RoundType.PVE_CREEP || roundType === RoundType.PVE_BOSS;
+  const canUsePositioning = opponentId !== null && potentialOpponentId !== null && opponentId !== "creep" && phase === GamePhase.PREPARING && !isPvE;
   const matchBoard = useSelector<AppState, BoardState<PieceModel> | null>((state) => state.game.match.board);
+  const playerList = useSelector<AppState, PlayerListPlayer[]>((state) => state.game.playerList);
   const selectedPieceId = useSelector<AppState, string | null>((state) => state.game.ui.selectedPieceId);
   const inventory = useSelector<AppState, string[]>((state) => state.game.playerInfo.inventory);
 
@@ -53,6 +58,16 @@ const TacticalAIPanel: React.FC = () => {
   }, [coachMessages, activeTab, loading]);
 
   const handlePositioningRequest = async () => {
+    if (!canUsePositioning) {
+      setCoachMessages((prev) => [...prev, {
+        role: "ai",
+        text: isPvE
+          ? "Round PvE không hỗ trợ gợi ý xếp quân."
+          : "Chỉ dùng được khi đã reveal đủ 2 đối thủ trong vòng mua đồ."
+      }]);
+      return;
+    }
+
     setLoading(true);
     try {
       const res = await requestPositioningAdvice(board);
@@ -79,8 +94,18 @@ const TacticalAIPanel: React.FC = () => {
       // /pos or /xếp → trigger positioning advice
       if (lower === "/pos" || lower === "/xếp" || lower === "/xep") {
         setActiveTab("positioning");
+        if (!canUsePositioning) {
+          setCoachMessages((prev) => [...prev, {
+            role: "ai",
+            text: isPvE
+              ? "Round PvE không hỗ trợ gợi ý xếp quân."
+              : "Chưa reveal đủ 2 đối thủ để chạy gợi ý xếp quân."
+          }]);
+          setLoading(false);
+          return;
+        }
         await handlePositioningRequest();
-        setCoachMessages((prev) => [...prev, { role: "ai", text: "Đã chuyển sang tab Xếp Quân và gửi yêu cầu phân tích." }]);
+        setCoachMessages((prev) => [...prev, { role: "ai", text: "Đã chuyển sang tab Xếp Quân và gửi yêu cầu phân tích cho cả 2 đối thủ." }]);
         setLoading(false);
         return;
       }
@@ -141,7 +166,16 @@ const TacticalAIPanel: React.FC = () => {
           ? BoardSelectors.getAllPieces(matchBoard).filter((p) => p.ownerId !== localPlayerId)
           : [];
         if (enemyPieces.length === 0) {
-          setCoachMessages((prev) => [...prev, { role: "ai", text: "Chưa có dữ liệu đối thủ để phân tích counter." }]);
+          const opp = opponentId ? playerList.find((p) => p.id === opponentId) : null;
+          if (!opp) {
+            setCoachMessages((prev) => [...prev, { role: "ai", text: "Chưa có dữ liệu đối thủ để phân tích counter." }]);
+            setLoading(false);
+            return;
+          }
+          setCoachMessages((prev) => [...prev, {
+            role: "ai",
+            text: `🛡️ Counter ${opp.name} (Lv.${opp.level}, HP ${opp.health}): Đang ở vòng mua đồ nên chưa thấy chi tiết quân địch. Hãy dùng /scout để xem tổng quan.`
+          }]);
           setLoading(false);
           return;
         }
@@ -169,17 +203,33 @@ const TacticalAIPanel: React.FC = () => {
         const enemyPieces = matchBoard
           ? BoardSelectors.getAllPieces(matchBoard).filter((p) => p.ownerId !== localPlayerId)
           : [];
-        if (enemyPieces.length === 0) {
+        if (enemyPieces.length > 0) {
+          const names = enemyPieces.map((p) => p.definition?.name || "?").join(", ");
+          const traits = [...new Set(enemyPieces.flatMap((p) => p.definition?.traits || []))].join(", ");
+          setCoachMessages((prev) => [...prev, {
+            role: "ai",
+            text: `📋 Scout đối thủ (combat):\nQuân: ${names}\nTộc/hệ: ${traits || "Không rõ"}\nSố lượng: ${enemyPieces.length}`
+          }]);
+          setLoading(false);
+          return;
+        }
+
+        // Preparing phase: use playerList info
+        const realOpp = opponentId ? playerList.find((p) => p.id === opponentId) : null;
+        const potOpp = potentialOpponentId ? playerList.find((p) => p.id === potentialOpponentId) : null;
+        if (!realOpp) {
           setCoachMessages((prev) => [...prev, { role: "ai", text: "Chưa có thông tin đối thủ." }]);
           setLoading(false);
           return;
         }
-        const names = enemyPieces.map((p) => p.definition?.name || "?").join(", ");
-        const traits = [...new Set(enemyPieces.flatMap((p) => p.definition?.traits || []))].join(", ");
-        setCoachMessages((prev) => [...prev, {
-          role: "ai",
-          text: `📋 Scout đối thủ:\nQuân: ${names}\nTộc/hệ: ${traits || "Không rõ"}\nSố lượng: ${enemyPieces.length}`
-        }]);
+        const lines = [
+          `📋 Scout đối thủ (preparing):`,
+          `👤 Đối thủ chính: ${realOpp.name} (Lv.${realOpp.level}, HP ${realOpp.health}, Streak ${realOpp.streakAmount ?? 0})`,
+        ];
+        if (potOpp) {
+          lines.push(`👤 Đối thủ phụ: ${potOpp.name} (Lv.${potOpp.level}, HP ${potOpp.health})`);
+        }
+        setCoachMessages((prev) => [...prev, { role: "ai", text: lines.join("\n") }]);
         setLoading(false);
         return;
       }
@@ -265,13 +315,13 @@ const TacticalAIPanel: React.FC = () => {
                   className={styles.actionBtn}
                   onClick={handlePositioningRequest}
                   disabled={loading || !canUsePositioning}
-                  title={canUsePositioning ? "" : "Chỉ dùng được khi đang đánh với đối thủ"}
+                  title={canUsePositioning ? "" : "Chỉ dùng được trong vòng mua đồ khi đã reveal đủ 2 đối thủ và không phải round PvE"}
                 >
                   {loading ? "Đang phân tích..." : "Gợi ý xếp quân"}
                 </button>
                 {!canUsePositioning && (
                   <div className={styles.disabledHint}>
-                    ⚠️ Chỉ dùng được khi đang đánh với đối thủ
+                    ⚠️ Chỉ dùng được trong vòng mua đồ, không áp dụng cho round PvE
                   </div>
                 )}
 
@@ -282,6 +332,16 @@ const TacticalAIPanel: React.FC = () => {
                       Win rate: {(positioningResult.winRate * 100).toFixed(0)}% | Confidence:{" "}
                       {positioningResult.confidence}
                     </div>
+                    {positioningResult.opponentBreakdown && positioningResult.opponentBreakdown.length > 0 && (
+                      <div className={styles.alternatives}>
+                        <strong>Kết quả theo từng đối thủ:</strong>
+                        {positioningResult.opponentBreakdown.map((result: { label: string; winRate: number; avgSurvivorMargin: number; testedScenarios: number }, i: number) => (
+                          <div key={i}>
+                            {result.label}: {(result.winRate * 100).toFixed(0)}% | Margin {result.avgSurvivorMargin.toFixed(1)} | {result.testedScenarios} scenarios
+                          </div>
+                        ))}
+                      </div>
+                    )}
                     {positioningResult.moves.length > 0 && (
                       <div className={styles.moves}>
                         <strong>Các nước đi:</strong>

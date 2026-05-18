@@ -5,6 +5,7 @@ describe("PPOAgent vs Rule-Based Heuristic Comparison", () => {
   const dummyState: TacticalRLState = {
     myBoard: new Float32Array(64 * 4).fill(0),
     enemyBoard: new Float32Array(64 * 4).fill(0),
+    potentialEnemyBoard: new Float32Array(64 * 4).fill(0),
     unitClasses: new Float32Array([2, 2, 1, 0]), // 2 tanks, 2 carries, 1 support
     synergies: new Float32Array([1, 0, 1, 0]),
     threats: new Float32Array([0.8, 0.5, 0.2]),

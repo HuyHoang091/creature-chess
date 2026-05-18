@@ -22,7 +22,7 @@ export class OpponentProvider {
 		this.players = players;
 	}
 
-	public getMatchups = () => {
+	public peekMatchups = () => {
 		const livingPlayers = this.getLivingPlayers();
 		const livingPlayerCount = livingPlayers.length;
 
@@ -39,13 +39,41 @@ export class OpponentProvider {
 		}
 
 		const isEven = livingPlayers.length % 2 === 0;
-		const output = isEven
+		return isEven
 			? this.getMatchupsEven(livingPlayers)
 			: this.getMatchupsOdd(livingPlayers);
+	};
 
+	public getMatchups = () => {
+		const output = this.peekMatchups();
 		this.updateRotation();
-
 		return output;
+	};
+
+	public getPotentialOpponent = (playerId: string) => {
+		const livingPlayers = this.getLivingPlayers();
+		if (livingPlayers.length < 3) {
+			return null;
+		}
+
+		const matchups = this.peekMatchups();
+		const realOpponent = matchups.find(
+			(m) => m.homeId === playerId || m.awayId === playerId
+		);
+		const realOpponentId =
+			realOpponent?.homeId === playerId
+				? realOpponent.awayId
+				: realOpponent?.homeId;
+
+		const candidates = livingPlayers.filter(
+			(p) => p.id !== playerId && p.id !== realOpponentId
+		);
+		if (candidates.length === 0) {
+			return null;
+		}
+
+		const potential = randomFromArray(candidates);
+		return { opponentId: potential.id, isClone: false };
 	};
 
 	private getLivingPlayers() {

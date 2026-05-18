@@ -43,11 +43,13 @@ const httpPost = (url: string, body: object): Promise<{ ok: boolean; status: num
 
 export interface TacticalAIPluginDeps {
   getOpponentBoard?: (playerId: string) => BoardState<PieceModel> | null;
+  getPotentialOpponentBoard?: (playerId: string) => BoardState<PieceModel> | null;
 }
 
 export interface PositioningRequest {
   myBoard: BoardState<PieceModel>;
   enemyBoard: BoardState<PieceModel>;
+  potentialEnemyBoard?: BoardState<PieceModel>;
 }
 
 export interface CoachRequest {
@@ -91,6 +93,7 @@ const handlePositioningRequest = async (
 ) => {
   try {
     let enemyBoard: BoardState<PieceModel> | null = null;
+    let potentialEnemyBoard: BoardState<PieceModel> | null = null;
 
     if (data.enemyBoard && Object.keys(data.enemyBoard.pieces || {}).length > 0) {
       enemyBoard = data.enemyBoard;
@@ -98,6 +101,15 @@ const handlePositioningRequest = async (
       const playerId = (data as any).playerId;
       if (playerId) {
         enemyBoard = deps.getOpponentBoard(playerId);
+      }
+    }
+
+    if (data.potentialEnemyBoard && Object.keys(data.potentialEnemyBoard.pieces || {}).length > 0) {
+      potentialEnemyBoard = data.potentialEnemyBoard;
+    } else if (deps.getPotentialOpponentBoard) {
+      const playerId = (data as any).playerId;
+      if (playerId) {
+        potentialEnemyBoard = deps.getPotentialOpponentBoard(playerId);
       }
     }
 
@@ -110,6 +122,7 @@ const handlePositioningRequest = async (
       "pos",
       JSON.stringify(data.myBoard.piecePositions),
       JSON.stringify(enemyBoard.piecePositions),
+      potentialEnemyBoard ? JSON.stringify(potentialEnemyBoard.piecePositions) : "",
     ]);
     const cached = await cache.get<{ success: boolean; advice: PositioningAdvice }>(cacheKey);
     if (cached) {
@@ -118,7 +131,7 @@ const handlePositioningRequest = async (
     }
 
     const advisor = await getPositioningAdvisor();
-    const advice = advisor.getAdvice(data.myBoard, enemyBoard);
+    const advice = await advisor.getAdvice(data.myBoard, enemyBoard, potentialEnemyBoard || undefined);
 
     if (!advice) {
       callback({ success: false, error: "Could not generate positioning advice" });

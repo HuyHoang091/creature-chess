@@ -27,11 +27,12 @@ type Parameters = {
 	getRoundInfo: () => RoundInfoState;
 	getPlayers: () => PlayerListPlayer[];
 	getOpponentBoard: (playerId: string) => BoardState<PieceModel> | null;
+	getPotentialOpponentBoard: (playerId: string) => BoardState<PieceModel> | null;
 };
 
 export const playerNetworking = function* (
 	socket: Socket,
-	{ getRoundInfo, getPlayers, getOpponentBoard }: Parameters,
+	{ getRoundInfo, getPlayers, getOpponentBoard, getPotentialOpponentBoard }: Parameters,
 	settings: GamemodeSettings
 ) {
 	const registries = {
@@ -47,7 +48,7 @@ export const playerNetworking = function* (
 	yield* setPacketRegistries(registries);
 
 	// Register Tactical AI socket events (Positioning Advisor + RAG Coach)
-	registerTacticalAIEvents(socket, { getOpponentBoard });
+	registerTacticalAIEvents(socket, { getOpponentBoard, getPotentialOpponentBoard });
 
 	const teardown = function* () {
 		yield* setPacketRegistries(null);

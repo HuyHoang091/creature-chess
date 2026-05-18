@@ -15,6 +15,12 @@ export interface PositioningAdvice {
   explanation: string;
   alternatives: Array<{ formation: string; winRate: number }>;
   testedScenarios: number;
+  opponentBreakdown?: Array<{
+    label: string;
+    winRate: number;
+    avgSurvivorMargin: number;
+    testedScenarios: number;
+  }>;
 }
 
 export interface CoachResponse {

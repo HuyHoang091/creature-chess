@@ -33,7 +33,7 @@ export const gameSaga = function* (
 ) {
 	const {
 		players,
-		game: { phase, phaseStartedAtSeconds },
+		game: { phase, phaseStartedAtSeconds, round, roundType, isOvertime },
 		settings,
 		playerId,
 	} = payload;
@@ -49,7 +49,13 @@ export const gameSaga = function* (
 		}
 	}
 
-	const update = { phase, startedAt: phaseStartedAtSeconds };
+	const update = {
+		phase,
+		startedAt: phaseStartedAtSeconds,
+		round,
+		roundType,
+		isOvertime,
+	};
 	yield put(RoundInfoCommands.setRoundInfoCommand(update));
 
 	yield put(SettingsCommands.setSettingsCommand(settings));

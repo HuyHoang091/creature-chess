@@ -20,6 +20,7 @@ export const PlayerInfoUpdateCommandActionTypesArray = [
 	playerInfoCommands.updateLevelCommand.toString(),
 	playerInfoCommands.updateHealthCommand.toString(),
 	playerInfoCommands.updateOpponentCommand.toString(),
+	playerInfoCommands.updatePotentialOpponentCommand.toString(),
 	playerInfoCommands.updateReadyCommand.toString(),
 	playerInfoCommands.addItemToInventoryCommand.toString(),
 	playerInfoCommands.removeItemFromInventoryCommand.toString(),
