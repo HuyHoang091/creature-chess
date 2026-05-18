@@ -11,10 +11,7 @@ export const InventoryPanel: React.FC = () => {
 	const inventory = useSelector<AppState, string[]>(
 		(state) => state.game.playerInfo.inventory || []
 	);
-
-	if (inventory.length === 0) {
-		return null;
-	}
+	const emptySlots = Math.max(4 - inventory.length, 0);
 
 	return (
 		<div className={styles.inventoryPanel}>
@@ -34,7 +31,17 @@ export const InventoryPanel: React.FC = () => {
 						/>
 					);
 				})}
+				{Array.from({ length: emptySlots }, (_, index) => (
+					<div
+						key={`empty-slot-${index}`}
+						className={styles.emptySlot}
+						aria-hidden="true"
+					/>
+				))}
 			</div>
+			{inventory.length === 0 ? (
+				<div className={styles.emptyHint}>No items yet</div>
+			) : null}
 		</div>
 	);
 };

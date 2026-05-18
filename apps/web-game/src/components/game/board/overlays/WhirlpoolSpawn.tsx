@@ -6,6 +6,7 @@ import { revealEnemyPieces, hideEnemyPieces } from "~/store/game/ui";
 
 import { GamePhase } from "@creature-chess/models";
 import { WhirlpoolEffect } from "./effectAppears";
+import { getHexTileCenter } from "../hexLayout";
 
 import styles from "./Overlays.module.css";
 
@@ -48,9 +49,10 @@ export function WhirlpoolSpawn() {
             if (!piece || piece.ownerId === localPlayerId) return;
 
             const [x, y] = posKey.split(",").map(Number);
+            const center = getHexTileCenter(size.width, size.height, x, y);
             targets.push({
-                targetXPercent: ((x + 0.5) / size.width) * 100,
-                targetYPercent: ((y + 0.5) / size.height) * 100,
+                targetXPercent: center.x,
+                targetYPercent: center.y,
                 delay: Math.random() * 0.3,
             });
         });

@@ -10,23 +10,23 @@ import { BoardSelectors } from "@shoki/board";
 import { GamePhase, PieceModel } from "@creature-chess/models";
 
 import { Footer } from "../../ui/Footer";
-import { PieceBattleStats } from "../PieceBattleStats";
-import { TopBarTFT } from "../TopBarTFT";
+import { TacticalAIPanel, BattleReportOverlay } from "../../tactical-ai";
+import { BattleAnalysis } from "~/services/tacticalAI";
 import { BoardContainer } from "../board";
 import { CardShop } from "../cardShop/cardShop";
+import { InventoryPanel } from "../inventory/InventoryPanel";
+import { PieceBattleStats } from "../PieceBattleStats";
 import { PlayerListTFT } from "../playerList/PlayerListTFT";
 import { PlayerGameProfile } from "../profile";
 import { Settings } from "../settings";
 import { SynergyPanel } from "../synergy/SynergyPanel";
-import { InventoryPanel } from "../inventory/InventoryPanel";
-import { TacticalAIPanel, BattleReportOverlay } from "../../tactical-ai";
-import { BattleAnalysis } from "~/services/tacticalAI";
+import { TopBarTFT } from "../TopBarTFT";
+import { DesktopBattlefieldBackground } from "./DesktopBattlefieldBackground";
+import { DesktopPrepOverlays } from "./DesktopPrepOverlays";
 import styles from "./DesktopGame.module.css";
 
-// Baseline game width — giao diện được thiết kế cho 1280px
 const BASE_WIDTH = 1280;
 
-/** Scale toàn bộ giao diện khi viewport nhỏ hơn baseline */
 function useViewportScale(ref: React.RefObject<HTMLDivElement>) {
 	React.useEffect(() => {
 		const el = ref.current;
@@ -34,14 +34,10 @@ function useViewportScale(ref: React.RefObject<HTMLDivElement>) {
 
 		const update = () => {
 			const vw = window.innerWidth;
-			const vh = window.innerHeight;
-
-			// Chỉ scale khi viewport nhỏ hơn baseline
 			const scaleByWidth = vw / BASE_WIDTH;
-			const scale = Math.min(scaleByWidth, 1); // Không scale lớn hơn 100%
+			const scale = Math.min(scaleByWidth, 1);
 
 			if (scale < 1) {
-				// Scale xuống và điều chỉnh kích thước container
 				el.style.transform = `scale(${scale})`;
 				el.style.width = `${100 / scale}vw`;
 				el.style.height = `${100 / scale}dvh`;
@@ -68,11 +64,13 @@ const DesktopGame: React.FunctionComponent = () => {
 
 	const [showStats, setShowStats] = React.useState(false);
 	const [showSettingsModal, setShowSettingsModal] = React.useState(false);
-	const [battleAnalysis, setBattleAnalysis] = React.useState<BattleAnalysis | null>(null);
+	const [isShopCollapsed, setIsShopCollapsed] = React.useState(false);
+	const [battleAnalysis, setBattleAnalysis] =
+		React.useState<BattleAnalysis | null>(null);
 
 	const ownedPieces = useSelector<AppState, PieceModel[]>((state) =>
 		[...BoardSelectors.getAllPieces(state.game.board)].filter(
-			(p) => p.ownerId === localPlayerId
+			(piece) => piece.ownerId === localPlayerId
 		)
 	);
 
@@ -83,8 +81,24 @@ const DesktopGame: React.FunctionComponent = () => {
 	);
 
 	return (
-		<div className={styles.gameContainer} ref={containerRef}>
-			{/* === TOP BAR === */}
+		<div
+			className={styles.gameContainer}
+			ref={containerRef}
+			data-shop-state={isShopCollapsed ? "collapsed" : "expanded"}
+		>
+			<DesktopBattlefieldBackground />
+
+			<div className={styles.centerArea}>
+				<div
+					className={`${styles.boardArea} ${
+						isShopCollapsed ? styles.boardAreaCollapsed : styles.boardAreaExpanded
+					}`}
+				>
+					<BoardContainer />
+				</div>
+				<DesktopPrepOverlays />
+			</div>
+
 			<div className={styles.topBarArea}>
 				<TopBarTFT
 					onToggleStats={() => setShowStats((prev) => !prev)}
@@ -93,19 +107,10 @@ const DesktopGame: React.FunctionComponent = () => {
 				/>
 			</div>
 
-			{/* === LEFT: Synergies === */}
 			<div className={styles.synergyColumn}>
 				<SynergyPanel />
 			</div>
 
-			{/* === CENTER: Board === */}
-			<div className={styles.centerArea}>
-				<div className={styles.boardArea}>
-					<BoardContainer />
-				</div>
-			</div>
-
-			{/* === RIGHT: Player List OR Stats === */}
 			<div className={styles.playerListColumn}>
 				{showStats ? (
 					<div className={styles.statsPanel}>
@@ -113,14 +118,7 @@ const DesktopGame: React.FunctionComponent = () => {
 						{inPreparingPhase ? (
 							<PieceBattleStats pieces={ownedPieces} stats={stats} />
 						) : (
-							<span
-								style={{
-									color: "#a09b8c",
-									fontSize: "12px",
-									padding: "8px",
-									display: "block",
-								}}
-							>
+							<span className={styles.statsHint}>
 								Stats available during preparation phase...
 							</span>
 						)}
@@ -130,18 +128,38 @@ const DesktopGame: React.FunctionComponent = () => {
 				)}
 			</div>
 
-			{/* === BOTTOM-LEFT: Profile/Controls === */}
 			<div className={styles.shopControls}>
-				<InventoryPanel />
-				<PlayerGameProfile />
+				<div className={`${styles.controlCard} ${styles.inventoryCard}`}>
+					<InventoryPanel />
+				</div>
+				<div className={`${styles.controlCard} ${styles.profileCard}`}>
+					<PlayerGameProfile />
+				</div>
 			</div>
 
-			{/* === BOTTOM-RIGHT: Shop === */}
-			<div className={styles.shopCards}>
-				<CardShop />
+			<div
+				className={`${styles.shopCards} ${
+					isShopCollapsed ? styles.shopCardsCollapsed : styles.shopCardsExpanded
+				}`}
+			>
+				<button
+					type="button"
+					className={styles.shopToggle}
+					aria-expanded={!isShopCollapsed}
+					aria-label="Toggle shop"
+					onClick={() => setIsShopCollapsed((prev) => !prev)}
+				>
+					<span
+						className={`${styles.shopToggleArrow} ${
+							isShopCollapsed ? styles.shopToggleArrowCollapsed : ""
+						}`}
+					/>
+				</button>
+				<div className={styles.shopContent}>
+					<CardShop />
+				</div>
 			</div>
 
-			{/* === SETTINGS MODAL === */}
 			{showSettingsModal && (
 				<div
 					className={styles.modalOverlay}
@@ -157,27 +175,19 @@ const DesktopGame: React.FunctionComponent = () => {
 								className={styles.modalCloseBtn}
 								onClick={() => setShowSettingsModal(false)}
 							>
-								✕
+								×
 							</button>
 						</div>
 						<Settings />
-						<div
-							style={{
-								marginTop: "16px",
-								paddingTop: "12px",
-								borderTop: "1px solid rgba(200,170,110,0.2)",
-							}}
-						>
+						<div className={styles.modalFooter}>
 							<Footer />
 						</div>
 					</div>
 				</div>
 			)}
 
-			{/* Tactical AI */}
 			<TacticalAIPanel />
 
-			{/* Post-Battle Report */}
 			<BattleReportOverlay
 				analysis={battleAnalysis}
 				onClose={() => setBattleAnalysis(null)}

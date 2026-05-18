@@ -1,50 +1,163 @@
 .root {
-	width: 100%;
-	height: 100%;
+	--board-width: min(82vw, 800px);
+	--playfield-width: calc(var(--board-width) * 0.94);
+	width: min(var(--playfield-width), calc(100vw - 340px));
+	height: min(78vh, 760px);
+	max-width: calc(100vw - 340px);
+	max-height: min(78vh, 760px);
 	display: flex;
 	justify-content: center;
 	align-items: center;
 	position: relative;
+	pointer-events: none;
 }
 
-/* Atmosphere overlay */
-.root::before {
-	content: "";
+.boardHaloOuter,
+.boardHaloMid,
+.boardRunes {
 	position: absolute;
-	top: 0;
-	left: 0;
-	right: 0;
-	bottom: 0;
-	background: radial-gradient(circle at center, rgba(0,0,0,0) 0%, rgba(0,0,0,0.3) 100%);
+	left: 50%;
+	top: 50%;
+	transform: translate(-50%, -50%);
+	border-radius: 50%;
 	pointer-events: none;
 	z-index: 0;
 }
 
-/*
-  .gameBoard nhận width/height từ JS (ResizeObserver) dưới dạng px.
-  Chỉ cần layout, không cần sizing CSS.
-*/
+.boardHaloOuter {
+	width: min(94vw, 1440px);
+	height: min(78vh, 860px);
+	border: 1px solid rgba(96, 215, 196, 0.11);
+	box-shadow:
+		0 0 60px rgba(79, 200, 182, 0.1),
+		inset 0 0 50px rgba(79, 200, 182, 0.04);
+}
+
+.boardHaloMid {
+	width: min(78vw, 1180px);
+	height: min(60vh, 640px);
+	border: 1px solid rgba(110, 124, 255, 0.12);
+	border-style: solid dashed;
+	box-shadow:
+		0 0 36px rgba(110, 124, 255, 0.08),
+		inset 0 0 28px rgba(110, 124, 255, 0.04);
+}
+
+.boardRunes {
+	width: min(82vw, 1240px);
+	height: min(64vh, 700px);
+	background:
+		conic-gradient(
+			from 0deg,
+			transparent 0 8%,
+			rgba(106, 227, 203, 0.12) 8% 10%,
+			transparent 10% 22%,
+			rgba(111, 122, 255, 0.1) 22% 24%,
+			transparent 24% 38%,
+			rgba(106, 227, 203, 0.12) 38% 40%,
+			transparent 40% 58%,
+			rgba(111, 122, 255, 0.1) 58% 60%,
+			transparent 60% 78%,
+			rgba(106, 227, 203, 0.12) 78% 80%,
+			transparent 80% 100%
+		);
+	mask-image: radial-gradient(circle at center, transparent 0 61%, black 67%, transparent 74%);
+	filter: blur(4px);
+	opacity: 0.82;
+}
+
 .gameBoard {
 	display: flex;
 	flex-direction: column;
-	overflow: hidden;
+	align-items: center;
+	gap: 0;
 	box-sizing: border-box;
 	will-change: transform;
 	position: relative;
 	z-index: 1;
-	flex-shrink: 0; /* Không cho bị co bật khi container nhỏ */
+	flex-shrink: 0;
+	pointer-events: auto;
 }
 
+.enemyBenchShell,
+.playerBenchShell {
+	width: 100%;
+	display: flex;
+	justify-content: center;
+}
+
+.enemyBench,
+.bench {
+	width: 100%;
+	aspect-ratio: var(--bench-ratio);
+	display: flex;
+	position: relative;
+}
+
+.enemyBench {
+	opacity: 0.72;
+	margin-bottom: 6px;
+}
+
+.enemyBenchTile {
+	flex: 1 1 0;
+	aspect-ratio: 1 / 1;
+	border-top: 1px solid rgba(198, 170, 108, 0.16);
+	border-bottom: 1px solid rgba(198, 170, 108, 0.16);
+	border-left: 1px solid rgba(198, 170, 108, 0.16);
+	background: linear-gradient(180deg, rgba(44, 35, 26, 0.34), rgba(18, 14, 10, 0.48));
+	box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02);
+}
+
+.enemyBenchTile:last-child {
+	border-right: 1px solid rgba(198, 170, 108, 0.16);
+}
+
+.playerBenchShell {
+	margin-top: 6px;
+}
+
+.boardShell {
+	position: relative;
+	width: 100%;
+	padding: 12px 2px 8px;
+	border-radius: 42px;
+	border: 1px solid rgba(198, 170, 108, 0.12);
+	background:
+		linear-gradient(180deg, rgba(7, 12, 18, 0.5), rgba(7, 12, 18, 0.26)),
+		radial-gradient(circle at 50% 50%, rgba(71, 160, 170, 0.05), transparent 62%);
+	box-shadow:
+		0 24px 80px rgba(0, 0, 0, 0.28),
+		inset 0 0 0 1px rgba(255, 255, 255, 0.02);
+	overflow: hidden;
+}
 
 .board {
 	position: relative;
 	aspect-ratio: var(--board-ratio);
 	width: 100%;
+	border-radius: 34px;
+	border: 1px solid rgba(198, 170, 108, 0.08);
+	overflow: hidden;
+	background:
+		linear-gradient(180deg, rgba(9, 16, 23, 0.18), rgba(9, 16, 23, 0.08));
+	box-shadow:
+		inset 0 1px 0 rgba(255, 255, 255, 0.03),
+		inset 0 -16px 28px rgba(0, 0, 0, 0.14);
 }
 
-.bench {
-	aspect-ratio: var(--bench-ratio);
-	width: 100%;
+.board::before {
+	content: "";
+	position: absolute;
+	inset: 6% 1% 8%;
+	border-radius: 999px;
+	background:
+		radial-gradient(circle at 50% 50%, rgba(101, 137, 158, 0.12), transparent 56%),
+		radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.05), transparent 72%);
+	filter: blur(18px);
+	opacity: 0.6;
+	pointer-events: none;
+	z-index: 0;
 }
 
 .benchBoard {
@@ -53,50 +166,84 @@
 	justify-content: end;
 }
 
-/* TFT themed bench tiles */
 .benchTile {
-	background: linear-gradient(180deg, #2a2318 0%, #1a1610 100%) !important;
-	box-shadow: inset 0 0 3px rgba(200, 170, 110, 0.2);
-	border: 1px solid rgba(200, 170, 110, 0.15);
+	background: linear-gradient(180deg, rgba(44, 35, 26, 0.5), rgba(18, 14, 10, 0.62)) !important;
+	box-shadow:
+		inset 0 1px 0 rgba(255, 255, 255, 0.025),
+		inset 0 -8px 10px rgba(0, 0, 0, 0.12);
+	border-top: 1px solid rgba(198, 170, 108, 0.18);
+	border-bottom: 1px solid rgba(198, 170, 108, 0.18);
+	border-left: 1px solid rgba(198, 170, 108, 0.18);
+	border-right: 1px solid rgba(198, 170, 108, 0.18);
 }
 
-/* Board Container */
 .boardContainer {
-    width: 100%;
-    height: 100%;
-    position: relative;
-    overflow: hidden;
+	width: 100%;
+	height: 100%;
+	position: relative;
+	overflow: visible;
+	display: flex;
+	align-items: center;
+	justify-content: center;
 }
 
-/* Space Filler */
-.filler {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    padding-bottom: 8px;
-    box-sizing: border-box;
+@media (max-width: 1100px) {
+	.root {
+		--board-width: min(78vw, 740px);
+		--playfield-width: calc(var(--board-width) * 0.94);
+	}
+
+	.board {
+		border-radius: 30px;
+	}
 }
 
-.row {
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    gap: 8px;
+@media (max-width: 820px) {
+	.root {
+		--board-width: min(74vw, 620px);
+		--playfield-width: calc(var(--board-width) * 0.93);
+		width: min(var(--playfield-width), calc(100vw - 120px));
+		height: min(72vh, 640px);
+		max-width: calc(100vw - 120px);
+		max-height: min(72vh, 640px);
+	}
+
+	.boardHaloOuter {
+		width: 110vw;
+		height: 78vh;
+	}
+
+	.boardHaloMid,
+	.boardRunes {
+		width: 94vw;
+	}
+
+	.boardShell {
+		padding: 8px 2px 6px;
+		border-radius: 30px;
+	}
+
+	.board {
+		border-radius: 26px;
+	}
 }
 
-.grow {
-    flex: 1;
-}
+@media (max-width: 560px) {
+	.root {
+		--board-width: min(70vw, 420px);
+		--playfield-width: calc(var(--board-width) * 0.92);
+		width: min(var(--playfield-width), calc(100vw - 110px));
+		height: min(68vh, 520px);
+		max-width: calc(100vw - 110px);
+		max-height: min(68vh, 520px);
+	}
 
-.half {
-    display: flex;
-    flex-direction: column;
-    flex: 1;
-}
+	.boardShell {
+		padding: 6px 1px 4px;
+		border-radius: 22px;
+	}
 
-.selectedPiece {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
+	.board {
+		border-radius: 20px;
+	}
 }
-

@@ -1,18 +1,21 @@
 .inventoryPanel {
-	position: absolute;
-	left: 16px;
-	bottom: 120px;
+	position: relative;
+	left: auto;
+	bottom: auto;
 	background-color: rgba(10, 12, 16, 0.85);
 	border: 1px solid rgba(200, 170, 110, 0.3);
 	border-radius: 8px;
-	padding: 12px;
+	padding: 10px;
 	display: flex;
 	flex-direction: column;
-	gap: 8px;
+	gap: 6px;
 	pointer-events: auto;
 	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
 	z-index: 50;
-	min-width: 120px;
+	width: 100%;
+	min-width: 0;
+	min-height: 64px;
+	box-sizing: border-box;
 }
 
 .title {
@@ -26,6 +29,21 @@
 .itemGrid {
 	display: flex;
 	flex-wrap: wrap;
-	gap: 6px;
-	max-width: 200px;
+	gap: 4px;
+	max-width: 100%;
+}
+
+.emptySlot {
+	width: 32px;
+	height: 32px;
+	border: 1px dashed rgba(200, 170, 110, 0.25);
+	border-radius: 6px;
+	background: rgba(255, 255, 255, 0.03);
+}
+
+.emptyHint {
+	font-size: 10px;
+	color: rgba(200, 170, 110, 0.5);
+	letter-spacing: 0.06em;
+	text-align: center;
 }

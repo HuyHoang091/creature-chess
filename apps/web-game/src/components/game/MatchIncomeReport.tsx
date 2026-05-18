@@ -16,29 +16,26 @@ export function MatchIncomeReport({ rewards, className }: Props) {
 		rewardMoney: { total, base, winBonus, streakBonus, interest },
 	} = rewards;
 
+	const rows = [
+		{ label: "Base", amount: base },
+		{ label: "Win Bonus", amount: winBonus },
+		{ label: "Streak Bonus", amount: streakBonus },
+		{ label: "Interest", amount: interest },
+	];
+
 	return (
 		<div className={classNames(styles.root, className)}>
 			<div className={styles.total}>
-				<BalanceIcon amount={total} />
-				<span>earned</span>
+				<span className={styles.totalLabel}>Total Earned</span>
+				<BalanceIcon amount={total} className={styles.totalValue} />
 			</div>
 			<div className={styles.incomeTable}>
-				<div>base</div>
-				<div>
-					<BalanceIcon amount={base} />
-				</div>
-				<div>win bonus</div>
-				<div>
-					<BalanceIcon amount={winBonus} />
-				</div>
-				<div>streak bonus</div>
-				<div>
-					<BalanceIcon amount={streakBonus} />
-				</div>
-				<div>interest (10%)</div>
-				<div>
-					<BalanceIcon amount={interest} />
-				</div>
+				{rows.map((row) => (
+					<React.Fragment key={row.label}>
+						<div className={styles.incomeLabel}>{row.label}</div>
+						<BalanceIcon amount={row.amount} className={styles.incomeValue} />
+					</React.Fragment>
+				))}
 			</div>
 		</div>
 	);

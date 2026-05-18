@@ -39,7 +39,10 @@ function useActiveOverlay(): OverlayType {
     // Priority cao → thấp
     if (connectionStatus === ConnectionStatus.DISCONNECTED) return "reconnect";
     if (winnerId) return "victory";
-    if (localPlayer && localPlayer.health <= 0 && !winnerId && !isSpectating) return "defeat";
+    if (matchRewards?.justDied && !winnerId && !isSpectating) return "matchRewards";
+    if (localPlayer && localPlayer.health <= 0 && !winnerId && !isSpectating && !matchRewards) {
+        return "defeat";
+    }
     if (matchRewards && !winnerId && !isSpectating) return "matchRewards";
     return null;
 }

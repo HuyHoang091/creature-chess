@@ -1,28 +1,19 @@
 @import url("https://fonts.googleapis.com/css2?family=Spiegel:wght@400;700&display=swap");
 
-/* === GAME CONTAINER — CSS Grid 2D === */
-/*
-  Grid 3 rows × 4 cols:
-  ┌────────┬────────┬────────┬────────┐  48px
-  │topbar  │topbar  │topbar  │topbar  │
-  ├────────┼────────┼────────┼────────┤  1fr
-  │synergy │ board  │ board  │players │
-  ├────────┼────────┼────────┼────────┤  160px
-  │      control    │ shop   │ shop   │
-  └────────┴────────┴────────┴────────┘
-*/
-
 .gameContainer {
 	display: grid;
 	grid-template-columns: 56px 180px 1fr 220px;
 	grid-template-rows: 48px 1fr 160px;
 	grid-template-areas:
-		"topbar  topbar   topbar  topbar"
-		"synergy board    board   players"
-		"control control  shop    shop";
+		"topbar topbar topbar topbar"
+		"synergy board board players"
+		"control control shop shop";
 	width: 100vw;
 	height: 100dvh;
-	background: linear-gradient(180deg, #0a0e13 0%, #111927 50%, #0d1117 100%);
+	background:
+		radial-gradient(circle at 50% 50%, rgba(78, 216, 198, 0.08), transparent 18%),
+		radial-gradient(circle at top, rgba(105, 126, 255, 0.08), transparent 30%),
+		linear-gradient(180deg, #040810 0%, #0a1722 42%, #101b20 100%);
 	color: #c8aa6e;
 	font-family: "Spiegel", "Segoe UI", sans-serif;
 	overflow: hidden;
@@ -30,115 +21,233 @@
 	transform-origin: top left;
 }
 
-/* === CÁC VÙNG GRID === */
+.centerArea {
+	position: absolute;
+	inset: 0;
+	z-index: 2;
+	pointer-events: none;
+	overflow: visible;
+}
+
+.boardArea {
+	position: absolute;
+	inset: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	pointer-events: auto;
+	will-change: transform;
+	transition: transform 340ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.boardAreaExpanded {
+	transform: translateY(-30px);
+}
+
+.boardAreaCollapsed {
+	transform: translateY(18px);
+}
+
+.topBarArea,
+.synergyColumn,
+.playerListColumn,
+.shopControls,
+.shopCards {
+	position: relative;
+	z-index: 10;
+}
 
 .topBarArea {
 	grid-area: topbar;
-	z-index: 10;
-	min-width: 0;
+	align-self: start;
+	padding: 12px 16px 0;
 }
 
 .synergyColumn {
 	grid-area: synergy;
+	align-self: stretch;
+	justify-self: center;
+	width: 62px;
+	margin: 8px 0 8px 0;
 	display: flex;
 	flex-direction: column;
-	align-items: center;
-	padding: 8px 4px;
-	gap: 4px;
-	overflow-y: auto;
-	overflow-x: hidden;
-	background: linear-gradient(
-		180deg,
-		rgba(0, 0, 0, 0.7) 0%,
-		rgba(0, 0, 0, 0.3) 100%
-	);
-	z-index: 5;
-	min-width: 0;
+	gap: 10px;
+	overflow: visible;
+	padding: 0;
+	background: none;
+	border: 0;
+	box-shadow: none;
 }
 
-/* synergyBottom đã bỏ, control tự span cột 1+2 */
-
-.synergyColumn::-webkit-scrollbar {
-	width: 3px;
-}
-.synergyColumn::-webkit-scrollbar-thumb {
-	background: #463714;
-}
-
-.centerArea {
-	grid-area: board;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	overflow: hidden;
-	position: relative;
-	min-width: 0;
-	min-height: 0;
-}
-
-.boardArea {
-	/* Chiếm toàn bộ centerArea, board tự scale qua aspect-ratio */
-	width: 100%;
-	height: 100%;
-	position: relative;
-	overflow: hidden;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-}
-
-.playerListColumn {
-	grid-area: players;
-	display: flex;
-	flex-direction: column;
-	background: linear-gradient(
-		180deg,
-		rgba(10, 14, 19, 0.95) 0%,
-		rgba(17, 25, 39, 0.95) 100%
-	);
-	border-left: 2px solid rgba(200, 170, 110, 0.2);
-	overflow-y: auto;
-	overflow-x: hidden;
-	z-index: 5;
-	min-width: 0;
-}
-
+.synergyColumn::-webkit-scrollbar,
 .playerListColumn::-webkit-scrollbar {
 	width: 4px;
 }
+
+.synergyColumn::-webkit-scrollbar-thumb,
 .playerListColumn::-webkit-scrollbar-thumb {
 	background: #463714;
 }
 
+.playerListColumn {
+	grid-area: players;
+	align-self: start;
+	justify-self: stretch;
+	width: calc(100% - 24px);
+	margin: 8px 12px 0 12px;
+	/* max-height: calc(100% - 12px); */
+	overflow-y: auto;
+	overflow-x: hidden;
+	scrollbar-gutter: stable;
+	background: none;
+	border: 0;
+	border-radius: 0;
+	box-shadow: none;
+	box-sizing: border-box;
+}
+
 .shopControls {
 	grid-area: control;
+	align-self: end;
+	justify-self: start;
+	margin: 0 0 12px 12px;
 	display: flex;
-	flex-direction: column;
-	justify-content: center;
-	align-items: center;
-	padding: 8px;
-	background: linear-gradient(180deg, #1a1a2e 0%, #0f0f1a 100%);
-	border-top: 2px solid #463714;
-	border-right: 1px solid rgba(200, 170, 110, 0.2);
+	flex-direction: row;
+	gap: 12px;
+	flex-wrap: nowrap;
+	align-items: end;
+	max-width: 380px;
+	background: none;
+	border: 0;
+	border-radius: 0;
+	box-shadow: none;
+}
+
+.controlCard {
+	pointer-events: auto;
+}
+
+.controlCard:empty {
+	display: none;
+}
+
+.inventoryCard {
+	width: 132px;
+	flex: 0 0 132px;
+}
+
+.profileCard {
+	width: 232px;
+	flex: 0 0 232px;
+}
+
+.playerListColumn > * {
+	width: 100%;
 	min-width: 0;
-	overflow: hidden;
 }
 
 .shopCards {
 	grid-area: shop;
+	align-self: end;
+	justify-self: center;
+	width: min(52vw, 760px);
 	display: flex;
-	flex-direction: row;
-	align-items: stretch;
+	align-items: flex-start;
 	justify-content: center;
-	padding: 8px;
-	gap: 8px;
-	background: linear-gradient(180deg, #1a1a2e 0%, #0f0f1a 100%);
-	border-top: 2px solid #463714;
-	overflow: hidden;
-	min-width: 0;
+	gap: 10px;
+	margin-bottom: 12px;
+	pointer-events: auto;
+	transform-origin: bottom center;
+	will-change: transform;
+	transition: transform 340ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-/* === SETTINGS MODAL === */
+.shopCardsExpanded {
+	transform: translateY(0);
+}
+
+.shopCardsCollapsed {
+	transform: translateY(calc(100% - 30px));
+}
+
+.shopContent {
+	flex: 1 1 auto;
+	min-width: 0;
+	transition:
+		opacity 260ms ease,
+		transform 340ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.shopCardsCollapsed .shopContent {
+	opacity: 0;
+	transform: translateY(10px) scale(0.96);
+	pointer-events: none;
+}
+
+.shopToggle {
+	width: 28px;
+	height: 28px;
+	padding: 0;
+	border-radius: 999px;
+	border: 1px solid rgba(198, 170, 108, 0.22);
+	background:
+		linear-gradient(180deg, rgba(24, 32, 42, 0.92), rgba(11, 16, 22, 0.88));
+	cursor: pointer;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	flex: 0 0 auto;
+	will-change: transform;
+	transition:
+		box-shadow 260ms ease,
+		transform 260ms ease,
+		background 260ms ease;
+	box-shadow:
+		0 12px 28px rgba(0, 0, 0, 0.32),
+		inset 0 0 14px rgba(104, 210, 193, 0.04);
+}
+
+.shopToggle:hover {
+	transform: translateY(-1px);
+}
+
+.shopToggleArrow {
+	width: 8px;
+	height: 8px;
+	border-right: 2px solid #c6aa6c;
+	border-bottom: 2px solid #c6aa6c;
+	transform: rotate(45deg) translateY(-1px);
+	transition: transform 260ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.shopToggleArrowCollapsed {
+	transform: rotate(-135deg) translate(-1px, 1px);
+}
+
+.statsPanel {
+	padding: 8px;
+	height: 100%;
+	overflow-y: auto;
+}
+
+.statsPanelTitle {
+	font-size: 11px;
+	font-weight: 700;
+	letter-spacing: 2px;
+	text-transform: uppercase;
+	color: #785a28;
+	padding: 4px 8px 8px;
+	border-bottom: 1px solid rgba(200, 170, 110, 0.2);
+	margin-bottom: 8px;
+}
+
+.statsHint {
+	color: #a09b8c;
+	font-size: 12px;
+	padding: 8px;
+	display: block;
+}
+
 .modalOverlay {
 	position: fixed;
 	inset: 0;
@@ -205,49 +314,106 @@
 	border-color: #e74c3c;
 }
 
-/* === STATS PANEL === */
-.statsPanel {
-	padding: 8px;
-	height: 100%;
-	overflow-y: auto;
+.modalFooter {
+	margin-top: 16px;
+	padding-top: 12px;
+	border-top: 1px solid rgba(200, 170, 110, 0.2);
 }
 
-.statsPanelTitle {
-	font-size: 11px;
-	font-weight: 700;
-	letter-spacing: 2px;
-	text-transform: uppercase;
-	color: #785a28;
-	padding: 4px 8px 8px;
-	border-bottom: 1px solid rgba(200, 170, 110, 0.2);
-	margin-bottom: 8px;
-}
-
-/* === RESPONSIVE: Thu nhỏ giao diện cho màn hình nhỏ === */
-/* Áp dụng khi viewport rất nhỏ — scale được set qua JS */
 .gameContainer[data-scaled="true"] {
 	overflow: visible;
 }
 
-/* Màn hình rộng ≥ 1400px */
 @media (min-width: 1400px) {
 	.gameContainer {
 		grid-template-columns: 64px 200px 1fr 260px;
 	}
 }
 
-/* Màn hình trung bình 900-1199px */
 @media (max-width: 1199px) {
 	.gameContainer {
 		grid-template-columns: 48px 155px 1fr 190px;
 		grid-template-rows: 44px 1fr 145px;
 	}
+
+	.boardAreaExpanded {
+		transform: translateY(-22px);
+	}
+
+	.boardAreaCollapsed {
+		transform: translateY(14px);
+	}
+
+	.shopCards {
+		width: min(48vw, 560px);
+		margin-bottom: 10px;
+	}
+
+	.synergyColumn {
+		width: 54px;
+		gap: 8px;
+	}
+
+	.playerListColumn {
+		width: calc(100% - 20px);
+		margin: 8px 10px 0 10px;
+	}
+
+	.shopControls {
+		gap: 10px;
+		max-width: 336px;
+		margin: 0 0 10px 10px;
+	}
+
+	.profileCard {
+		width: 210px;
+		flex-basis: 210px;
+	}
 }
 
-/* Màn hình nhỏ / tablet landscape < 900px */
 @media (max-width: 899px) {
 	.gameContainer {
 		grid-template-columns: 40px 140px 1fr 155px;
 		grid-template-rows: 40px 1fr 130px;
+	}
+
+	.topBarArea {
+		padding: 10px 10px 0;
+	}
+
+	.playerListColumn {
+		width: calc(100% - 16px);
+		margin: 8px 8px 0 8px;
+	}
+
+	.shopControls {
+		margin: 0 0 8px 8px;
+		max-width: 300px;
+		gap: 8px;
+		flex-wrap: wrap;
+	}
+
+	.shopCards {
+		width: min(54vw, 286px);
+		margin-bottom: 8px;
+	}
+
+	.shopToggle {
+		width: 26px;
+		height: 26px;
+	}
+
+	.synergyColumn {
+		width: 48px;
+	}
+
+	.inventoryCard {
+		width: 108px;
+		flex-basis: 108px;
+	}
+
+	.profileCard {
+		width: 184px;
+		flex-basis: 184px;
 	}
 }

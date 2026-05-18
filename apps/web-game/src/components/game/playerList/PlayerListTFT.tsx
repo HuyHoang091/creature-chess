@@ -6,6 +6,7 @@ import { AppState } from "~/store";
 
 import { PlayerActions } from "@creature-chess/gamemode";
 import { GamePhase } from "@creature-chess/models";
+import { MAX_HEALTH } from "@creature-chess/models/config";
 import {
     PlayerListPlayer,
     PlayerStatus,
@@ -41,7 +42,7 @@ export function PlayerListTFT() {
     const showOpponent = opponentId !== null
         && (phase === GamePhase.READY || phase === GamePhase.PLAYING);
 
-    const maxHealth = 100;
+    const maxHealth = MAX_HEALTH;
 
     const handleClick = (player: PlayerListPlayer) => {
         if (player.id === localPlayerId) return;

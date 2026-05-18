@@ -1,46 +1,60 @@
 .root {
 	display: flex;
 	flex-direction: column;
-	justify-content: center;
-	gap: 8px;
-}
-
-@media (orientation: portrait) and (max-width: 430px) {
-	.root {
-		gap: 4px;
-	}
+	gap: 12px;
 }
 
 .total {
 	display: flex;
-	flex-direction: row;
 	align-items: center;
-	justify-content: center;
-	gap: 24px;
-	font-size: 24px;
+	justify-content: space-between;
+	gap: 16px;
+	padding: 12px 14px;
+	border-radius: 16px;
+	background: rgba(255, 255, 255, 0.03);
+	border: 1px solid rgba(198, 170, 108, 0.14);
 }
 
-@media (orientation: portrait) and (max-width: 430px) {
-	.total {
-		font-size: 16px;
-		gap: 16px;
-	}
+.totalLabel {
+	font-size: 11px;
+	font-weight: 700;
+	letter-spacing: 0.12em;
+	text-transform: uppercase;
+	color: rgba(237, 246, 244, 0.7);
+}
+
+.totalValue {
+	font-size: 26px;
+	font-weight: 700;
 }
 
 .incomeTable {
 	display: grid;
 	grid-template-columns: repeat(2, 1fr);
-	grid-row-gap: 4px;
+	grid-row-gap: 8px;
 	grid-column-gap: 16px;
-	font-size: 16px;
+	font-size: 14px;
+	padding: 0 4px;
 }
 
-.incomeTable > *:nth-child(odd) {
+.incomeLabel {
 	text-align: right;
-	color: #d4d4d4;
+	color: rgba(237, 246, 244, 0.72);
 }
 
-@media (orientation: portrait) and (max-width: 430px) {
+.incomeValue {
+	justify-self: start;
+}
+
+@media (max-width: 430px) {
+	.total {
+		padding: 10px 12px;
+	}
+
+	.totalValue {
+		font-size: 20px;
+	}
+
 	.incomeTable {
 		font-size: 12px;
 	}
