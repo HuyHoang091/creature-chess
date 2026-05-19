@@ -89,6 +89,132 @@ function applyDamage(
 	};
 }
 
+function createSkillVisualEffect(
+	text: string,
+	options: {
+		variant: "skillDamage" | "heal" | "label";
+		tone?: "neutral" | "ice" | "gold" | "warning";
+		sourcePieceId?: string;
+		color?: string;
+	}
+) {
+	return {
+		id: Math.random().toString(36).slice(2),
+		text,
+		color:
+			options.color ??
+			(options.variant === "heal"
+				? "#00ff99"
+				: options.variant === "skillDamage"
+					? "#75f8ff"
+					: "#ffffff"),
+		variant: options.variant,
+		tone: options.tone,
+		sourcePieceId: options.sourcePieceId,
+	};
+}
+
+function appendSkillVisualEffects(
+	board: BoardState<PieceModel>,
+	pieces: PieceModel[],
+	attacker: PieceModel,
+	skillName: string,
+	skillType: "damage" | "buff" | "support",
+	skillTarget: "single" | "aoe" | "bounce" | "line"
+) {
+	if (pieces.length === 0) {
+		return pieces;
+	}
+
+	if (skillType === "damage") {
+		const primaryTargetId = pieces[0]?.id;
+
+		return pieces.map((piece) => {
+			const visualEffects = [...(piece.visualEffects ?? [])];
+
+			if (piece.id !== attacker.id && piece.hit?.damage) {
+				visualEffects.push(
+					createSkillVisualEffect(`-${piece.hit.damage}`, {
+						variant: "skillDamage",
+						sourcePieceId: attacker.id,
+					})
+				);
+
+				if (skillName === "Flame Burst" && piece.id === primaryTargetId) {
+					visualEffects.push(
+						createSkillVisualEffect("Burn", {
+							variant: "label",
+							tone: "warning",
+							sourcePieceId: attacker.id,
+							color: "#ffb18a",
+						})
+					);
+				}
+			}
+
+			return {
+				...piece,
+				visualEffects,
+			};
+		});
+	}
+
+	if (skillType === "buff") {
+		return pieces.map((piece) => {
+			if (piece.id !== attacker.id) {
+				return piece;
+			}
+
+			const healAmount = Math.max(piece.currentHealth - attacker.currentHealth, 0);
+			const visualEffects = [...(piece.visualEffects ?? [])];
+
+			if (healAmount > 0) {
+				visualEffects.push(
+					createSkillVisualEffect(`+${healAmount}`, {
+						variant: "heal",
+						sourcePieceId: attacker.id,
+					})
+				);
+			}
+
+			visualEffects.push(
+				createSkillVisualEffect(`Rage +${Math.round(BUFF_ATTACK_BONUS * 100)}%`, {
+					variant: "label",
+					tone: "gold",
+					sourcePieceId: attacker.id,
+					color: "#ffd888",
+				})
+			);
+
+			return {
+				...piece,
+				visualEffects,
+			};
+		});
+	}
+
+	return pieces.map((piece) => {
+		const previousHealth =
+			BoardSelectors.getPiece(board, piece.id)?.currentHealth ?? piece.currentHealth;
+		const healAmount = Math.max(piece.currentHealth - previousHealth, 0);
+		const visualEffects = [...(piece.visualEffects ?? [])];
+
+		if (healAmount > 0) {
+			visualEffects.push(
+				createSkillVisualEffect(`+${healAmount}`, {
+					variant: "heal",
+					sourcePieceId: attacker.id,
+				})
+			);
+		}
+
+		return {
+			...piece,
+			visualEffects,
+		};
+	});
+}
+
 // ===================== SKILL TYPE HANDLERS =====================
 
 /** Sát thương đơn mục tiêu — Fatal Thrust style */
@@ -405,6 +531,15 @@ export function doSkill(
 	}
 
 	// Cooldown sau khi tung chiêu
+	affectedPieces = appendSkillVisualEffects(
+		board,
+		affectedPieces,
+		attacker,
+		skillName,
+		skillType,
+		skillTarget
+	);
+
 	const attackerHitFrozenHeartHolder =
 		skillType === "damage" &&
 		affectedPieces.some(
@@ -437,9 +572,23 @@ export function doSkill(
 	});
 
 	// Toạ độ mục tiêu để UI vẽ hiệu ứng
-	const skillTargetsCoords = affectedPieces
-		.map((t) => BoardSelectors.getPiecePosition(board, t.id)!)
-		.filter(Boolean);
+	const affectedPieceIds = affectedPieces.map((piece) => piece.id);
+	const actualPrimaryTargetId =
+		skillType === "buff"
+			? attacker.id
+			: skillType === "support" && skillTarget !== "aoe"
+				? affectedPieceIds[0] ?? attacker.id
+				: skillType === "support"
+					? attacker.id
+					: action.payload.targetId;
+	const skillTargetsCoords = affectedPieceIds.flatMap((pieceId) => {
+		const position = BoardSelectors.getPiecePosition(board, pieceId);
+		return position ? [position] : [];
+	});
+	const primaryTarget =
+		actualPrimaryTargetId !== null
+			? BoardSelectors.getPiecePosition(board, actualPrimaryTargetId)
+			: null;
 
 	// Cập nhật attacker: reset mana, đánh dấu skillCast cho UI
 	const isAttackerInAffected = affectedPieces.some((p) => p.id === attacker.id);
@@ -457,6 +606,9 @@ export function doSkill(
 			skillType,
 			skillTarget,
 			targets: skillTargetsCoords,
+			primaryTarget: primaryTarget ?? null,
+			primaryTargetId: actualPrimaryTargetId ?? null,
+			affectedPieceIds,
 		},
 		lastBattleStats: {
 			...(attacker.lastBattleStats ?? { damageDealt: 0, damageTaken: 0, turnsSurvived: 0 }),

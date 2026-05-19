@@ -30,7 +30,7 @@ export interface PieceModel {
 	definitionId: number;
 
 	/**
-	 * @deprecated Dữ liệu định nghĩa nên được khởi tạo trực tiếp lên chính chi tiết đó.
+	 * @deprecated Definition data should be initialized from the source definition.
 	 */
 	definition: CreatureDefinition;
 
@@ -42,26 +42,26 @@ export interface PieceModel {
 	stage: number;
 
 	/**
-	 * Chiếc quân cờ có đang quay lưng lại với người xem (tức là nhìn về "phía bắc") hay không
+	 * Whether the piece is facing away from the viewer.
 	 *
-	 * @deprecated Dữ liệu trạng thái/vị trí nên được lưu trữ riêng biệt với dữ liệu cốt lõi của quân cờ.
+	 * @deprecated Positional/render state should be stored separately from core piece data.
 	 */
 	facingAway: boolean;
 
 	/**
-	 * @deprecated Dữ liệu trạng thái/vị trí nên được lưu trữ riêng biệt với dữ liệu cốt lõi của quân cờ.
+	 * @deprecated Positional/render state should be stored separately from core piece data.
 	 */
 	attacking?: AttackDetails | null;
 
 	/**
-	 * @deprecated Dữ liệu trạng thái/vị trí nên được lưu trữ riêng biệt với dữ liệu cốt lõi của quân cờ.
+	 * @deprecated Positional/render state should be stored separately from core piece data.
 	 */
 	hit?: HitDetails | null;
 
 	maxHealth: number;
 
 	/**
-	 * @deprecated Dữ liệu trạng thái/vị trí nên được lưu trữ riêng biệt với dữ liệu cốt lõi của quân cờ.
+	 * @deprecated Positional/render state should be stored separately from core piece data.
 	 */
 	currentHealth: number;
 
@@ -69,14 +69,16 @@ export interface PieceModel {
 	currentMana: number;
 
 	/**
-	 * Nơi lưu trữ trạng thái hiển thị Skill ra UI (VD: khi Piece dùng chiêu).
-	 * UI đọc thông tin này để vẽ Overlay Canvas.
+	 * Temporary skill-cast payload for the board overlay.
 	 */
 	skillCast?: {
 		skillName: string;
 		skillType: "damage" | "buff" | "support";
 		skillTarget: "single" | "aoe" | "bounce" | "line";
-		targets: TileCoordinates[]; // Điểm/vùng tác dụng
+		targets: TileCoordinates[];
+		primaryTarget?: TileCoordinates | null;
+		primaryTargetId?: string | null;
+		affectedPieceIds?: string[];
 	} | null;
 
 	/**
@@ -86,6 +88,9 @@ export interface PieceModel {
 		id: string;
 		text: string;
 		color: string;
+		variant?: "damage" | "skillDamage" | "heal" | "label";
+		tone?: "neutral" | "ice" | "gold" | "warning";
+		sourcePieceId?: string;
 	}[];
 
 	/**
@@ -94,7 +99,7 @@ export interface PieceModel {
 	statusEffects?: PieceStatusEffect[];
 
 	/**
-	 * @deprecated Dữ liệu trạng thái/vị trí nên được lưu trữ riêng biệt với dữ liệu cốt lõi của quân cờ.
+	 * @deprecated Positional/render state should be stored separately from core piece data.
 	 */
 	lastBattleStats: {
 		damageDealt: number;

@@ -11,6 +11,8 @@ function createReviveEffect() {
 		id: Math.random().toString(36).slice(2),
 		text: "Revive!",
 		color: "#ffd48d",
+		variant: "label" as const,
+		tone: "gold" as const,
 	};
 }
 
@@ -31,7 +33,7 @@ export function doRevive(
 		hit: null,
 		skillCast: null,
 		statusEffects: getPieceStatusEffects(piece, currentTurn, { combatStore }),
-		visualEffects: [createReviveEffect()],
+		visualEffects: [...(piece.visualEffects ?? []), createReviveEffect()],
 	};
 
 	combatStore.updatePiecePartial(piece.id, {

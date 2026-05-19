@@ -143,14 +143,27 @@ export function doHit(
 	const canBeAttackedAtTurn = currentTurn + MOVE_TURN_DURATION + 2;
 	combatStore.updatePiecePartial(target.id, { canBeAttackedAtTurn });
 
-	const attackerVisualEffects = [];
-	const defenderVisualEffects = [];
+	const attackerVisualEffects = [...(attacker.visualEffects ?? [])];
+	const defenderVisualEffects = [...(target.visualEffects ?? [])];
 
 	if (isDodged) {
 		defenderVisualEffects.push({
 			id: Math.random().toString(36).substring(7),
 			text: "Dodge!",
 			color: "#ffffff",
+			variant: "label",
+			tone: "neutral",
+			sourcePieceId: attacker.id,
+		});
+	}
+
+	if (!isDodged && damage > 0) {
+		defenderVisualEffects.push({
+			id: Math.random().toString(36).substring(7),
+			text: `-${damage}`,
+			color: "#ffffff",
+			variant: "damage",
+			sourcePieceId: attacker.id,
 		});
 	}
 
@@ -159,11 +172,16 @@ export function doHit(
 			id: Math.random().toString(36).substring(7),
 			text: "Thorns",
 			color: "#ffaa00",
+			variant: "label",
+			tone: "warning",
+			sourcePieceId: attacker.id,
 		});
 		attackerVisualEffects.push({
 			id: Math.random().toString(36).substring(7),
 			text: `-${reflectedDamage}`,
 			color: "#ff0000",
+			variant: "damage",
+			sourcePieceId: target.id,
 		});
 	}
 
@@ -172,6 +190,8 @@ export function doHit(
 			id: Math.random().toString(36).substring(7),
 			text: `+${healAmount}`,
 			color: "#00ff00",
+			variant: "heal",
+			sourcePieceId: target.id,
 		});
 	}
 

@@ -21,11 +21,20 @@ type Stores = {
 	combatStore: PieceInfoStore<PieceCombatState>;
 };
 
-function createVisualEffect(text: string, color: string) {
+function createVisualEffect(
+	text: string,
+	color: string,
+	options: {
+		variant?: "damage" | "skillDamage" | "heal" | "label";
+		tone?: "neutral" | "ice" | "gold" | "warning";
+		sourcePieceId?: string;
+	} = {}
+) {
 	return {
 		id: Math.random().toString(36).slice(2),
 		text,
 		color,
+		...options,
 	};
 }
 
@@ -127,7 +136,10 @@ export function applyFrozenHeartSlow(
 		slowUntilTurn: currentTurn + FROZEN_HEART_DURATION_TURNS,
 	});
 
-	return createVisualEffect("Slow", "#b7f3ff");
+	return createVisualEffect("Slow", "#b7f3ff", {
+		variant: "label",
+		tone: "ice",
+	});
 }
 
 export function resolveRevive(

@@ -5,7 +5,8 @@ import { AppState } from "~/store";
 
 import { GamePhase } from "@creature-chess/models";
 
-import { SkillOverlay } from "~/effects/skills/SkillOverlay";
+import { CombatEffectsOverlay } from "~/effects/combat/CombatEffectsOverlay";
+import { buildCombatEffects } from "~/effects/combat/buildCombatEffects";
 
 import { GameBoard } from "./GameBoard";
 import { GameBoardContextProvider } from "./GameBoardContext";
@@ -140,41 +141,54 @@ export function UnifiedBoard({ children }: { children?: React.ReactNode }) {
 		[mapVisualBoardYToLogical, onDropPieceBase, visualBoardOffset]
 	);
 
-	const [activeSkills, setActiveSkills] = React.useState<
-		{
-			id: string;
-			name: string;
-			skillType: "damage" | "buff" | "support";
-			skillTarget: "single" | "aoe" | "bounce" | "line";
-			targets: any;
-			time: number;
-		}[]
+	const previousBoardRef = React.useRef<typeof displayBoard | null>(null);
+	const cleanupTimersRef = React.useRef<number[]>([]);
+	const [activeCombatEffects, setActiveCombatEffects] = React.useState<
+		React.ComponentProps<typeof CombatEffectsOverlay>["effects"]
 	>([]);
 
 	React.useEffect(() => {
-		const casting = Object.values(displayBoard.pieces).filter(
-			(piece) => !!piece.skillCast
-		);
+		return () => {
+			cleanupTimersRef.current.forEach((timer) => window.clearTimeout(timer));
+			cleanupTimersRef.current = [];
+		};
+	}, []);
 
-		if (casting.length > 0) {
-			setActiveSkills((prev) => {
-				const now = Date.now();
-				return [
-					...prev.filter((skill) => now - skill.time < 1200),
-					...casting.map((piece) => ({
-						id: `${piece.id}-${now}`,
-						name: piece.skillCast!.skillName,
-						skillType: piece.skillCast!.skillType ?? ("damage" as const),
-						skillTarget: piece.skillCast!.skillTarget ?? ("aoe" as const),
-						targets: piece.skillCast!.targets,
-						time: now,
-					})),
-				];
-			});
+	React.useEffect(() => {
+		if (!isMatch) {
+			previousBoardRef.current = displayBoard;
+			setActiveCombatEffects([]);
+			return;
 		}
-	}, [displayBoard]);
 
-	const boardColumns = displayBoard.size.width;
+		const nextEffects = buildCombatEffects(previousBoardRef.current, displayBoard);
+		previousBoardRef.current = displayBoard;
+
+		if (nextEffects.length === 0) {
+			return;
+		}
+
+		setActiveCombatEffects((current) => [...current, ...nextEffects]);
+
+		const effectIds = new Set(nextEffects.map((effect) => effect.id));
+		const totalLifetime =
+			Math.max(
+				...nextEffects.map(
+					(effect) =>
+						(effect.kind === "floatingText"
+							? effect.durationMs ?? 1100
+							: effect.durationMs) + effect.delayMs
+					)
+				) + 200;
+		const timer = window.setTimeout(() => {
+			setActiveCombatEffects((current) =>
+				current.filter((effect) => !effectIds.has(effect.id))
+			);
+		}, totalLifetime);
+
+		cleanupTimersRef.current.push(timer);
+	}, [displayBoard, isMatch]);
+
 	const boardRows = displayBoard.size.height;
 	const deployZoneRows = React.useMemo(() => {
 		if (!isPreparing) {
@@ -210,17 +224,12 @@ export function UnifiedBoard({ children }: { children?: React.ReactNode }) {
 					isPreparing={isPreparing}
 					deployZoneRows={deployZoneRows}
 				>
-					{activeSkills.map((skill) => (
-						<SkillOverlay
-							key={skill.id}
-							skillName={skill.name}
-							skillType={skill.skillType}
-							skillTarget={skill.skillTarget}
-							targets={skill.targets}
-							boardColumns={boardColumns}
-							boardRows={boardRows}
+					{activeCombatEffects.length > 0 ? (
+						<CombatEffectsOverlay
+							board={displayBoard}
+							effects={activeCombatEffects}
 						/>
-					))}
+					) : null}
 					{children}
 				</GameBoard>
 			</div>
