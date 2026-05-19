@@ -18,10 +18,10 @@ const traitBuilds: Partial<Record<TraitId, ReturnType<typeof getBaseStats>>> = {
 		speed: 0.3,
 	},
 	["cunning"]: {
-		hp: 0.1,
-		attack: 0.4,
+		hp: 0.15,
+		attack: 0.8,
 		defense: 0.1,
-		speed: 0.45,
+		speed: 0.65,
 	},
 };
 

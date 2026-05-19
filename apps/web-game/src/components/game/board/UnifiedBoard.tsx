@@ -28,6 +28,9 @@ export function UnifiedBoard({ children }: { children?: React.ReactNode }) {
 	const isOvertime = useSelector<AppState, boolean>(
 		(state) => !!state.game.roundInfo.isOvertime
 	);
+	const spectatingId = useSelector<AppState, string | null>(
+		(state) => state.game.spectating.id
+	);
 
 	const localBoard = useGameBoard();
 	const matchBoard = useGameMatchBoard();
@@ -74,10 +77,6 @@ export function UnifiedBoard({ children }: { children?: React.ReactNode }) {
 	const onDropPieceBase = useOnDropPiece(logicalBoard, bench);
 
 	const isPreparing = phase === GamePhase.PREPARING;
-
-	if (!displayBoard) {
-		return null;
-	}
 
 	const mapVisualBoardYToLogical = React.useCallback(
 		(y: number) => {
@@ -141,23 +140,41 @@ export function UnifiedBoard({ children }: { children?: React.ReactNode }) {
 		[mapVisualBoardYToLogical, onDropPieceBase, visualBoardOffset]
 	);
 
-	const previousBoardRef = React.useRef<typeof displayBoard | null>(null);
+	const previousBoardRef = React.useRef<typeof rawBoard | null>(null);
+	const previousCombatContextRef = React.useRef<string | null>(null);
 	const cleanupTimersRef = React.useRef<number[]>([]);
 	const [activeCombatEffects, setActiveCombatEffects] = React.useState<
 		React.ComponentProps<typeof CombatEffectsOverlay>["effects"]
 	>([]);
+	const resetCombatEffects = React.useCallback(() => {
+		cleanupTimersRef.current.forEach((timer) => window.clearTimeout(timer));
+		cleanupTimersRef.current = [];
+		setActiveCombatEffects([]);
+	}, []);
+	const combatEffectContextKey = isMatch
+		? `${displayBoard?.id ?? "match"}:${spectatingId ?? "self"}`
+		: null;
 
-	React.useEffect(() => {
-		return () => {
+	React.useEffect(
+		() => () => {
 			cleanupTimersRef.current.forEach((timer) => window.clearTimeout(timer));
 			cleanupTimersRef.current = [];
-		};
-	}, []);
+		},
+		[]
+	);
 
 	React.useEffect(() => {
-		if (!isMatch) {
+		if (!displayBoard || !isMatch || !combatEffectContextKey) {
+			previousCombatContextRef.current = null;
+			previousBoardRef.current = null;
+			resetCombatEffects();
+			return;
+		}
+
+		if (previousCombatContextRef.current !== combatEffectContextKey) {
+			previousCombatContextRef.current = combatEffectContextKey;
 			previousBoardRef.current = displayBoard;
-			setActiveCombatEffects([]);
+			resetCombatEffects();
 			return;
 		}
 
@@ -187,9 +204,9 @@ export function UnifiedBoard({ children }: { children?: React.ReactNode }) {
 		}, totalLifetime);
 
 		cleanupTimersRef.current.push(timer);
-	}, [displayBoard, isMatch]);
+	}, [combatEffectContextKey, displayBoard, isMatch, resetCombatEffects]);
 
-	const boardRows = displayBoard.size.height;
+	const boardRows = displayBoard?.size.height ?? 0;
 	const deployZoneRows = React.useMemo(() => {
 		if (!isPreparing) {
 			return [] as number[];
@@ -199,19 +216,23 @@ export function UnifiedBoard({ children }: { children?: React.ReactNode }) {
 		return Array.from({ length: boardRows - start }, (_, index) => start + index);
 	}, [boardRows, isPreparing]);
 
+	if (!displayBoard) {
+		return null;
+	}
+
 	return (
 		<GameBoardContextProvider value={{ board: displayBoard, bench }}>
 			<div
 				className="unified-board-root"
 				style={
 					{
-						width: "100%",
-						height: "100%",
-						display: "flex",
-						alignItems: "center",
-						justifyContent: "center",
-						position: "relative",
-						overflow: "visible",
+						"width": "100%",
+						"height": "100%",
+						"display": "flex",
+						"alignItems": "center",
+						"justifyContent": "center",
+						"position": "relative",
+						"overflow": "visible",
 						"--board-item-transition-dur": isOvertime ? "65ms" : "0.2s",
 					} as React.CSSProperties
 				}

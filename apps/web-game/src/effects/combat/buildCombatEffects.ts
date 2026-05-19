@@ -35,8 +35,8 @@ const getNewVisualEffects = (previous: PieceModel | undefined, current: PieceMod
 	return (current.visualEffects ?? []).filter((effect) => !previousIds.has(effect.id));
 };
 
-const skillCastSignature = (piece: PieceModel) => {
-	const skillCast = piece.skillCast;
+const skillCastSignature = (piece?: PieceModel) => {
+	const skillCast = piece?.skillCast;
 	if (!skillCast) {
 		return null;
 	}

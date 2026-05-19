@@ -505,12 +505,14 @@ const runBattle = (
     canMoveAtTurn: 15,
     canBeAttackedAtTurn: 0,
     canAttackAtTurn: 15,
+    reviveUsed: false,
+    slowUntilTurn: 0,
   });
 
   let board = prepareBattleBoard(homeBoard, awayBoard);
   let turn = 0;
 
-  while (turn < settings.battleTurnCount && !isATeamDefeated(board)) {
+  while (turn < settings.battleTurnCount && !isATeamDefeated(board, { combatStore })) {
     turn += 1;
     board = simulateTurn(turn, board, boardSlice, { combatStore });
   }
