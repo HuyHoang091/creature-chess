@@ -142,6 +142,28 @@ export function applyFrozenHeartSlow(
 	});
 }
 
+export function shouldDodge(piece: PieceModel) {
+	return hasPassive(piece, "dodge") && Math.random() < 0.15;
+}
+
+export function getThornmailReflectDamage(
+	reflectOwner: PieceModel,
+	attacker: PieceModel
+) {
+	if (!hasPassive(reflectOwner, "thornmail")) {
+		return 0;
+	}
+
+	const reflectDefense = Math.max(1, getStats(reflectOwner).defense);
+	const attackerDefense = Math.max(1, getStats(attacker).defense);
+
+	return Math.max(1, Math.ceil((reflectDefense / attackerDefense) * 4));
+}
+
+export function getLifestealHealAmount(piece: PieceModel, damage: number) {
+	return hasPassive(piece, "lifesteal") ? Math.floor(damage * 0.2) : 0;
+}
+
 export function resolveRevive(
 	currentTurn: number,
 	piece: PieceModel,

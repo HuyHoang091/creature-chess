@@ -18,9 +18,12 @@ import { getStats } from "../../../utils/getStats";
 import {
 	applyFrozenHeartSlow,
 	getEffectiveSpeed,
+	getLifestealHealAmount,
 	getPieceStatusEffects,
+	getThornmailReflectDamage,
 	hasPassive,
 	resolveRevive,
+	shouldDodge,
 } from "../../../utils/itemPassives";
 import { inAttackRange } from "../../../utils/inAttackRange";
 import { Stores } from "../../types";
@@ -63,7 +66,7 @@ export function doHit(
 	let damage = getHitDamage(attacker, target);
 	let isDodged = false;
 
-	if (hasPassive(target, "dodge") && Math.random() < 0.15) {
+	if (shouldDodge(target)) {
 		damage = 0;
 		isDodged = true;
 	}
@@ -81,14 +84,11 @@ export function doHit(
 	);
 
 	let reflectedDamage = 0;
-	if (!isDodged && hasPassive(target, "thornmail")) {
-		reflectedDamage = Math.floor(damage * 0.2);
+	if (!isDodged) {
+		reflectedDamage = getThornmailReflectDamage(target, attacker);
 	}
 
-	let healAmount = 0;
-	if (!isDodged && hasPassive(attacker, "lifesteal")) {
-		healAmount = Math.floor(damage * 0.2);
-	}
+	const healAmount = !isDodged ? getLifestealHealAmount(attacker, damage) : 0;
 
 	const attackerResult = resolveRevive(
 		currentTurn,

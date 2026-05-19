@@ -17,9 +17,12 @@ import { getStats } from "../../../utils/getStats";
 import {
 	applyFrozenHeartSlow,
 	getEffectiveSpeed,
+	getLifestealHealAmount,
 	getPieceStatusEffects,
+	getThornmailReflectDamage,
 	hasPassive,
 	resolveRevive,
+	shouldDodge,
 } from "../../../utils/itemPassives";
 import { Stores } from "../../types";
 import { SkillAction } from "./types";
@@ -49,50 +52,90 @@ function calcDamage(attackerAtk: number, defenderDef: number): number {
 	return Math.ceil((attackerAtk / defenderDef) * 8 * SKILL_DAMAGE_MULTIPLIER);
 }
 
+type SkillDamageResult = {
+	piece: PieceModel;
+	actualDamage: number;
+	reflectedDamage: number;
+	dodged: boolean;
+	triggeredFrozenHeart: boolean;
+};
+
 function applyDamage(
 	currentTurn: number,
+	attacker: PieceModel,
 	piece: PieceModel,
 	damage: number,
 	attackerPosition: PiecePosition,
 	board: BoardState<PieceModel>,
 	stores: Stores
-): PieceModel {
+): SkillDamageResult {
 	const pPos = BoardSelectors.getPiecePosition(board, piece.id);
+	const dodged = shouldDodge(piece);
+	const actualDamage = dodged ? 0 : damage;
 	const reviveResult = resolveRevive(
 		currentTurn,
 		piece,
-		Math.max(piece.currentHealth - damage, 0),
+		Math.max(piece.currentHealth - actualDamage, 0),
 		stores
 	);
+	const reflectedDamage = dodged ? 0 : getThornmailReflectDamage(piece, attacker);
 	const defenderMana =
 		reviveResult.revived
 			? reviveResult.mana
 			: reviveResult.health > 0
-			? Math.min(piece.currentMana + damage, piece.maxMana || 100)
+			? Math.min(piece.currentMana + actualDamage, piece.maxMana || 100)
 			: piece.currentMana;
+	const visualEffects = [...(piece.visualEffects ?? [])];
+
+	if (dodged) {
+		visualEffects.push(
+			createSkillVisualEffect("Dodge!", {
+				variant: "label",
+				tone: "neutral",
+				sourcePieceId: attacker.id,
+			})
+		);
+	}
+
+	if (!dodged && reflectedDamage > 0) {
+		visualEffects.push(
+			createSkillVisualEffect("Thorns", {
+				variant: "label",
+				tone: "warning",
+				sourcePieceId: attacker.id,
+				color: "#ffaa00",
+			})
+		);
+	}
 
 	return {
-		...piece,
-		currentHealth: reviveResult.health,
-		currentMana: defenderMana,
-		hit: {
-			direction: pPos
-				? getRelativeDirection(pPos, attackerPosition)
-				: { x: 0, y: 0 },
-			damage,
+		piece: {
+			...piece,
+			currentHealth: reviveResult.health,
+			currentMana: defenderMana,
+			hit: {
+				direction: pPos
+					? getRelativeDirection(pPos, attackerPosition)
+					: { x: 0, y: 0 },
+				damage: actualDamage,
+			},
+			lastBattleStats: {
+				...piece.lastBattleStats!,
+				damageTaken: piece.lastBattleStats!.damageTaken + actualDamage,
+			},
+			visualEffects,
 		},
-		lastBattleStats: {
-			...piece.lastBattleStats!,
-			damageTaken: piece.lastBattleStats!.damageTaken + damage,
-		},
-		visualEffects: piece.visualEffects,
+		actualDamage,
+		reflectedDamage,
+		dodged,
+		triggeredFrozenHeart: !dodged && hasPassive(piece, "slow_nearby"),
 	};
 }
 
 function createSkillVisualEffect(
 	text: string,
 	options: {
-		variant: "skillDamage" | "heal" | "label";
+		variant: "damage" | "skillDamage" | "heal" | "label";
 		tone?: "neutral" | "ice" | "gold" | "warning";
 		sourcePieceId?: string;
 		color?: string;
@@ -105,6 +148,8 @@ function createSkillVisualEffect(
 			options.color ??
 			(options.variant === "heal"
 				? "#00ff99"
+				: options.variant === "damage"
+					? "#ff7f7f"
 				: options.variant === "skillDamage"
 					? "#75f8ff"
 					: "#ffffff"),
@@ -225,15 +270,28 @@ function doSingleDamage(
 	attackerPosition: PiecePosition,
 	targetId: string,
 	stores: Stores
-): { affected: PieceModel[]; totalDamage: number } {
+): {
+	affected: PieceModel[];
+	totalDamage: number;
+	reflectedDamage: number;
+	triggeredFrozenHeart: boolean;
+} {
 	const target = BoardSelectors.getPiece(board, targetId);
-	if (!target || target.currentHealth <= 0) return { affected: [], totalDamage: 0 };
+	if (!target || target.currentHealth <= 0) {
+		return {
+			affected: [],
+			totalDamage: 0,
+			reflectedDamage: 0,
+			triggeredFrozenHeart: false,
+		};
+	}
 
 	const atkStats = getStats(attacker);
 	const defStats = getStats(target);
 	const damage = calcDamage(atkStats.attack, defStats.defense) * 2; // Single = extra strong
-	const updated = applyDamage(
+	const result = applyDamage(
 		currentTurn,
+		attacker,
 		target,
 		damage,
 		attackerPosition,
@@ -241,7 +299,12 @@ function doSingleDamage(
 		stores
 	);
 
-	return { affected: [updated], totalDamage: damage };
+	return {
+		affected: [result.piece],
+		totalDamage: result.actualDamage,
+		reflectedDamage: result.reflectedDamage,
+		triggeredFrozenHeart: result.triggeredFrozenHeart,
+	};
 }
 
 /** Sát thương vùng AoE — Flame Burst / Earthquake */
@@ -252,27 +315,50 @@ function doAoeDamage(
 	attackerPosition: PiecePosition,
 	targetId: string,
 	stores: Stores
-): { affected: PieceModel[]; totalDamage: number } {
+): {
+	affected: PieceModel[];
+	totalDamage: number;
+	reflectedDamage: number;
+	triggeredFrozenHeart: boolean;
+} {
 	const targetPosition = BoardSelectors.getPiecePosition(board, targetId);
-	if (!targetPosition) return { affected: [], totalDamage: 0 };
+	if (!targetPosition) {
+		return {
+			affected: [],
+			totalDamage: 0,
+			reflectedDamage: 0,
+			triggeredFrozenHeart: false,
+		};
+	}
 
 	const atkStats = getStats(attacker);
 	const affected: PieceModel[] = [];
 	let totalDamage = 0;
+	let reflectedDamage = 0;
+	let triggeredFrozenHeart = false;
 
 	getAllEnemies(board, attacker.ownerId).forEach((enemy) => {
 		const ePos = BoardSelectors.getPiecePosition(board, enemy.id);
 		if (ePos && getDistance(targetPosition, ePos) <= 1) {
 			const defStats = getStats(enemy);
 			const damage = calcDamage(atkStats.attack, defStats.defense);
-			affected.push(
-				applyDamage(currentTurn, enemy, damage, attackerPosition, board, stores)
+			const result = applyDamage(
+				currentTurn,
+				attacker,
+				enemy,
+				damage,
+				attackerPosition,
+				board,
+				stores
 			);
-			totalDamage += damage;
+			affected.push(result.piece);
+			totalDamage += result.actualDamage;
+			reflectedDamage += result.reflectedDamage;
+			triggeredFrozenHeart = triggeredFrozenHeart || result.triggeredFrozenHeart;
 		}
 	});
 
-	return { affected, totalDamage };
+	return { affected, totalDamage, reflectedDamage, triggeredFrozenHeart };
 }
 
 /** Sát thương bật nảy — Chain Lightning */
@@ -283,10 +369,17 @@ function doBounceDamage(
 	attackerPosition: PiecePosition,
 	targetId: string,
 	stores: Stores
-): { affected: PieceModel[]; totalDamage: number } {
+): {
+	affected: PieceModel[];
+	totalDamage: number;
+	reflectedDamage: number;
+	triggeredFrozenHeart: boolean;
+} {
 	const atkStats = getStats(attacker);
 	const affected: PieceModel[] = [];
 	let totalDamage = 0;
+	let reflectedDamage = 0;
+	let triggeredFrozenHeart = false;
 	const hitIds = new Set<string>();
 
 	let currentTargetId = targetId;
@@ -298,10 +391,19 @@ function doBounceDamage(
 		const defStats = getStats(target);
 		const damageDecay = 1 - bounce * 0.2; // 100% → 80% → 60%
 		const damage = Math.ceil(calcDamage(atkStats.attack, defStats.defense) * damageDecay);
-		affected.push(
-			applyDamage(currentTurn, target, damage, attackerPosition, board, stores)
+		const result = applyDamage(
+			currentTurn,
+			attacker,
+			target,
+			damage,
+			attackerPosition,
+			board,
+			stores
 		);
-		totalDamage += damage;
+		affected.push(result.piece);
+		totalDamage += result.actualDamage;
+		reflectedDamage += result.reflectedDamage;
+		triggeredFrozenHeart = triggeredFrozenHeart || result.triggeredFrozenHeart;
 		hitIds.add(currentTargetId);
 
 		// Tìm con quân gần nhất chưa bị đánh
@@ -319,7 +421,7 @@ function doBounceDamage(
 		currentTargetId = (nearest as { id: string; dist: number }).id;
 	}
 
-	return { affected, totalDamage };
+	return { affected, totalDamage, reflectedDamage, triggeredFrozenHeart };
 }
 
 /** Sát thương xuyên thẳng — Laser Beam */
@@ -330,9 +432,21 @@ function doLineDamage(
 	attackerPosition: PiecePosition,
 	targetId: string,
 	stores: Stores
-): { affected: PieceModel[]; totalDamage: number } {
+): {
+	affected: PieceModel[];
+	totalDamage: number;
+	reflectedDamage: number;
+	triggeredFrozenHeart: boolean;
+} {
 	const targetPosition = BoardSelectors.getPiecePosition(board, targetId);
-	if (!targetPosition) return { affected: [], totalDamage: 0 };
+	if (!targetPosition) {
+		return {
+			affected: [],
+			totalDamage: 0,
+			reflectedDamage: 0,
+			triggeredFrozenHeart: false,
+		};
+	}
 
 	// Tính hướng đi từ attacker → target
 	const dx = targetPosition.x - attackerPosition.x;
@@ -343,6 +457,8 @@ function doLineDamage(
 	const atkStats = getStats(attacker);
 	const affected: PieceModel[] = [];
 	let totalDamage = 0;
+	let reflectedDamage = 0;
+	let triggeredFrozenHeart = false;
 
 	// Quét tối đa 7 ô theo hướng
 	for (let step = 1; step <= 7; step++) {
@@ -355,15 +471,24 @@ function doLineDamage(
 			if (ePos && ePos.x === checkX && ePos.y === checkY) {
 				const defStats = getStats(enemy);
 				const damage = calcDamage(atkStats.attack, defStats.defense);
-				affected.push(
-					applyDamage(currentTurn, enemy, damage, attackerPosition, board, stores)
+				const result = applyDamage(
+					currentTurn,
+					attacker,
+					enemy,
+					damage,
+					attackerPosition,
+					board,
+					stores
 				);
-				totalDamage += damage;
+				affected.push(result.piece);
+				totalDamage += result.actualDamage;
+				reflectedDamage += result.reflectedDamage;
+				triggeredFrozenHeart = triggeredFrozenHeart || result.triggeredFrozenHeart;
 			}
 		});
 	}
 
-	return { affected, totalDamage };
+	return { affected, totalDamage, reflectedDamage, triggeredFrozenHeart };
 }
 
 /** Buff bản thân — Rage Mode */
@@ -456,6 +581,8 @@ export function doSkill(
 
 	let affectedPieces: PieceModel[] = [];
 	let totalDamage = 0;
+	let totalReflectedDamage = 0;
+	let attackerTriggeredFrozenHeart = false;
 
 	// ========== DAMAGE skills ==========
 	if (skillType === "damage") {
@@ -471,6 +598,8 @@ export function doSkill(
 				);
 				affectedPieces = result.affected;
 				totalDamage = result.totalDamage;
+				totalReflectedDamage = result.reflectedDamage;
+				attackerTriggeredFrozenHeart = result.triggeredFrozenHeart;
 				break;
 			}
 			case "aoe": {
@@ -484,6 +613,8 @@ export function doSkill(
 				);
 				affectedPieces = result.affected;
 				totalDamage = result.totalDamage;
+				totalReflectedDamage = result.reflectedDamage;
+				attackerTriggeredFrozenHeart = result.triggeredFrozenHeart;
 				break;
 			}
 			case "bounce": {
@@ -497,6 +628,8 @@ export function doSkill(
 				);
 				affectedPieces = result.affected;
 				totalDamage = result.totalDamage;
+				totalReflectedDamage = result.reflectedDamage;
+				attackerTriggeredFrozenHeart = result.triggeredFrozenHeart;
 				break;
 			}
 			case "line": {
@@ -510,6 +643,8 @@ export function doSkill(
 				);
 				affectedPieces = result.affected;
 				totalDamage = result.totalDamage;
+				totalReflectedDamage = result.reflectedDamage;
+				attackerTriggeredFrozenHeart = result.triggeredFrozenHeart;
 				break;
 			}
 		}
@@ -540,15 +675,9 @@ export function doSkill(
 		skillTarget
 	);
 
-	const attackerHitFrozenHeartHolder =
-		skillType === "damage" &&
-		affectedPieces.some(
-			(piece) => piece.ownerId !== attacker.ownerId && hasPassive(piece, "slow_nearby")
-		);
-	const slowEffect = attackerHitFrozenHeartHolder
+	const slowEffect = attackerTriggeredFrozenHeart
 		? applyFrozenHeartSlow(attacker, currentTurn, { combatStore })
 		: null;
-	const attackerStats = getStats(attacker);
 	const canAttackAtTurn =
 		currentTurn +
 		SKILL_CAST_TURN_DURATION +
@@ -595,12 +724,48 @@ export function doSkill(
 	const attackerAfterSkill = isAttackerInAffected
 		? affectedPieces.find((p) => p.id === attacker.id)!
 		: attacker;
-	const attackerVisualEffects = slowEffect
-		? [...(attackerAfterSkill.visualEffects ?? []), slowEffect]
-		: attackerAfterSkill.visualEffects;
+	const skillHealAmount =
+		skillType === "damage" ? getLifestealHealAmount(attacker, totalDamage) : 0;
+	const attackerResult = resolveRevive(
+		currentTurn,
+		attackerAfterSkill,
+		Math.max(
+			Math.min(
+				attackerAfterSkill.currentHealth - totalReflectedDamage + skillHealAmount,
+				attackerAfterSkill.maxHealth
+			),
+			0
+		),
+		{ combatStore }
+	);
+	const attackerVisualEffects = [...(attackerAfterSkill.visualEffects ?? [])];
+
+	if (totalReflectedDamage > 0) {
+		attackerVisualEffects.push(
+			createSkillVisualEffect(`-${totalReflectedDamage}`, {
+				variant: "damage",
+				sourcePieceId: actualPrimaryTargetId ?? undefined,
+				color: "#ff0000",
+			})
+		);
+	}
+
+	if (skillHealAmount > 0) {
+		attackerVisualEffects.push(
+			createSkillVisualEffect(`+${skillHealAmount}`, {
+				variant: "heal",
+				sourcePieceId: actualPrimaryTargetId ?? undefined,
+			})
+		);
+	}
+
+	if (slowEffect) {
+		attackerVisualEffects.push(slowEffect);
+	}
 	const newAttacker: PieceModel = {
 		...attackerAfterSkill,
-		currentMana: 0,
+		currentHealth: attackerResult.health,
+		currentMana: attackerResult.health > 0 ? 0 : attackerResult.mana,
 		skillCast: {
 			skillName,
 			skillType,
