@@ -285,16 +285,24 @@ export const SessionBootstrapProvider = ({
 	const token = useSelector((state: AppState) => state.auth.accessToken);
 	const mode = useSelector((state: AppState) => state.auth.mode);
 	const status = useSelector((state: AppState) => state.auth.status);
+	const requiresProfileCompletion = useSelector(
+		(state: AppState) => state.auth.requiresProfileCompletion
+	);
 
 	React.useEffect(() => {
-		if (mode !== "account" || !token || status !== "authenticated") {
-			if (mode !== "account") {
+		if (
+			mode !== "account" ||
+			requiresProfileCompletion ||
+			!token ||
+			status !== "authenticated"
+		) {
+			if (mode !== "account" || requiresProfileCompletion) {
 				dispatch(FriendsCommands.reset());
 			}
 			return;
 		}
 		dispatch(ensureConnection());
-	}, [dispatch, mode, status, token]);
+	}, [dispatch, mode, requiresProfileCompletion, status, token]);
 
 	return AUTH0_ENABLED ? (
 		<Auth0Bootstrap>{children}</Auth0Bootstrap>

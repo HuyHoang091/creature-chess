@@ -16,7 +16,7 @@ COPY . .
 RUN cp .env .env.example
 
 # Install tất cả dependencies
-RUN yarn install
+RUN yarn install && yarn workspace @creature-chess/rl-bot build && yarn workspace @creature-chess/tactical-ai build
 
 # Generate Prisma client
 RUN cd modules/@cc-server/data && yarn prisma generate && cd ../../..

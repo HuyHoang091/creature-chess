@@ -15,6 +15,7 @@ import {
 } from "~/services/tacticalAI";
 
 import { CoachMessageRenderer } from "./CoachMessageRenderer";
+import { PositioningTab } from "./PositioningTab";
 import styles from "./tactical-ai.module.css";
 
 const TacticalAIPanel: React.FC = () => {
@@ -33,6 +34,7 @@ const TacticalAIPanel: React.FC = () => {
   const opponentId = useSelector<AppState, string | null>((state) => state.game.playerInfo.opponentId);
   const potentialOpponentId = useSelector<AppState, string | null>((state) => state.game.playerInfo.potentialOpponentId);
   const phase = useSelector<AppState, GamePhase>((state) => state.game.roundInfo.phase);
+  const roundNumber = useSelector<AppState, number>((state) => state.game.roundInfo.round);
   const roundType = useSelector<AppState, RoundType | undefined>((state) => state.game.roundInfo.roundType);
   const isPvE = roundType === RoundType.PVE_CREEP || roundType === RoundType.PVE_BOSS;
   const canUsePositioning = opponentId !== null && potentialOpponentId !== null && opponentId !== "creep" && phase === GamePhase.PREPARING && !isPvE;
@@ -56,6 +58,15 @@ const TacticalAIPanel: React.FC = () => {
       chatMessagesRef.current.scrollTop = chatMessagesRef.current.scrollHeight;
     }
   }, [coachMessages, activeTab, loading]);
+
+  // Reset positioning result when round changes
+  const prevRoundRef = React.useRef(roundNumber);
+  React.useEffect(() => {
+    if (roundNumber !== prevRoundRef.current) {
+      prevRoundRef.current = roundNumber;
+      setPositioningResult(null);
+    }
+  }, [roundNumber]);
 
   const handlePositioningRequest = async () => {
     if (!canUsePositioning) {
@@ -310,61 +321,15 @@ const TacticalAIPanel: React.FC = () => {
 
           <div className={styles.panelBody}>
             {activeTab === "positioning" && (
-              <div>
-                <button
-                  className={styles.actionBtn}
-                  onClick={handlePositioningRequest}
-                  disabled={loading || !canUsePositioning}
-                  title={canUsePositioning ? "" : "Chỉ dùng được trong vòng mua đồ khi đã reveal đủ 2 đối thủ và không phải round PvE"}
-                >
-                  {loading ? "Đang phân tích..." : "Gợi ý xếp quân"}
-                </button>
-                {!canUsePositioning && (
-                  <div className={styles.disabledHint}>
-                    ⚠️ Chỉ dùng được trong vòng mua đồ, không áp dụng cho round PvE
-                  </div>
-                )}
-
-                {positioningResult && (
-                  <div className={styles.resultBox}>
-                    <div className={styles.resultTitle}>{positioningResult.explanation}</div>
-                    <div className={styles.meta}>
-                      Win rate: {(positioningResult.winRate * 100).toFixed(0)}% | Confidence:{" "}
-                      {positioningResult.confidence}
-                    </div>
-                    {positioningResult.opponentBreakdown && positioningResult.opponentBreakdown.length > 0 && (
-                      <div className={styles.alternatives}>
-                        <strong>Kết quả theo từng đối thủ:</strong>
-                        {positioningResult.opponentBreakdown.map((result: { label: string; winRate: number; avgSurvivorMargin: number; testedScenarios: number }, i: number) => (
-                          <div key={i}>
-                            {result.label}: {(result.winRate * 100).toFixed(0)}% | Margin {result.avgSurvivorMargin.toFixed(1)} | {result.testedScenarios} scenarios
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                    {positioningResult.moves.length > 0 && (
-                      <div className={styles.moves}>
-                        <strong>Các nước đi:</strong>
-                        {positioningResult.moves.map((m, i) => (
-                          <div key={i}>
-                            {m.pieceId} → ({m.targetX}, {m.targetY})
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                    {positioningResult.alternatives.length > 0 && (
-                      <div className={styles.alternatives}>
-                        <strong>Phương án khác:</strong>
-                        {positioningResult.alternatives.map((alt, i) => (
-                          <div key={i}>
-                            {alt.formation}: {(alt.winRate * 100).toFixed(0)}%
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
+              <PositioningTab
+                loading={loading}
+                result={positioningResult}
+                board={board}
+                localPlayerId={localPlayerId}
+                canUsePositioning={canUsePositioning}
+                roundNumber={roundNumber}
+                onRequest={handlePositioningRequest}
+              />
             )}
 
             {activeTab === "coach" && (
