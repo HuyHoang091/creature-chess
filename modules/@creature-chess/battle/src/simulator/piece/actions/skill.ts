@@ -14,6 +14,13 @@ import {
 
 import { getCooldownForSpeed } from "../../../utils/getCooldownForSpeed";
 import { getStats } from "../../../utils/getStats";
+import {
+	applyFrozenHeartSlow,
+	getEffectiveSpeed,
+	getPieceStatusEffects,
+	hasPassive,
+	resolveRevive,
+} from "../../../utils/itemPassives";
 import { Stores } from "../../types";
 import { SkillAction } from "./types";
 
@@ -43,21 +50,30 @@ function calcDamage(attackerAtk: number, defenderDef: number): number {
 }
 
 function applyDamage(
+	currentTurn: number,
 	piece: PieceModel,
 	damage: number,
 	attackerPosition: PiecePosition,
-	board: BoardState<PieceModel>
+	board: BoardState<PieceModel>,
+	stores: Stores
 ): PieceModel {
 	const pPos = BoardSelectors.getPiecePosition(board, piece.id);
-	const newHealth = Math.max(piece.currentHealth - damage, 0);
+	const reviveResult = resolveRevive(
+		currentTurn,
+		piece,
+		Math.max(piece.currentHealth - damage, 0),
+		stores
+	);
 	const defenderMana =
-		newHealth > 0
+		reviveResult.revived
+			? reviveResult.mana
+			: reviveResult.health > 0
 			? Math.min(piece.currentMana + damage, piece.maxMana || 100)
 			: piece.currentMana;
 
 	return {
 		...piece,
-		currentHealth: newHealth,
+		currentHealth: reviveResult.health,
 		currentMana: defenderMana,
 		hit: {
 			direction: pPos
@@ -69,6 +85,7 @@ function applyDamage(
 			...piece.lastBattleStats!,
 			damageTaken: piece.lastBattleStats!.damageTaken + damage,
 		},
+		visualEffects: piece.visualEffects,
 	};
 }
 
@@ -76,10 +93,12 @@ function applyDamage(
 
 /** Sát thương đơn mục tiêu — Fatal Thrust style */
 function doSingleDamage(
+	currentTurn: number,
 	board: BoardState<PieceModel>,
 	attacker: PieceModel,
 	attackerPosition: PiecePosition,
-	targetId: string
+	targetId: string,
+	stores: Stores
 ): { affected: PieceModel[]; totalDamage: number } {
 	const target = BoardSelectors.getPiece(board, targetId);
 	if (!target || target.currentHealth <= 0) return { affected: [], totalDamage: 0 };
@@ -87,17 +106,26 @@ function doSingleDamage(
 	const atkStats = getStats(attacker);
 	const defStats = getStats(target);
 	const damage = calcDamage(atkStats.attack, defStats.defense) * 2; // Single = extra strong
-	const updated = applyDamage(target, damage, attackerPosition, board);
+	const updated = applyDamage(
+		currentTurn,
+		target,
+		damage,
+		attackerPosition,
+		board,
+		stores
+	);
 
 	return { affected: [updated], totalDamage: damage };
 }
 
 /** Sát thương vùng AoE — Flame Burst / Earthquake */
 function doAoeDamage(
+	currentTurn: number,
 	board: BoardState<PieceModel>,
 	attacker: PieceModel,
 	attackerPosition: PiecePosition,
-	targetId: string
+	targetId: string,
+	stores: Stores
 ): { affected: PieceModel[]; totalDamage: number } {
 	const targetPosition = BoardSelectors.getPiecePosition(board, targetId);
 	if (!targetPosition) return { affected: [], totalDamage: 0 };
@@ -111,7 +139,9 @@ function doAoeDamage(
 		if (ePos && getDistance(targetPosition, ePos) <= 1) {
 			const defStats = getStats(enemy);
 			const damage = calcDamage(atkStats.attack, defStats.defense);
-			affected.push(applyDamage(enemy, damage, attackerPosition, board));
+			affected.push(
+				applyDamage(currentTurn, enemy, damage, attackerPosition, board, stores)
+			);
 			totalDamage += damage;
 		}
 	});
@@ -121,10 +151,12 @@ function doAoeDamage(
 
 /** Sát thương bật nảy — Chain Lightning */
 function doBounceDamage(
+	currentTurn: number,
 	board: BoardState<PieceModel>,
 	attacker: PieceModel,
 	attackerPosition: PiecePosition,
-	targetId: string
+	targetId: string,
+	stores: Stores
 ): { affected: PieceModel[]; totalDamage: number } {
 	const atkStats = getStats(attacker);
 	const affected: PieceModel[] = [];
@@ -140,7 +172,9 @@ function doBounceDamage(
 		const defStats = getStats(target);
 		const damageDecay = 1 - bounce * 0.2; // 100% → 80% → 60%
 		const damage = Math.ceil(calcDamage(atkStats.attack, defStats.defense) * damageDecay);
-		affected.push(applyDamage(target, damage, attackerPosition, board));
+		affected.push(
+			applyDamage(currentTurn, target, damage, attackerPosition, board, stores)
+		);
 		totalDamage += damage;
 		hitIds.add(currentTargetId);
 
@@ -164,10 +198,12 @@ function doBounceDamage(
 
 /** Sát thương xuyên thẳng — Laser Beam */
 function doLineDamage(
+	currentTurn: number,
 	board: BoardState<PieceModel>,
 	attacker: PieceModel,
 	attackerPosition: PiecePosition,
-	targetId: string
+	targetId: string,
+	stores: Stores
 ): { affected: PieceModel[]; totalDamage: number } {
 	const targetPosition = BoardSelectors.getPiecePosition(board, targetId);
 	if (!targetPosition) return { affected: [], totalDamage: 0 };
@@ -193,7 +229,9 @@ function doLineDamage(
 			if (ePos && ePos.x === checkX && ePos.y === checkY) {
 				const defStats = getStats(enemy);
 				const damage = calcDamage(atkStats.attack, defStats.defense);
-				affected.push(applyDamage(enemy, damage, attackerPosition, board));
+				affected.push(
+					applyDamage(currentTurn, enemy, damage, attackerPosition, board, stores)
+				);
 				totalDamage += damage;
 			}
 		});
@@ -297,25 +335,53 @@ export function doSkill(
 	if (skillType === "damage") {
 		switch (skillTarget) {
 			case "single": {
-				const result = doSingleDamage(board, attacker, attackerPosition, action.payload.targetId);
+				const result = doSingleDamage(
+					currentTurn,
+					board,
+					attacker,
+					attackerPosition,
+					action.payload.targetId,
+					{ combatStore }
+				);
 				affectedPieces = result.affected;
 				totalDamage = result.totalDamage;
 				break;
 			}
 			case "aoe": {
-				const result = doAoeDamage(board, attacker, attackerPosition, action.payload.targetId);
+				const result = doAoeDamage(
+					currentTurn,
+					board,
+					attacker,
+					attackerPosition,
+					action.payload.targetId,
+					{ combatStore }
+				);
 				affectedPieces = result.affected;
 				totalDamage = result.totalDamage;
 				break;
 			}
 			case "bounce": {
-				const result = doBounceDamage(board, attacker, attackerPosition, action.payload.targetId);
+				const result = doBounceDamage(
+					currentTurn,
+					board,
+					attacker,
+					attackerPosition,
+					action.payload.targetId,
+					{ combatStore }
+				);
 				affectedPieces = result.affected;
 				totalDamage = result.totalDamage;
 				break;
 			}
 			case "line": {
-				const result = doLineDamage(board, attacker, attackerPosition, action.payload.targetId);
+				const result = doLineDamage(
+					currentTurn,
+					board,
+					attacker,
+					attackerPosition,
+					action.payload.targetId,
+					{ combatStore }
+				);
 				affectedPieces = result.affected;
 				totalDamage = result.totalDamage;
 				break;
@@ -339,11 +405,23 @@ export function doSkill(
 	}
 
 	// Cooldown sau khi tung chiêu
+	const attackerHitFrozenHeartHolder =
+		skillType === "damage" &&
+		affectedPieces.some(
+			(piece) => piece.ownerId !== attacker.ownerId && hasPassive(piece, "slow_nearby")
+		);
+	const slowEffect = attackerHitFrozenHeartHolder
+		? applyFrozenHeartSlow(attacker, currentTurn, { combatStore })
+		: null;
 	const attackerStats = getStats(attacker);
 	const canAttackAtTurn =
-		currentTurn + SKILL_CAST_TURN_DURATION + getCooldownForSpeed(attackerStats.speed);
+		currentTurn +
+		SKILL_CAST_TURN_DURATION +
+		getCooldownForSpeed(getEffectiveSpeed(attacker, currentTurn, { combatStore }));
 	const canMoveAtTurn =
-		currentTurn + SKILL_CAST_TURN_DURATION + getCooldownForSpeed(attackerStats.speed);
+		currentTurn +
+		SKILL_CAST_TURN_DURATION +
+		getCooldownForSpeed(getEffectiveSpeed(attacker, currentTurn, { combatStore }));
 
 	combatStore.updatePiecePartial(attacker.id, {
 		canAttackAtTurn,
@@ -365,10 +443,14 @@ export function doSkill(
 
 	// Cập nhật attacker: reset mana, đánh dấu skillCast cho UI
 	const isAttackerInAffected = affectedPieces.some((p) => p.id === attacker.id);
+	const attackerAfterSkill = isAttackerInAffected
+		? affectedPieces.find((p) => p.id === attacker.id)!
+		: attacker;
+	const attackerVisualEffects = slowEffect
+		? [...(attackerAfterSkill.visualEffects ?? []), slowEffect]
+		: attackerAfterSkill.visualEffects;
 	const newAttacker: PieceModel = {
-		...(isAttackerInAffected
-			? affectedPieces.find((p) => p.id === attacker.id)!
-			: attacker),
+		...attackerAfterSkill,
 		currentMana: 0,
 		skillCast: {
 			skillName,
@@ -380,10 +462,21 @@ export function doSkill(
 			...(attacker.lastBattleStats ?? { damageDealt: 0, damageTaken: 0, turnsSurvived: 0 }),
 			damageDealt: (attacker.lastBattleStats?.damageDealt ?? 0) + totalDamage,
 		},
+		statusEffects: getPieceStatusEffects(attacker, currentTurn, {
+			combatStore,
+		}),
+		visualEffects: attackerVisualEffects,
 	};
 
 	// Loại attacker khỏi affected để không duplicate
-	const otherAffected = affectedPieces.filter((p) => p.id !== attacker.id);
+	const otherAffected = affectedPieces
+		.filter((p) => p.id !== attacker.id)
+		.map((piece) => ({
+			...piece,
+			statusEffects: getPieceStatusEffects(piece, currentTurn, {
+				combatStore,
+			}),
+		}));
 
 	return boardSlice.boardReducer(
 		board,

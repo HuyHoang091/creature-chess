@@ -19,6 +19,10 @@ export interface MovementDetails {
 	direction: TileCoordinates;
 }
 
+export interface PieceStatusEffect {
+	type: "slow" | "reviving";
+}
+
 export interface PieceModel {
 	id: string;
 	ownerId: string;
@@ -83,6 +87,11 @@ export interface PieceModel {
 		text: string;
 		color: string;
 	}[];
+
+	/**
+	 * Persistent status effects to render over the piece.
+	 */
+	statusEffects?: PieceStatusEffect[];
 
 	/**
 	 * @deprecated Dữ liệu trạng thái/vị trí nên được lưu trữ riêng biệt với dữ liệu cốt lõi của quân cờ.

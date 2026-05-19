@@ -9,4 +9,6 @@ export type PieceCombatState = {
 	canMoveAtTurn: number;
 	canBeAttackedAtTurn: number; // used to stop pieces being hit as soon as they land
 	canAttackAtTurn: number;
+	reviveUsed: boolean;
+	slowUntilTurn: number;
 };

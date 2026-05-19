@@ -57,7 +57,10 @@ export const MatchPiece: React.FC = () => {
 		);
 
 	const onAnimationEnd = (event: React.AnimationEvent<HTMLDivElement>) => {
-		if (event.animationName.includes("piece-dying-anim")) {
+		const isReviving =
+			piece?.statusEffects?.some((effect) => effect.type === "reviving") ?? false;
+
+		if (event.animationName.includes("piece-dying-anim") && !isReviving) {
 			return;
 		}
 		setCurrentAnimations((oldAnimations) =>
@@ -68,6 +71,12 @@ export const MatchPiece: React.FC = () => {
 	const runAnimations = React.useCallback(
 		(newPiece: PieceModel) => {
 			const { attacking, hit, currentHealth } = newPiece;
+			const isReviving =
+				newPiece.statusEffects?.some((effect) => effect.type === "reviving") ?? false;
+			const wasReviving =
+				lastRenderedPiece?.statusEffects?.some(
+					(effect) => effect.type === "reviving"
+				) ?? false;
 
 			if (!lastRenderedPiece) {
 				setLastRenderedPiece(newPiece);
@@ -102,6 +111,10 @@ export const MatchPiece: React.FC = () => {
 			if (currentHealth === 0) {
 				if (lastRenderedPiece.currentHealth !== 0) {
 					runAnimation(animationStyles.dying, "dying");
+				}
+
+				if (isReviving && !wasReviving) {
+					removeAnimation(animationStyles.dying);
 				}
 			} else {
 				if (lastRenderedPiece.currentHealth === 0) {
@@ -145,7 +158,16 @@ export const MatchPiece: React.FC = () => {
 	}
 
 	const animationClasses = currentAnimations.map((a) => a.name);
-	const className = classNames(animationStyles.piece, ...animationClasses);
+	const isSlowed =
+		piece.statusEffects?.some((effect) => effect.type === "slow") ?? false;
+	const isReviving =
+		piece.statusEffects?.some((effect) => effect.type === "reviving") ?? false;
+	const className = classNames(
+		animationStyles.piece,
+		isSlowed && animationStyles.slowed,
+		isReviving && animationStyles.reviving,
+		...animationClasses
+	);
 
 	// ===== THÊM MỚI: Ẩn quân địch cho đến khi reveal =====
 	const enemyHiddenStyle: React.CSSProperties =

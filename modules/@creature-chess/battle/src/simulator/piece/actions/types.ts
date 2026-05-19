@@ -8,8 +8,17 @@ export type MoveAction = { type: "move"; payload: { x: number; y: number } };
 export type HitAction = { type: "hit"; payload: { targetId: string } };
 export type DeleteAction = { type: "delete" };
 export type SkillAction = { type: "skill"; payload: { targetId: string } };
+export type ReviveAction = {
+	type: "revive";
+	payload: { health: number; mana: number };
+};
 
-export type PieceAction = MoveAction | HitAction | DeleteAction | SkillAction;
+export type PieceAction =
+	| MoveAction
+	| HitAction
+	| DeleteAction
+	| SkillAction
+	| ReviveAction;
 
 export type ActionHandler = (
 	currentTurn: number,

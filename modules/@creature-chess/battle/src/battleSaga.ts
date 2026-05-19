@@ -39,6 +39,8 @@ const runBattle = function* (
 						maxHealth: stats.hp,
 						currentHealth: stats.hp, // Reset health to full at battle start (includes item bonus)
 						currentMana: "startingMana" in stats ? (stats as any).startingMana : 0, // Set starting mana from items
+						visualEffects: [],
+						statusEffects: [],
 						lastBattleStats: {
 							damageDealt: 0,
 							damageTaken: 0,
@@ -64,6 +66,19 @@ const runBattle = function* (
 		canMoveAtTurn: 15,
 		canBeAttackedAtTurn: 0,
 		canAttackAtTurn: 15,
+		reviveUsed: false,
+		slowUntilTurn: 0,
+	});
+
+	Object.keys(board.pieces).forEach((pieceId) => {
+		combatStore.updatePiece(pieceId, {
+			state: { type: "wandering" },
+			canMoveAtTurn: 15,
+			canBeAttackedAtTurn: 0,
+			canAttackAtTurn: 15,
+			reviveUsed: false,
+			slowUntilTurn: 0,
+		});
 	});
 
 	/**
@@ -74,7 +89,8 @@ const runBattle = function* (
 
 	while (true) {
 		const shouldStop =
-			turnCount >= settings.battleTurnCount || isATeamDefeated(board);
+			turnCount >= settings.battleTurnCount ||
+			isATeamDefeated(board, { combatStore });
 
 		if (shouldStop) {
 			yield duration(1000).remaining().promise;

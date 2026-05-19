@@ -3,7 +3,7 @@ import { BoardSlice, BoardState, PiecePosition } from "@shoki/board";
 import { PieceModel } from "@creature-chess/models";
 
 import { getCooldownForSpeed } from "../../../utils/getCooldownForSpeed";
-import { getStats } from "../../../utils/getStats";
+import { getEffectiveSpeed } from "../../../utils/itemPassives";
 import { Stores } from "../../types";
 import { MoveAction } from "../actions";
 
@@ -25,10 +25,10 @@ export function doMove(
 		return board;
 	}
 
-	const stats = getStats(piece);
-
 	const canMoveAtTurn =
-		currentTurn + MOVE_TURN_DURATION + getCooldownForSpeed(stats.speed);
+		currentTurn +
+		MOVE_TURN_DURATION +
+		getCooldownForSpeed(getEffectiveSpeed(piece, currentTurn, { combatStore }));
 
 	combatStore.updatePiecePartial(piece.id, {
 		canMoveAtTurn,

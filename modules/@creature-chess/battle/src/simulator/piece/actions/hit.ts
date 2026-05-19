@@ -9,13 +9,19 @@ import {
 	getDistance,
 	getRelativeDirection,
 	PieceModel,
-	getItemDefinition,
 } from "@creature-chess/models";
 
 import { getCooldownForSpeed } from "../../../utils/getCooldownForSpeed";
 import { getHitDamage } from "../../../utils/getHitDamage";
 import { getNewAttackerFacingAway } from "../../../utils/getNewAttackerFacingAway";
 import { getStats } from "../../../utils/getStats";
+import {
+	applyFrozenHeartSlow,
+	getEffectiveSpeed,
+	getPieceStatusEffects,
+	hasPassive,
+	resolveRevive,
+} from "../../../utils/itemPassives";
 import { inAttackRange } from "../../../utils/inAttackRange";
 import { Stores } from "../../types";
 import { HitAction } from "./types";
@@ -54,47 +60,61 @@ export function doHit(
 		return board;
 	}
 
-	const hasPassive = (p: PieceModel, passiveId: string) => {
-		return p.items?.some((item) => {
-			const def = getItemDefinition(item.itemId);
-			return def?.passive?.id === passiveId;
-		});
-	};
-
 	let damage = getHitDamage(attacker, target);
 	let isDodged = false;
 
-	// DODGE
 	if (hasPassive(target, "dodge") && Math.random() < 0.15) {
 		damage = 0;
 		isDodged = true;
 	}
 
-	const newDefenderHealth = Math.max(target.currentHealth - damage, 0);
-
-	// THORNMAIL
-	let reflectedDamage = 0;
-	if (!isDodged && hasPassive(target, "thornmail")) {
-		reflectedDamage = Math.floor(damage * 0.2); // 20%
+	let slowEffect;
+	if (!isDodged && hasPassive(target, "slow_nearby")) {
+		slowEffect = applyFrozenHeartSlow(attacker, currentTurn, { combatStore });
 	}
 
-	// LIFESTEAL
+	const defenderResult = resolveRevive(
+		currentTurn,
+		target,
+		Math.max(target.currentHealth - damage, 0),
+		{ combatStore }
+	);
+
+	let reflectedDamage = 0;
+	if (!isDodged && hasPassive(target, "thornmail")) {
+		reflectedDamage = Math.floor(damage * 0.2);
+	}
+
 	let healAmount = 0;
 	if (!isDodged && hasPassive(attacker, "lifesteal")) {
 		healAmount = Math.floor(damage * 0.2);
 	}
 
-	const newAttackerHealth = Math.max(
-		Math.min(attacker.currentHealth - reflectedDamage + healAmount, attacker.maxHealth),
-		0
+	const attackerResult = resolveRevive(
+		currentTurn,
+		attacker,
+		Math.max(
+			Math.min(
+				attacker.currentHealth - reflectedDamage + healAmount,
+				attacker.maxHealth
+			),
+			0
+		),
+		{ combatStore }
 	);
 
-	const MANA_ON_ATTACK = 10;
-	// Người chơi bị đánh cũng sẽ nhận lượng Mana bằng với lượng sát thương (cap tại MaxMana)
-	const MANA_ON_DEFEND = damage;
+	const manaOnAttack = 10;
+	const manaOnDefend = damage;
 
-	const newAttackerMana = Math.min(attacker.currentMana + MANA_ON_ATTACK, attacker.maxMana || 100);
-	const newDefenderMana = newDefenderHealth > 0 ? Math.min(target.currentMana + MANA_ON_DEFEND, target.maxMana || 100) : target.currentMana;
+	const newAttackerMana =
+		attackerResult.health > 0
+			? Math.min(attacker.currentMana + manaOnAttack, attacker.maxMana || 100)
+			: attackerResult.mana;
+	const newDefenderMana = defenderResult.revived
+		? defenderResult.mana
+		: defenderResult.health > 0
+			? Math.min(target.currentMana + manaOnDefend, target.maxMana || 100)
+			: target.currentMana;
 
 	const attackerDirection = getRelativeDirection(
 		attackerPosition,
@@ -109,9 +129,11 @@ export function doHit(
 	const canAttackAtTurn =
 		currentTurn +
 		ATTACK_TURN_DURATION +
-		getCooldownForSpeed(attackerStats.speed);
+		getCooldownForSpeed(getEffectiveSpeed(attacker, currentTurn, { combatStore }));
 	const canMoveAtTurn =
-		currentTurn + MOVE_TURN_DURATION + getCooldownForSpeed(attackerStats.speed);
+		currentTurn +
+		MOVE_TURN_DURATION +
+		getCooldownForSpeed(getEffectiveSpeed(attacker, currentTurn, { combatStore }));
 
 	combatStore.updatePiecePartial(attacker.id, {
 		canAttackAtTurn,
@@ -119,7 +141,6 @@ export function doHit(
 	});
 
 	const canBeAttackedAtTurn = currentTurn + MOVE_TURN_DURATION + 2;
-
 	combatStore.updatePiecePartial(target.id, { canBeAttackedAtTurn });
 
 	const attackerVisualEffects = [];
@@ -129,7 +150,7 @@ export function doHit(
 		defenderVisualEffects.push({
 			id: Math.random().toString(36).substring(7),
 			text: "Dodge!",
-			color: "#ffffff"
+			color: "#ffffff",
 		});
 	}
 
@@ -137,12 +158,12 @@ export function doHit(
 		defenderVisualEffects.push({
 			id: Math.random().toString(36).substring(7),
 			text: "Thorns",
-			color: "#ffaa00"
+			color: "#ffaa00",
 		});
 		attackerVisualEffects.push({
 			id: Math.random().toString(36).substring(7),
 			text: `-${reflectedDamage}`,
-			color: "#ff0000"
+			color: "#ff0000",
 		});
 	}
 
@@ -150,13 +171,17 @@ export function doHit(
 		attackerVisualEffects.push({
 			id: Math.random().toString(36).substring(7),
 			text: `+${healAmount}`,
-			color: "#00ff00"
+			color: "#00ff00",
 		});
+	}
+
+	if (slowEffect) {
+		attackerVisualEffects.push(slowEffect);
 	}
 
 	const newAttacker: PieceModel = {
 		...attacker,
-		currentHealth: newAttackerHealth,
+		currentHealth: attackerResult.health,
 		currentMana: newAttackerMana,
 		attacking: {
 			attackType: attackerStats.attackType,
@@ -169,12 +194,15 @@ export function doHit(
 			...attacker.lastBattleStats!,
 			damageDealt: attacker.lastBattleStats!.damageDealt + damage,
 		},
+		statusEffects: getPieceStatusEffects(attacker, currentTurn, {
+			combatStore,
+		}),
 		visualEffects: attackerVisualEffects,
 	};
 
 	const defender: PieceModel = {
 		...target,
-		currentHealth: newDefenderHealth,
+		currentHealth: defenderResult.health,
 		currentMana: newDefenderMana,
 		hit: {
 			direction: getRelativeDirection(targetPosition, attackerPosition),
@@ -184,6 +212,9 @@ export function doHit(
 			...target.lastBattleStats!,
 			damageTaken: target.lastBattleStats!.damageTaken + damage,
 		},
+		statusEffects: getPieceStatusEffects(target, currentTurn, {
+			combatStore,
+		}),
 		visualEffects: defenderVisualEffects,
 	};
 

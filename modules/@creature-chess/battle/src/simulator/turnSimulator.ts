@@ -3,7 +3,10 @@ import { BoardSelectors, BoardSlice, BoardState } from "@shoki/board";
 import { PieceModel } from "@creature-chess/models";
 
 import { PieceCombatState, PieceInfoStore } from "../state";
-import { getStats } from "../utils/getStats";
+import {
+	getEffectiveSpeed,
+	syncPieceStatusEffects,
+} from "../utils/itemPassives";
 import { simulatePiece } from "./piece/simulate";
 
 type Stores = { combatStore: PieceInfoStore<PieceCombatState> };
@@ -14,6 +17,8 @@ export const simulateTurn = (
 	boardSlice: BoardSlice<PieceModel>,
 	stores: Stores
 ) => {
+	board = syncPieceStatusEffects(board, currentTurn, stores);
+
 	const pieceEntries = Object.entries(board.pieces).map(
 		([pieceId, piece]) =>
 			[
@@ -29,10 +34,10 @@ export const simulateTurn = (
 	);
 
 	pieceEntries.sort(([, aPiece], [, bPiece]) => {
-		const aStats = getStats(aPiece);
-		const bStats = getStats(bPiece);
-
-		return bStats.speed - aStats.speed;
+		return (
+			getEffectiveSpeed(bPiece, currentTurn, stores) -
+			getEffectiveSpeed(aPiece, currentTurn, stores)
+		);
 	});
 
 	return pieceEntries.reduce(

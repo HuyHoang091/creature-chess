@@ -14,6 +14,23 @@ export function doDying(
 	{ combatStore }: Stores
 ): StateResult {
 	if (state.payload.dieAtTurn <= currentTurn) {
+		if (
+			state.payload.reviveAtTurn !== undefined &&
+			state.payload.reviveHealth !== undefined &&
+			state.payload.reviveMana !== undefined
+		) {
+			return [
+				{
+					type: "reviving",
+					payload: {
+						reviveAtTurn: state.payload.reviveAtTurn,
+						health: state.payload.reviveHealth,
+						mana: state.payload.reviveMana,
+					},
+				},
+			];
+		}
+
 		return [state, [{ type: "delete" }]];
 	}
 

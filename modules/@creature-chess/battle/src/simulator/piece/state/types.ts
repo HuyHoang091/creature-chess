@@ -7,9 +7,25 @@ import { PieceAction } from "../actions";
 
 export type AttackState = { type: "attacking"; payload: { targetId: string } };
 export type WanderState = { type: "wandering" };
-export type DyingState = { type: "dying"; payload: { dieAtTurn: number } };
+export type DyingState = {
+	type: "dying";
+	payload: {
+		dieAtTurn: number;
+		reviveAtTurn?: number;
+		reviveHealth?: number;
+		reviveMana?: number;
+	};
+};
+export type RevivingState = {
+	type: "reviving";
+	payload: {
+		reviveAtTurn: number;
+		health: number;
+		mana: number;
+	};
+};
 
-export type PieceState = WanderState | DyingState | AttackState;
+export type PieceState = WanderState | DyingState | RevivingState | AttackState;
 
 export type StateResult = [PieceState] | [PieceState, PieceAction[]];
 

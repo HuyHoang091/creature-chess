@@ -116,15 +116,15 @@ export const COMBINED_ITEMS: Record<string, ItemDefinition> = {
 	FROZEN_HEART: {
 		id: "FROZEN_HEART",
 		name: "Frozen Heart",
-		description: "+15 DEF, +15 Mana. Passive: Slow nearby enemies",
+		description: "+15 DEF, +15 Mana. Passive: Attackers that hit this unit are slowed for 2s",
 		tier: 2,
 		icon: "❄️",
 		stats: { defense: 15, mana: 15 },
 		passive: {
 			id: "slow_nearby",
-			name: "Frozen Aura",
-			description: "Slow nearby enemies' attack speed",
-			trigger: "onBattleStart",
+			name: "Frozen Retribution",
+			description: "Attackers that hit this unit are slowed for 2 seconds",
+			trigger: "onTakeDamage",
 		},
 	},
 	GUARDIAN_ANGEL: {

@@ -3,9 +3,11 @@ import { BoardSlice, BoardState, PiecePosition } from "@shoki/board";
 import { PieceModel } from "@creature-chess/models";
 
 import { Stores } from "../types";
+import { getPieceStatusEffects } from "../../utils/itemPassives";
 import { doActions } from "./doActions";
 import { doAttack } from "./state/attack";
 import { doDying } from "./state/dying";
+import { doReviving } from "./state/reviving";
 import { PieceState, StateHandler } from "./state/types";
 import { doWander } from "./state/wander";
 
@@ -15,6 +17,7 @@ const stateFunctions: { [key: string]: StateHandler } = {
 	wandering: doWander as StateHandler,
 	attacking: doAttack as StateHandler,
 	dying: doDying as StateHandler,
+	reviving: doReviving as StateHandler,
 };
 
 /**
@@ -29,7 +32,11 @@ function getPieceState(
 ): PieceState {
 	const combatState = combatStore.getPiece(piece.id);
 
-	if (piece.currentHealth === 0 && combatState.state.type !== "dying") {
+	if (
+		piece.currentHealth === 0 &&
+		combatState.state.type !== "dying" &&
+		combatState.state.type !== "reviving"
+	) {
 		const dieAtTurn = currentTurn + DYING_DURATION;
 
 		const newState = {
@@ -72,6 +79,28 @@ export function simulatePiece(
 	// if there was a new state, set our piece to it
 	if (newState !== state) {
 		combatStore.updatePiecePartial(piece.id, { state: newState });
+
+		const statusEffects = getPieceStatusEffects(piece, currentTurn, {
+			combatStore,
+		});
+		const currentStatusEffects = piece.statusEffects ?? [];
+		const statusChanged =
+			currentStatusEffects.length !== statusEffects.length ||
+			currentStatusEffects.some(
+				(effect, index) => effect.type !== statusEffects[index]?.type
+			);
+
+		if (statusChanged) {
+			board = boardSlice.boardReducer(
+				board,
+				boardSlice.commands.updateBoardPiecesCommand([
+					{
+						...piece,
+						statusEffects,
+					},
+				])
+			);
+		}
 	}
 
 	// process any actions
