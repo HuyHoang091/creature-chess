@@ -1,3 +1,9 @@
+import {
+	type ElementTraitId,
+	ELEMENT_SYNERGY_BALANCE,
+	describeElementSynergyTier,
+} from "./elementSynergyBalance";
+
 export interface Trait {
 	id: TraitId;
 	name: string;
@@ -13,46 +19,44 @@ export interface Trait {
  */
 export type TraitSet = Map<TraitId, number>;
 
-export type TraitId =
-	| "fire"
-	| "water"
-	| "earth"
-	| "wood"
-	| "metal"
-	| "arcane"
-	| "valiant"
-	| "cunning";
+export type TraitId = ElementTraitId | "arcane" | "valiant" | "cunning";
+
+const getElementTraitTiers = (traitId: ElementTraitId) =>
+	ELEMENT_SYNERGY_BALANCE[traitId].map((tier) => ({
+		amount: tier.amount,
+		description: describeElementSynergyTier(tier),
+	}));
 
 export const allTraits: Trait[] = [
 	{
 		id: "fire",
 		name: "Fire",
 		icon: "fire",
-		tiers: [],
+		tiers: getElementTraitTiers("fire"),
 	},
 	{
 		id: "water",
 		name: "Water",
 		icon: "water",
-		tiers: [],
+		tiers: getElementTraitTiers("water"),
 	},
 	{
 		id: "earth",
 		name: "Earth",
 		icon: "earth",
-		tiers: [],
+		tiers: getElementTraitTiers("earth"),
 	},
 	{
 		id: "wood",
 		name: "Wood",
 		icon: "wood",
-		tiers: [],
+		tiers: getElementTraitTiers("wood"),
 	},
 	{
 		id: "metal",
 		name: "Metal",
 		icon: "metal",
-		tiers: [],
+		tiers: getElementTraitTiers("metal"),
 	},
 	{
 		id: "arcane",

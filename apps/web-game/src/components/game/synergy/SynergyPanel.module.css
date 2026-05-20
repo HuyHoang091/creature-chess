@@ -1,88 +1,218 @@
 .panel {
 	display: flex;
 	flex-direction: column;
-	gap: clamp(3px, 0.5vh, 6px);
+	gap: 8px;
 	align-items: center;
 	width: 100%;
 	padding-top: 4px;
 }
 
+.emptyState {
+	width: 100%;
+	padding: 8px 0;
+	font-size: 10px;
+	text-align: center;
+	text-transform: uppercase;
+	letter-spacing: 1px;
+	color: rgba(240, 230, 210, 0.55);
+}
+
 .synergyItem {
 	position: relative;
-	width: clamp(30px, 4.5vw, 44px);
-	height: clamp(30px, 4.5vw, 44px);
+	width: clamp(34px, 4.5vw, 46px);
+	height: clamp(34px, 4.5vw, 46px);
 	border-radius: 50%;
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	border: 2px solid #463714;
-	background: rgba(0, 0, 0, 0.5);
+	border: 1px solid rgba(200, 170, 110, 0.25);
+	background:
+		radial-gradient(circle at 30% 30%, rgba(76, 90, 107, 0.35), rgba(8, 14, 20, 0.92)),
+		linear-gradient(180deg, rgba(20, 27, 38, 0.92), rgba(8, 12, 18, 0.96));
+	box-shadow:
+		0 10px 18px rgba(0, 0, 0, 0.35),
+		inset 0 0 10px rgba(255, 255, 255, 0.03);
 	cursor: default;
-	transition: all 0.3s;
 	flex-shrink: 0;
+	transition:
+		border-color 180ms ease,
+		transform 180ms ease,
+		box-shadow 180ms ease;
 }
 
 .synergyItem:hover {
-	border-color: #c8aa6e;
-	box-shadow: 0 0 8px rgba(200, 170, 110, 0.4);
+	transform: translateY(-1px);
+	border-color: rgba(200, 170, 110, 0.7);
+	box-shadow:
+		0 12px 22px rgba(0, 0, 0, 0.45),
+		0 0 12px rgba(200, 170, 110, 0.18);
 }
 
 .tierBronze {
-	border-color: #cd7f32 !important;
-	box-shadow: 0 0 6px rgba(205, 127, 50, 0.5);
-	background: radial-gradient(circle, rgba(205, 127, 50, 0.2) 0%, rgba(0,0,0,0.5) 70%);
+	border-color: rgba(181, 117, 73, 0.92);
+	box-shadow:
+		0 12px 22px rgba(0, 0, 0, 0.4),
+		0 0 12px rgba(181, 117, 73, 0.3);
 }
 
 .tierSilver {
-	border-color: #c0c0c0 !important;
-	box-shadow: 0 0 8px rgba(192, 192, 192, 0.5);
-	background: radial-gradient(circle, rgba(192, 192, 192, 0.15) 0%, rgba(0,0,0,0.5) 70%);
+	border-color: rgba(181, 192, 205, 0.95);
+	box-shadow:
+		0 12px 22px rgba(0, 0, 0, 0.4),
+		0 0 14px rgba(181, 192, 205, 0.32);
 }
 
 .tierGold {
-	border-color: #ffd700 !important;
-	box-shadow: 0 0 10px rgba(255, 215, 0, 0.6);
-	background: radial-gradient(circle, rgba(255, 215, 0, 0.2) 0%, rgba(0,0,0,0.5) 70%);
+	border-color: rgba(233, 196, 106, 0.98);
+	box-shadow:
+		0 12px 22px rgba(0, 0, 0, 0.4),
+		0 0 16px rgba(233, 196, 106, 0.35);
 }
 
 .tierChromatic {
-	border-color: #e338ff !important;
-	box-shadow: 0 0 12px rgba(227, 56, 255, 0.6);
-	background: radial-gradient(circle, rgba(227, 56, 255, 0.2) 0%, rgba(0,0,0,0.5) 70%);
+	border-color: rgba(107, 196, 186, 0.98);
+	box-shadow:
+		0 12px 22px rgba(0, 0, 0, 0.45),
+		0 0 18px rgba(107, 196, 186, 0.34);
 }
 
 .icon {
-	font-size: clamp(12px, 1.5vw, 18px);
-	color: #f0e6d2;
+	width: 26px;
+	height: 26px;
 }
 
 .countBadge {
 	position: absolute;
-	bottom: -2px;
-	right: -2px;
-	font-size: clamp(7px, 0.8vw, 9px);
-	font-weight: 700;
+	right: -3px;
+	bottom: -3px;
+	min-width: 16px;
+	height: 16px;
+	padding: 0 4px;
+	border-radius: 999px;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	background: linear-gradient(180deg, #181f2b, #0b1016);
+	border: 1px solid rgba(200, 170, 110, 0.55);
 	color: #f0e6d2;
-	background: #1a1a2e;
-	border: 1px solid #463714;
-	border-radius: 3px;
-	padding: 1px 3px;
+	font-size: 9px;
+	font-weight: 700;
 	line-height: 1;
+	box-sizing: border-box;
 }
 
 .tooltip {
 	position: absolute;
-	left: 50px;
-	top: 50%;
-	transform: translateY(-50%);
-	background: rgba(10, 14, 19, 0.95);
-	border: 1px solid #463714;
-	border-radius: 4px;
-	padding: 6px 10px;
-	font-size: 11px;
+	top: 0;
+	left: calc(100% + 12px);
+	min-width: 260px;
+	max-width: 320px;
+	max-height: min(70vh, 380px);
+	padding: 10px 12px;
+	border-radius: 10px;
+	border: 1px solid rgba(200, 170, 110, 0.35);
+	background:
+		linear-gradient(180deg, rgba(20, 27, 38, 0.98), rgba(8, 12, 18, 0.98)),
+		radial-gradient(circle at top, rgba(76, 90, 107, 0.18), transparent 52%);
+	box-shadow:
+		0 18px 28px rgba(0, 0, 0, 0.5),
+		0 0 12px rgba(200, 170, 110, 0.12);
 	color: #f0e6d2;
-	white-space: nowrap;
-	z-index: 100;
+	font-size: 11px;
 	pointer-events: none;
-	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+	z-index: 100;
+	overflow-y: auto;
+}
+
+.tooltipHeader {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding-bottom: 6px;
+	margin-bottom: 8px;
+	border-bottom: 1px solid rgba(200, 170, 110, 0.16);
+}
+
+.tooltipTitle {
+	font-size: 12px;
+	font-weight: 700;
+	letter-spacing: 0.4px;
+	color: #f3e4bd;
+}
+
+.tooltipCount {
+	padding: 2px 7px;
+	border-radius: 999px;
+	background: rgba(200, 170, 110, 0.12);
+	color: #c8aa6e;
+	font-size: 10px;
+	font-weight: 700;
+}
+
+.thresholdRail {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	margin-bottom: 8px;
+	font-size: 10px;
+	font-weight: 700;
+	letter-spacing: 0.5px;
+}
+
+.thresholdStep::after {
+	content: "/";
+	margin-left: 6px;
+	color: rgba(240, 230, 210, 0.2);
+}
+
+.thresholdStep:last-child::after {
+	display: none;
+}
+
+.thresholdStepActive {
+	color: #f0e6d2;
+}
+
+.thresholdStepInactive {
+	color: rgba(240, 230, 210, 0.34);
+}
+
+.tierList {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+}
+
+.tierRow {
+	display: grid;
+	grid-template-columns: 24px minmax(0, 1fr);
+	gap: 8px;
+	align-items: start;
+	padding: 6px 8px;
+	border-radius: 6px;
+}
+
+.tierRowActive {
+	color: #f0e6d2;
+	background: rgba(200, 170, 110, 0.1);
+}
+
+.tierRowInactive {
+	color: rgba(240, 230, 210, 0.36);
+	background: rgba(255, 255, 255, 0.02);
+}
+
+.tierAmount {
+	font-weight: 700;
+	color: inherit;
+}
+
+.tierAmount::before {
+	content: ">";
+	margin-right: 4px;
+}
+
+.tierDescription {
+	color: inherit;
+	line-height: 1.35;
 }

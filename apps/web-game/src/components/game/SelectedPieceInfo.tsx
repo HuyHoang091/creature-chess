@@ -1,17 +1,17 @@
 import React from "react";
 
-
-
 import { getDefinitionById } from "@creature-chess/gamemode";
 
 import { TraitIcon } from "../ui/TraitIcon";
 import { BalanceIcon } from "../ui/icon/BalanceIcon";
+import { usePreviewPiece } from "./hooks/usePreviewPiece";
 import { useSelectedPiece } from "./hooks/useSelectedPiece";
 
 import styles from "./SelectedPieceInfo.module.css";
 
 export function SelectedPieceInfo() {
 	const selectedPiece = useSelectedPiece();
+	const previewPiece = usePreviewPiece(selectedPiece);
 
 	if (selectedPiece === null) {
 		return null;
@@ -23,7 +23,7 @@ export function SelectedPieceInfo() {
 		return null;
 	}
 
-	const stats = definition.stages[selectedPiece.stage];
+	const stats = previewPiece?.stats ?? definition.stages[selectedPiece.stage];
 
 	return (
 		<div className={styles.root}>

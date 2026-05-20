@@ -17,6 +17,7 @@ import { simulateTurn } from "./simulator";
 import { PieceCombatState } from "./state/state";
 import { pieceInfoStore } from "./state/store";
 import { duration } from "./utils/duration";
+import { buildBattleModifiersForBoard } from "./utils/elementSynergies";
 import { getStats } from "./utils/getStats";
 import { isATeamDefeated } from "./utils/isATeamDefeated";
 
@@ -27,18 +28,27 @@ const runBattle = function* (
 	startingTurn: number,
 	settings: GamemodeSettings
 ) {
+	const battleModifiersByPiece = buildBattleModifiersForBoard(initialBoard);
+
 	let board: BoardState<PieceModel> = {
 		id: initialBoard.id,
 		pieces: Object.fromEntries(
 			Object.entries(initialBoard.pieces).map(([id, piece]) => {
-				const stats = getStats(piece);
+				const pieceWithModifiers: PieceModel = {
+					...piece,
+					battleModifiers: battleModifiersByPiece.get(id),
+				};
+				const stats = getStats(pieceWithModifiers);
 				return [
 					id,
 					{
-						...piece,
+						...pieceWithModifiers,
 						maxHealth: stats.hp,
 						currentHealth: stats.hp, // Reset health to full at battle start (includes item bonus)
-						currentMana: "startingMana" in stats ? (stats as any).startingMana : 0, // Set starting mana from items
+						currentMana: Math.min(
+							stats.startingMana,
+							pieceWithModifiers.maxMana || 100
+						), // Set starting mana from items and traits
 						visualEffects: [],
 						statusEffects: [],
 						lastBattleStats: {

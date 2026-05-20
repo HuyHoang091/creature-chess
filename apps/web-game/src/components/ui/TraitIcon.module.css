@@ -6,6 +6,13 @@
 	container-type: size;
 }
 
+.traitIcon > img {
+	width: 100%;
+	height: 100%;
+	display: block;
+	object-fit: contain;
+}
+
 .labelContainer {
 	position: absolute;
 	width: 100%;

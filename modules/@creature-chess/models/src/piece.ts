@@ -1,3 +1,4 @@
+import type { PieceBattleModifierSet } from "../gamemode/elementSynergyBalance";
 import { TraitId } from "../gamemode/traits";
 import { AttackType, CreatureDefinition } from "./creatureDefinition";
 import { ItemInstance } from "./item";
@@ -97,6 +98,11 @@ export interface PieceModel {
 	 * Persistent status effects to render over the piece.
 	 */
 	statusEffects?: PieceStatusEffect[];
+
+	/**
+	 * Battle-only trait bonuses resolved from the starting board.
+	 */
+	battleModifiers?: PieceBattleModifierSet;
 
 	/**
 	 * @deprecated Positional/render state should be stored separately from core piece data.

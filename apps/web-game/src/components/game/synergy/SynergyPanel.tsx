@@ -2,118 +2,154 @@ import * as React from "react";
 
 import { useSelector } from "react-redux";
 import { useLocalPlayerId } from "~/auth/context";
-import { AppState } from "~/store";
+import type { AppState } from "~/store";
 
 import { BoardSelectors } from "@shoki/board";
-import { PieceModel } from "@creature-chess/models";
+
+import type { PieceModel } from "@creature-chess/models";
+import {
+	ELEMENT_TRAIT_IDS,
+	countUniqueElementTraits,
+} from "@creature-chess/models/gamemode/elementSynergyBalance";
+import { allTraitsMap } from "@creature-chess/models/gamemode/traits";
+import type { Trait } from "@creature-chess/models/gamemode/traits";
+
+import { TraitIcon } from "../../ui/TraitIcon";
 import styles from "./SynergyPanel.module.css";
 
-// Bạn cần types từ models. Nếu chưa có synergy data trong store,
-// component này sẽ tính toán dựa trên pieces đang có trên board.
-// Đây là component mẫu, cần tùy chỉnh theo data thực tế.
+type ActiveSynergy = {
+	trait: Trait;
+	count: number;
+	activeTierIndex: number;
+};
 
-// Tính synergies từ các piece (mẫu - tuỳ chỉnh theo data thực)
-function computeSynergies(pieces: PieceModel[]): {
-    name: string;
-    icon: string;
-    current: number;
-    thresholds: number[];
-}[] {
-    // Group pieces by class/type
-    const typeMap: Record<string, Set<number>> = {};
+const TIER_CLASSES = [
+	styles.tierBronze,
+	styles.tierSilver,
+	styles.tierGold,
+	styles.tierChromatic,
+	styles.tierChromatic,
+];
 
-    pieces.forEach((p) => {
-        const typeName = p.definition?.traits.toString();
-        const className = p.definition?.traits.toString();
+function getActiveSynergies(pieces: PieceModel[]) {
+	const counts = countUniqueElementTraits(pieces);
 
-        if (typeName) {
-            if (!typeMap[typeName]) typeMap[typeName] = new Set();
-            typeMap[typeName].add(p.definitionId);
-        }
-        if (className) {
-            if (!typeMap[className]) typeMap[className] = new Set();
-            typeMap[className].add(p.definitionId);
-        }
-    });
+	return ELEMENT_TRAIT_IDS.map((traitId) => {
+		const trait = allTraitsMap.get(traitId);
+		const count = counts.get(traitId) ?? 0;
 
-    // Tạo danh sách synergy
-    const icons: Record<string, string> = {
-        // Fallback icons - customize per your game's types
-    };
+		if (!trait || count === 0) {
+			return null;
+		}
 
-    const defaultIcons = ["🔥", "💧", "🌿", "⚡", "💀", "🛡️", "⚔️", "🌙", "☀️", "❄️"];
-    let iconIdx = 0;
+		const activeTierIndex = trait.tiers.reduce(
+			(highestTierIndex, tier, tierIndex) =>
+				count >= tier.amount ? tierIndex : highestTierIndex,
+			-1
+		);
 
-    return Object.entries(typeMap)
-        .map(([name, ids]) => ({
-            name,
-            icon: icons[name] || defaultIcons[iconIdx++ % defaultIcons.length],
-            current: ids.size,
-            thresholds: [2, 4, 6], // Thresholds mẫu
-        }))
-        .filter((s) => s.current > 0)
-        .sort((a, b) => b.current - a.current);
-}
-
-function getTierClass(
-    current: number,
-    thresholds: number[]
-): string {
-    const sorted = [...thresholds].sort((a, b) => a - b);
-    if (current >= (sorted[3] || Infinity)) return styles.tierChromatic;
-    if (current >= (sorted[2] || Infinity)) return styles.tierGold;
-    if (current >= (sorted[1] || Infinity)) return styles.tierSilver;
-    if (current >= (sorted[0] || Infinity)) return styles.tierBronze;
-    return "";
+		return {
+			trait,
+			count,
+			activeTierIndex,
+		};
+	})
+		.filter((synergy): synergy is ActiveSynergy => synergy !== null)
+		.sort(
+			(a, b) =>
+				b.count - a.count ||
+				b.activeTierIndex - a.activeTierIndex ||
+				a.trait.name.localeCompare(b.trait.name)
+		);
 }
 
 export function SynergyPanel() {
-    const localPlayerId = useLocalPlayerId();
-    const [hoveredIdx, setHoveredIdx] = React.useState<number | null>(null);
+	const localPlayerId = useLocalPlayerId();
+	const [hoveredTraitId, setHoveredTraitId] = React.useState<string | null>(
+		null
+	);
 
-    const pieces = useSelector<AppState, PieceModel[]>((state) =>
-        [...BoardSelectors.getAllPieces(state.game.board)].filter(
-            (p) => p.ownerId === localPlayerId
-        )
-    );
+	const pieces = useSelector<AppState, PieceModel[]>((state) =>
+		[...BoardSelectors.getAllPieces(state.game.board)].filter(
+			(piece) => piece.ownerId === localPlayerId
+		)
+	);
 
-    const synergies = React.useMemo(() => computeSynergies(pieces), [pieces]);
+	const synergies = React.useMemo(() => getActiveSynergies(pieces), [pieces]);
 
-    if (synergies.length === 0) {
-        return (
-            <div className={styles.panel}>
-                <span style={{ fontSize: "10px", color: "#463714", textAlign: "center" }}>
-                    No synergies
-                </span>
-            </div>
-        );
-    }
+	if (synergies.length === 0) {
+		return (
+			<div className={styles.panel}>
+				<div className={styles.emptyState}>No elements</div>
+			</div>
+		);
+	}
 
-    return (
-        <div className={styles.panel}>
-            {synergies.map((syn, idx) => {
-                const tierClass = getTierClass(syn.current, syn.thresholds);
+	return (
+		<div className={styles.panel}>
+			{synergies.map(({ trait, count, activeTierIndex }) => (
+				<div
+					key={trait.id}
+					className={`${styles.synergyItem} ${
+						activeTierIndex >= 0 ? TIER_CLASSES[activeTierIndex] ?? "" : ""
+					}`}
+					onMouseEnter={() => setHoveredTraitId(trait.id)}
+					onMouseLeave={() => setHoveredTraitId(null)}
+				>
+					<TraitIcon trait={trait.id} className={styles.icon} />
+					<span className={styles.countBadge}>{count}</span>
 
-                return (
-                    <div
-                        key={syn.name}
-                        className={`${styles.synergyItem} ${tierClass}`}
-                        onMouseEnter={() => setHoveredIdx(idx)}
-                        onMouseLeave={() => setHoveredIdx(null)}
-                    >
-                        <span className={styles.icon}>{syn.icon}</span>
-                        <span className={styles.countBadge}>
-                            {syn.current}
-                        </span>
+					{hoveredTraitId === trait.id && (
+						<div className={styles.tooltip}>
+							<div className={styles.tooltipHeader}>
+								<span className={styles.tooltipTitle}>{trait.name}</span>
+								<span className={styles.tooltipCount}>{count}</span>
+							</div>
 
-                        {hoveredIdx === idx && (
-                            <div className={styles.tooltip}>
-                                <strong>{syn.name}</strong> — {syn.current}/{syn.thresholds.join("/")}
-                            </div>
-                        )}
-                    </div>
-                );
-            })}
-        </div>
-    );
+							<div className={styles.thresholdRail}>
+								{trait.tiers.map((tier) => {
+									const isActive = count >= tier.amount;
+
+									return (
+										<span
+											key={tier.amount}
+											className={`${styles.thresholdStep} ${
+												isActive
+													? styles.thresholdStepActive
+													: styles.thresholdStepInactive
+											}`}
+										>
+											{tier.amount}
+										</span>
+									);
+								})}
+							</div>
+
+							<div className={styles.tierList}>
+								{trait.tiers.map((tier) => {
+									const isActive = count >= tier.amount;
+
+									return (
+										<div
+											key={tier.amount}
+											className={`${styles.tierRow} ${
+												isActive
+													? styles.tierRowActive
+													: styles.tierRowInactive
+											}`}
+										>
+											<span className={styles.tierAmount}>{tier.amount}</span>
+											<span className={styles.tierDescription}>
+												{tier.description}
+											</span>
+										</div>
+									);
+								})}
+							</div>
+						</div>
+					)}
+				</div>
+			))}
+		</div>
+	);
 }

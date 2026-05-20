@@ -51,10 +51,7 @@ function isPieceReviving({ combatStore }: Stores, pieceId: string) {
 	return combatStore.getPiece(pieceId).state.type === "reviving";
 }
 
-export function hasPendingRevive(
-	piece: PieceModel,
-	{ combatStore }: Stores
-) {
+export function hasPendingRevive(piece: PieceModel, { combatStore }: Stores) {
 	const pieceState = combatStore.getPiece(piece.id).state;
 
 	return (
@@ -161,7 +158,31 @@ export function getThornmailReflectDamage(
 }
 
 export function getLifestealHealAmount(piece: PieceModel, damage: number) {
-	return hasPassive(piece, "lifesteal") ? Math.floor(damage * 0.2) : 0;
+	const baseHeal = hasPassive(piece, "lifesteal")
+		? Math.floor(damage * 0.2)
+		: 0;
+
+	return applyHealingAmplification(piece, baseHeal);
+}
+
+export function applyDamageReduction(piece: PieceModel, damage: number) {
+	if (damage <= 0) {
+		return 0;
+	}
+
+	const { damageReductionPct } = getStats(piece);
+
+	return Math.max(0, Math.ceil(damage * (1 - damageReductionPct)));
+}
+
+export function applyHealingAmplification(piece: PieceModel, healing: number) {
+	if (healing <= 0) {
+		return 0;
+	}
+
+	const { healAmpPct } = getStats(piece);
+
+	return Math.max(0, Math.ceil(healing * (1 + healAmpPct)));
 }
 
 export function resolveRevive(

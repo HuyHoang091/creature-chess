@@ -15,6 +15,8 @@ import {
 import { getCooldownForSpeed } from "../../../utils/getCooldownForSpeed";
 import { getStats } from "../../../utils/getStats";
 import {
+	applyDamageReduction,
+	applyHealingAmplification,
 	applyFrozenHeartSlow,
 	getEffectiveSpeed,
 	getLifestealHealAmount,
@@ -36,13 +38,19 @@ const HEAL_PERCENT = 0.25; // Heal 25% maxHP
 
 // ===================== HELPER FUNCTIONS =====================
 
-function getAllEnemies(board: BoardState<PieceModel>, ownerId: string): PieceModel[] {
+function getAllEnemies(
+	board: BoardState<PieceModel>,
+	ownerId: string
+): PieceModel[] {
 	return Object.values(board.pieces).filter(
 		(p) => p.ownerId !== ownerId && p.currentHealth > 0
 	);
 }
 
-function getAllAllies(board: BoardState<PieceModel>, ownerId: string): PieceModel[] {
+function getAllAllies(
+	board: BoardState<PieceModel>,
+	ownerId: string
+): PieceModel[] {
 	return Object.values(board.pieces).filter(
 		(p) => p.ownerId === ownerId && p.currentHealth > 0
 	);
@@ -50,6 +58,16 @@ function getAllAllies(board: BoardState<PieceModel>, ownerId: string): PieceMode
 
 function calcDamage(attackerAtk: number, defenderDef: number): number {
 	return Math.ceil((attackerAtk / defenderDef) * 8 * SKILL_DAMAGE_MULTIPLIER);
+}
+
+function getSkillDamageWithBonus(piece: PieceModel, damage: number): number {
+	if (damage <= 0) {
+		return 0;
+	}
+
+	const { skillDamagePct } = getStats(piece);
+
+	return Math.ceil(damage * (1 + skillDamagePct));
 }
 
 type SkillDamageResult = {
@@ -71,18 +89,22 @@ function applyDamage(
 ): SkillDamageResult {
 	const pPos = BoardSelectors.getPiecePosition(board, piece.id);
 	const dodged = shouldDodge(piece);
-	const actualDamage = dodged ? 0 : damage;
+	const actualDamage = dodged ? 0 : applyDamageReduction(piece, damage);
 	const reviveResult = resolveRevive(
 		currentTurn,
 		piece,
 		Math.max(piece.currentHealth - actualDamage, 0),
 		stores
 	);
-	const reflectedDamage = dodged ? 0 : getThornmailReflectDamage(piece, attacker);
-	const defenderMana =
-		reviveResult.revived
-			? reviveResult.mana
-			: reviveResult.health > 0
+	const reflectedDamage = dodged
+		? 0
+		: applyDamageReduction(
+				attacker,
+				getThornmailReflectDamage(piece, attacker)
+			);
+	const defenderMana = reviveResult.revived
+		? reviveResult.mana
+		: reviveResult.health > 0
 			? Math.min(piece.currentMana + actualDamage, piece.maxMana || 100)
 			: piece.currentMana;
 	const visualEffects = [...(piece.visualEffects ?? [])];
@@ -150,9 +172,9 @@ function createSkillVisualEffect(
 				? "#00ff99"
 				: options.variant === "damage"
 					? "#ff7f7f"
-				: options.variant === "skillDamage"
-					? "#75f8ff"
-					: "#ffffff"),
+					: options.variant === "skillDamage"
+						? "#75f8ff"
+						: "#ffffff"),
 		variant: options.variant,
 		tone: options.tone,
 		sourcePieceId: options.sourcePieceId,
@@ -210,7 +232,10 @@ function appendSkillVisualEffects(
 				return piece;
 			}
 
-			const healAmount = Math.max(piece.currentHealth - attacker.currentHealth, 0);
+			const healAmount = Math.max(
+				piece.currentHealth - attacker.currentHealth,
+				0
+			);
 			const visualEffects = [...(piece.visualEffects ?? [])];
 
 			if (healAmount > 0) {
@@ -223,12 +248,15 @@ function appendSkillVisualEffects(
 			}
 
 			visualEffects.push(
-				createSkillVisualEffect(`Rage +${Math.round(BUFF_ATTACK_BONUS * 100)}%`, {
-					variant: "label",
-					tone: "gold",
-					sourcePieceId: attacker.id,
-					color: "#ffd888",
-				})
+				createSkillVisualEffect(
+					`Rage +${Math.round(BUFF_ATTACK_BONUS * 100)}%`,
+					{
+						variant: "label",
+						tone: "gold",
+						sourcePieceId: attacker.id,
+						color: "#ffd888",
+					}
+				)
 			);
 
 			return {
@@ -240,7 +268,8 @@ function appendSkillVisualEffects(
 
 	return pieces.map((piece) => {
 		const previousHealth =
-			BoardSelectors.getPiece(board, piece.id)?.currentHealth ?? piece.currentHealth;
+			BoardSelectors.getPiece(board, piece.id)?.currentHealth ??
+			piece.currentHealth;
 		const healAmount = Math.max(piece.currentHealth - previousHealth, 0);
 		const visualEffects = [...(piece.visualEffects ?? [])];
 
@@ -288,7 +317,10 @@ function doSingleDamage(
 
 	const atkStats = getStats(attacker);
 	const defStats = getStats(target);
-	const damage = calcDamage(atkStats.attack, defStats.defense) * 2; // Single = extra strong
+	const damage = getSkillDamageWithBonus(
+		attacker,
+		calcDamage(atkStats.attack, defStats.defense) * 2
+	); // Single = extra strong
 	const result = applyDamage(
 		currentTurn,
 		attacker,
@@ -341,7 +373,10 @@ function doAoeDamage(
 		const ePos = BoardSelectors.getPiecePosition(board, enemy.id);
 		if (ePos && getDistance(targetPosition, ePos) <= 1) {
 			const defStats = getStats(enemy);
-			const damage = calcDamage(atkStats.attack, defStats.defense);
+			const damage = getSkillDamageWithBonus(
+				attacker,
+				calcDamage(atkStats.attack, defStats.defense)
+			);
 			const result = applyDamage(
 				currentTurn,
 				attacker,
@@ -354,7 +389,8 @@ function doAoeDamage(
 			affected.push(result.piece);
 			totalDamage += result.actualDamage;
 			reflectedDamage += result.reflectedDamage;
-			triggeredFrozenHeart = triggeredFrozenHeart || result.triggeredFrozenHeart;
+			triggeredFrozenHeart =
+				triggeredFrozenHeart || result.triggeredFrozenHeart;
 		}
 	});
 
@@ -390,7 +426,10 @@ function doBounceDamage(
 
 		const defStats = getStats(target);
 		const damageDecay = 1 - bounce * 0.2; // 100% → 80% → 60%
-		const damage = Math.ceil(calcDamage(atkStats.attack, defStats.defense) * damageDecay);
+		const damage = getSkillDamageWithBonus(
+			attacker,
+			Math.ceil(calcDamage(atkStats.attack, defStats.defense) * damageDecay)
+		);
 		const result = applyDamage(
 			currentTurn,
 			attacker,
@@ -464,13 +503,22 @@ function doLineDamage(
 	for (let step = 1; step <= 7; step++) {
 		const checkX = attackerPosition.x + dirX * step;
 		const checkY = attackerPosition.y + dirY * step;
-		if (checkX < 0 || checkX >= board.size.width || checkY < 0 || checkY >= board.size.height) break;
+		if (
+			checkX < 0 ||
+			checkX >= board.size.width ||
+			checkY < 0 ||
+			checkY >= board.size.height
+		)
+			break;
 
 		getAllEnemies(board, attacker.ownerId).forEach((enemy) => {
 			const ePos = BoardSelectors.getPiecePosition(board, enemy.id);
 			if (ePos && ePos.x === checkX && ePos.y === checkY) {
 				const defStats = getStats(enemy);
-				const damage = calcDamage(atkStats.attack, defStats.defense);
+				const damage = getSkillDamageWithBonus(
+					attacker,
+					calcDamage(atkStats.attack, defStats.defense)
+				);
 				const result = applyDamage(
 					currentTurn,
 					attacker,
@@ -483,7 +531,8 @@ function doLineDamage(
 				affected.push(result.piece);
 				totalDamage += result.actualDamage;
 				reflectedDamage += result.reflectedDamage;
-				triggeredFrozenHeart = triggeredFrozenHeart || result.triggeredFrozenHeart;
+				triggeredFrozenHeart =
+					triggeredFrozenHeart || result.triggeredFrozenHeart;
 			}
 		});
 	}
@@ -492,19 +541,25 @@ function doLineDamage(
 }
 
 /** Buff bản thân — Rage Mode */
-function doBuffSingle(
-	attacker: PieceModel
-): { affected: PieceModel[] } {
+function doBuffSingle(attacker: PieceModel): { affected: PieceModel[] } {
 	// Tăng 30% attack cho bản thân (thông qua tạm thời tăng HP vì model không có buff field)
 	// Workaround: Hồi 25% maxHP cho bản thân như một "shield"
-	const healAmount = Math.ceil(attacker.maxHealth * HEAL_PERCENT);
-	const newHealth = Math.min(attacker.currentHealth + healAmount, attacker.maxHealth);
+	const healAmount = applyHealingAmplification(
+		attacker,
+		Math.ceil(attacker.maxHealth * HEAL_PERCENT)
+	);
+	const newHealth = Math.min(
+		attacker.currentHealth + healAmount,
+		attacker.maxHealth
+	);
 	return {
-		affected: [{
-			...attacker,
-			currentHealth: newHealth,
-			currentMana: 0,
-		}],
+		affected: [
+			{
+				...attacker,
+				currentHealth: newHealth,
+				currentMana: 0,
+			},
+		],
 	};
 }
 
@@ -525,14 +580,22 @@ function doHealSingle(
 		}
 	});
 
-	const healAmount = Math.ceil(weakest.maxHealth * 0.35);
-	const newHealth = Math.min(weakest.currentHealth + healAmount, weakest.maxHealth);
+	const healAmount = applyHealingAmplification(
+		attacker,
+		Math.ceil(weakest.maxHealth * 0.35)
+	);
+	const newHealth = Math.min(
+		weakest.currentHealth + healAmount,
+		weakest.maxHealth
+	);
 
 	return {
-		affected: [{
-			...weakest,
-			currentHealth: newHealth,
-		}],
+		affected: [
+			{
+				...weakest,
+				currentHealth: newHealth,
+			},
+		],
 	};
 }
 
@@ -548,8 +611,14 @@ function doHealAoe(
 	allies.forEach((ally) => {
 		const aPos = BoardSelectors.getPiecePosition(board, ally.id);
 		if (aPos && getDistance(attackerPosition, aPos) <= 2) {
-			const healAmount = Math.ceil(ally.maxHealth * 0.2);
-			const newHealth = Math.min(ally.currentHealth + healAmount, ally.maxHealth);
+			const healAmount = applyHealingAmplification(
+				attacker,
+				Math.ceil(ally.maxHealth * 0.2)
+			);
+			const newHealth = Math.min(
+				ally.currentHealth + healAmount,
+				ally.maxHealth
+			);
 			affected.push({
 				...ally,
 				currentHealth: newHealth,
@@ -681,11 +750,15 @@ export function doSkill(
 	const canAttackAtTurn =
 		currentTurn +
 		SKILL_CAST_TURN_DURATION +
-		getCooldownForSpeed(getEffectiveSpeed(attacker, currentTurn, { combatStore }));
+		getCooldownForSpeed(
+			getEffectiveSpeed(attacker, currentTurn, { combatStore })
+		);
 	const canMoveAtTurn =
 		currentTurn +
 		SKILL_CAST_TURN_DURATION +
-		getCooldownForSpeed(getEffectiveSpeed(attacker, currentTurn, { combatStore }));
+		getCooldownForSpeed(
+			getEffectiveSpeed(attacker, currentTurn, { combatStore })
+		);
 
 	combatStore.updatePiecePartial(attacker.id, {
 		canAttackAtTurn,
@@ -706,7 +779,7 @@ export function doSkill(
 		skillType === "buff"
 			? attacker.id
 			: skillType === "support" && skillTarget !== "aoe"
-				? affectedPieceIds[0] ?? attacker.id
+				? (affectedPieceIds[0] ?? attacker.id)
 				: skillType === "support"
 					? attacker.id
 					: action.payload.targetId;
@@ -731,7 +804,9 @@ export function doSkill(
 		attackerAfterSkill,
 		Math.max(
 			Math.min(
-				attackerAfterSkill.currentHealth - totalReflectedDamage + skillHealAmount,
+				attackerAfterSkill.currentHealth -
+					totalReflectedDamage +
+					skillHealAmount,
 				attackerAfterSkill.maxHealth
 			),
 			0
@@ -776,7 +851,11 @@ export function doSkill(
 			affectedPieceIds,
 		},
 		lastBattleStats: {
-			...(attacker.lastBattleStats ?? { damageDealt: 0, damageTaken: 0, turnsSurvived: 0 }),
+			...(attacker.lastBattleStats ?? {
+				damageDealt: 0,
+				damageTaken: 0,
+				turnsSurvived: 0,
+			}),
 			damageDealt: (attacker.lastBattleStats?.damageDealt ?? 0) + totalDamage,
 		},
 		statusEffects: getPieceStatusEffects(attacker, currentTurn, {
@@ -797,6 +876,9 @@ export function doSkill(
 
 	return boardSlice.boardReducer(
 		board,
-		boardSlice.commands.updateBoardPiecesCommand([newAttacker, ...otherAffected])
+		boardSlice.commands.updateBoardPiecesCommand([
+			newAttacker,
+			...otherAffected,
+		])
 	);
 }

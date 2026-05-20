@@ -15,7 +15,9 @@ import { getCooldownForSpeed } from "../../../utils/getCooldownForSpeed";
 import { getHitDamage } from "../../../utils/getHitDamage";
 import { getNewAttackerFacingAway } from "../../../utils/getNewAttackerFacingAway";
 import { getStats } from "../../../utils/getStats";
+import { inAttackRange } from "../../../utils/inAttackRange";
 import {
+	applyDamageReduction,
 	applyFrozenHeartSlow,
 	getEffectiveSpeed,
 	getLifestealHealAmount,
@@ -25,7 +27,6 @@ import {
 	resolveRevive,
 	shouldDodge,
 } from "../../../utils/itemPassives";
-import { inAttackRange } from "../../../utils/inAttackRange";
 import { Stores } from "../../types";
 import { HitAction } from "./types";
 
@@ -69,6 +70,8 @@ export function doHit(
 	if (shouldDodge(target)) {
 		damage = 0;
 		isDodged = true;
+	} else {
+		damage = applyDamageReduction(target, damage);
 	}
 
 	let slowEffect;
@@ -85,7 +88,10 @@ export function doHit(
 
 	let reflectedDamage = 0;
 	if (!isDodged) {
-		reflectedDamage = getThornmailReflectDamage(target, attacker);
+		reflectedDamage = applyDamageReduction(
+			attacker,
+			getThornmailReflectDamage(target, attacker)
+		);
 	}
 
 	const healAmount = !isDodged ? getLifestealHealAmount(attacker, damage) : 0;
@@ -129,11 +135,15 @@ export function doHit(
 	const canAttackAtTurn =
 		currentTurn +
 		ATTACK_TURN_DURATION +
-		getCooldownForSpeed(getEffectiveSpeed(attacker, currentTurn, { combatStore }));
+		getCooldownForSpeed(
+			getEffectiveSpeed(attacker, currentTurn, { combatStore })
+		);
 	const canMoveAtTurn =
 		currentTurn +
 		MOVE_TURN_DURATION +
-		getCooldownForSpeed(getEffectiveSpeed(attacker, currentTurn, { combatStore }));
+		getCooldownForSpeed(
+			getEffectiveSpeed(attacker, currentTurn, { combatStore })
+		);
 
 	combatStore.updatePiecePartial(attacker.id, {
 		canAttackAtTurn,

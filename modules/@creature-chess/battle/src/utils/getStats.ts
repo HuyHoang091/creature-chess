@@ -1,35 +1,66 @@
-import { PieceModel, getItemDefinition } from "@creature-chess/models";
+import {
+	type CreatureStats,
+	PieceModel,
+	getItemDefinition,
+} from "@creature-chess/models";
 
-export const getStats = (piece: PieceModel) => {
+export type BattleStats = CreatureStats & {
+	startingMana: number;
+	healAmpPct: number;
+	skillDamagePct: number;
+	damageReductionPct: number;
+};
+
+const applyModifier = (baseValue: number, flatBonus = 0, percentBonus = 0) =>
+	Math.max(1, Math.ceil((baseValue + flatBonus) * (1 + percentBonus)));
+
+export const getStats = (piece: PieceModel): BattleStats => {
 	const base = piece.definition.stages[piece.stage];
+	const battleModifiers = piece.battleModifiers ?? {};
+	const itemModifiers = {
+		hp: 0,
+		attack: 0,
+		defense: 0,
+		speed: 0,
+		mana: 0,
+	};
 
-	if (!piece.items || piece.items.length === 0) {
-		return base;
-	}
-
-	let itemBonusHp = 0;
-	let itemBonusAttack = 0;
-	let itemBonusDefense = 0;
-	let itemBonusSpeed = 0;
-	let itemBonusMana = 0;
-
-	for (const item of piece.items) {
-		const itemDef = getItemDefinition(item.itemId);
-		if (itemDef?.stats) {
-			itemBonusHp += itemDef.stats.hp || 0;
-			itemBonusAttack += itemDef.stats.attack || 0;
-			itemBonusDefense += itemDef.stats.defense || 0;
-			itemBonusSpeed += itemDef.stats.speed || 0;
-			itemBonusMana += itemDef.stats.mana || 0;
+	for (const item of piece.items ?? []) {
+		const itemDefinition = getItemDefinition(item.itemId);
+		if (itemDefinition?.stats) {
+			itemModifiers.hp += itemDefinition.stats.hp || 0;
+			itemModifiers.attack += itemDefinition.stats.attack || 0;
+			itemModifiers.defense += itemDefinition.stats.defense || 0;
+			itemModifiers.speed += itemDefinition.stats.speed || 0;
+			itemModifiers.mana += itemDefinition.stats.mana || 0;
 		}
 	}
 
 	return {
 		...base,
-		hp: base.hp + itemBonusHp,
-		attack: base.attack + itemBonusAttack,
-		defense: base.defense + itemBonusDefense,
-		speed: base.speed + itemBonusSpeed,
-		startingMana: itemBonusMana, // Starting mana instead of max mana
+		hp: applyModifier(
+			base.hp + itemModifiers.hp,
+			battleModifiers.hpFlat,
+			battleModifiers.hpPct
+		),
+		attack: applyModifier(
+			base.attack + itemModifiers.attack,
+			battleModifiers.attackFlat,
+			battleModifiers.attackPct
+		),
+		defense: applyModifier(
+			base.defense + itemModifiers.defense,
+			battleModifiers.defenseFlat,
+			battleModifiers.defensePct
+		),
+		speed: applyModifier(
+			base.speed + itemModifiers.speed,
+			battleModifiers.speedFlat,
+			battleModifiers.speedPct
+		),
+		startingMana: itemModifiers.mana + (battleModifiers.startingManaFlat ?? 0),
+		healAmpPct: battleModifiers.healAmpPct ?? 0,
+		skillDamagePct: battleModifiers.skillDamagePct ?? 0,
+		damageReductionPct: battleModifiers.damageReductionPct ?? 0,
 	};
 };
