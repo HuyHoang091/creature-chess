@@ -24,7 +24,7 @@ RUN cd modules/@cc-server/data && yarn prisma generate && cd ../../..
 # Expose các port cần thiết
 # 8080 = webpack dev server (web-game)
 # 3000 = server-game & server-info (chung port nhưng khác process)
-EXPOSE 8090 3000 3001
+EXPOSE 8090 3002 3001
 
 # Chạy dev-all (concurrently chạy cả 3 services)
 CMD ["yarn", "dev-all"]

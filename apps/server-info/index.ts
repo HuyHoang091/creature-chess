@@ -33,7 +33,7 @@ import Filter = require("bad-words");
 const LOCAL_SESSION_TTL_MS = 1000 * 60 * 60 * 24 * 7;
 
 const app = express();
-const PORT = 3000;
+const PORT = 3002;
 const SOCIAL_SOCKET_PATH = "/social/socket.io";
 
 app.disable("etag");

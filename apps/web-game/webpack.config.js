@@ -130,7 +130,7 @@ module.exports = {
 		proxy: {
 			// Proxy tất cả requests bắt đầu bằng /api đến server-info
 			"/api": {
-				target: "http://localhost:3000",
+				target: "http://localhost:3002",
 				changeOrigin: true,
 				ws: true,
 				// Không rewrite path vì server-info expect /api/...

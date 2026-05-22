@@ -1,184 +1,112 @@
 const { io } = require("socket.io-client");
 const axios = require("axios");
-const msgpackParser = require("socket.io-msgpack-parser");
 
-const GAME_SERVER_URL = process.env.GAME_SERVER_URL || "http://localhost:3001";
-const INFO_SERVER_URL = process.env.INFO_SERVER_URL || "http://localhost:3000";
-const AUTH_URL = `${INFO_SERVER_URL}/guest/session`;
-const GAME_COUNT = parseInt(process.env.RL_TRAIN_GAME_COUNT || process.argv[2] || "1000", 10);
-const CLIENT_CREATION_INTERVAL_IN_MS = parseInt(process.env.RL_TRAIN_GAME_INTERVAL_MS || "400", 10);
-const READY_PULSE_MS = parseInt(process.env.RL_READY_PULSE_MS || "1000", 10);
-const FINISH_MATCH_PULSE_MS = parseInt(process.env.RL_FINISH_MATCH_PULSE_MS || "250", 10);
-const FAST_SETTINGS = {
-  healthLostPerPiece: 12,
-  battleTurnCount: 30,
-  battleTurnDuration: 20,
-};
+// Cấu hình test tải
+const SERVER_URL = "https://covuasinhvat.xyz";
+const AUTH_URL = "https://covuasinhvat.xyz/api/guest/session";
+const MAX_CLIENTS = 3000; // Số lượng kết nối đồng thời muốn tạo
+const CLIENT_CREATION_INTERVAL_IN_MS = 100; // Tốc độ tạo client mới (càng thấp càng dồn dập)
+const EMIT_INTERVAL_IN_MS = 1000; // Tần suất gửi event (để tạo tải CPU cho server)
 
-let spawnedCount = 0;
+let clientCount = 0;
+let connectedCount = 0;
 let authenticatedCount = 0;
-let lobbyStartCount = 0;
-let gameConnectedCount = 0;
-let finishedGameCount = 0;
 let errorCount = 0;
 const clients = [];
 
-const sendReadyUp = (socket) => {
-  if (!socket.connected) {
-    return;
-  }
+console.log(`🚀 Bắt đầu giả lập ${MAX_CLIENTS} guest tham gia đấu trường (${SERVER_URL})...`);
 
-  socket.emit("sendPlayerActions", {
-    type: "readyUpPlayerAction",
-  });
-};
+async function createClient() {
+    try {
+        // 1. Lấy token guest hợp lệ từ server auth
+        const response = await axios.get(AUTH_URL, {
+            headers: {
+                "User-Agent": "LoadTester"
+            }
+        });
 
-const createGuestToken = async () => {
-  const response = await axios.get(AUTH_URL, {
-    headers: {
-      "User-Agent": "RLAutoTrainer",
-    },
-  });
+        // Lấy token từ header Set-Cookie trả về
+        const cookies = response.headers["set-cookie"];
+        if (!cookies || cookies.length === 0) {
+            throw new Error("Không nhận được cookie guest-token");
+        }
 
-  const cookies = response.headers["set-cookie"] || [];
-  const guestTokenCookie = cookies.find((cookie) =>
-    cookie.includes("guest-token=")
-  );
+        const guestTokenCookie = cookies.find(c => c.includes("guest-token="));
+        if (!guestTokenCookie) {
+            throw new Error("Không tìm thấy guest-token trong cookie");
+        }
 
-  if (!guestTokenCookie) {
-    throw new Error("Guest token cookie was not returned by server-info");
-  }
+        const token = guestTokenCookie.split("guest-token=")[1].split(";")[0];
 
-  return guestTokenCookie.split("guest-token=")[1].split(";")[0];
-};
+        // 2. Kết nối tới server game bằng Socket.IO
+        const socket = io(SERVER_URL, {
+            path: "/game/socket.io",
+            transports: ["websocket"], // Ép dùng websocket thay vì polling để chuẩn tải thực
+            reconnection: false, // Tạm tắt kết nối lại tự động để đo chính xác số bị rớt
+            parser: require("socket.io-msgpack-parser")
+        });
 
-async function createClient(index) {
-  let readyInterval = null;
-  let finishMatchInterval = null;
-  let startedLobby = false;
+        socket.on("connect", () => {
+            connectedCount++;
+            console.log(`[+] Client Socket ${socket.id} đã kết nối mạng. Đang chứng thực...`);
 
-  try {
-    const token = await createGuestToken();
-    const socket = io(GAME_SERVER_URL, {
-      path: "/socket.io",
-      transports: ["websocket"],
-      reconnection: false,
-      parser: msgpackParser,
-    });
+            // Gửi tay bắt mặt mừng (Handshake) để vào sảnh ghép trận (Matchmaking)
+            socket.emit("authenticate", {
+                type: "guest",
+                data: {
+                    accessToken: token
+                }
+            });
+        });
 
-    const cleanup = () => {
-      if (readyInterval) {
-        clearInterval(readyInterval);
-        readyInterval = null;
-      }
+        socket.on("handshake_success", () => {
+            authenticatedCount++;
+            console.log(`[✔] Client ${socket.id} đã authenticate xong và tham gia Hàng Chờ (Matchmaking) (${authenticatedCount}/${MAX_CLIENTS})`);
+        });
 
-      if (finishMatchInterval) {
-        clearInterval(finishMatchInterval);
-        finishMatchInterval = null;
-      }
-    };
+        socket.on("handshake_failure", (err) => {
+            console.error(`[X] Client ${socket.id} bị từ chối chứng thực:`, err);
+        });
 
-    socket.on("connect", () => {
-      socket.emit("authenticate", {
-        type: "guest",
-        data: {
-          accessToken: token,
-        },
-      });
-    });
+        socket.on("connect_error", (err) => {
+            errorCount++;
+            console.error(`[!] Lỗi Socket client thứ ${clientCount}: ${err.message}`);
+        });
 
-    socket.on("authenticate_response", (response) => {
-      if (response?.error) {
+        socket.on("disconnect", (reason) => {
+            connectedCount--;
+            console.log(`[-] Client ngắt kết nối: ${reason}. Đang duy trì: ${connectedCount}`);
+        });
+
+        // Giả lập traffic: gửi event liên tục để bắt server phải xử lý
+        setInterval(() => {
+            if (socket.connected) {
+                // Gửi thông tin hành động ngẫu nhiên để server phải chạy các file game loop
+                socket.emit("room_action", { timestamp: Date.now(), workload: "Z".repeat(50) });
+            }
+        }, EMIT_INTERVAL_IN_MS);
+
+        clients.push(socket);
+
+    } catch (error) {
         errorCount++;
-        console.error(`[X] Guest ${index} authenticate failed:`, response.error);
-        socket.disconnect();
-        return;
-      }
-
-      authenticatedCount++;
-      console.log(`[✔] Guest ${index} authenticated (${authenticatedCount}/${GAME_COUNT})`);
-    });
-
-    socket.on("connected", () => {
-      for (const [key, value] of Object.entries(FAST_SETTINGS)) {
-        socket.emit("updateSetting", { key, value: String(value) });
-      }
-
-      if (!startedLobby) {
-        startedLobby = true;
-        lobbyStartCount++;
-        socket.emit("startNow", { empty: true });
-      }
-    });
-
-    socket.on("gameConnected", () => {
-      gameConnectedCount++;
-      sendReadyUp(socket);
-
-      if (!readyInterval) {
-        readyInterval = setInterval(() => sendReadyUp(socket), READY_PULSE_MS);
-      }
-
-      if (!finishMatchInterval) {
-        finishMatchInterval = setInterval(() => {
-          if (socket.connected) {
-            socket.emit("finishMatch", { empty: true });
-          }
-        }, FINISH_MATCH_PULSE_MS);
-      }
-    });
-
-    socket.on("sendGameEvents", (packet) => {
-      const action = packet?.payload;
-      if (!action) {
-        return;
-      }
-
-      if (
-        action.type === "gamePhaseStartedEvent" &&
-        action.payload?.phase === "PREPARING"
-      ) {
-        sendReadyUp(socket);
-      }
-
-      if (action.type === "gameFinishEvent") {
-        finishedGameCount++;
-        cleanup();
-        console.log(`[🏁] Guest ${index} observed game finish (${finishedGameCount})`);
-      }
-    });
-
-    socket.on("connect_error", (error) => {
-      errorCount++;
-      console.error(`[!] Guest ${index} socket error: ${error.message}`);
-    });
-
-    socket.on("disconnect", () => {
-      cleanup();
-    });
-
-    clients.push(socket);
-  } catch (error) {
-    errorCount++;
-    console.error(`[!] Failed to create guest ${index}: ${error.message}`);
-  }
+        console.error(`[!] Lỗi tạo guest: ${error.message}`);
+    }
 }
 
-console.log(
-  `� Auto-creating ${GAME_COUNT} fast training lobbies via ${GAME_SERVER_URL} using ${AUTH_URL}`
-);
-
 const interval = setInterval(() => {
-  spawnedCount++;
-  createClient(spawnedCount);
+    createClient();
+    clientCount++;
 
-  if (spawnedCount >= GAME_COUNT) {
-    clearInterval(interval);
-  }
+    if (clientCount >= MAX_CLIENTS) {
+        clearInterval(interval);
+        console.log(`\n✅ Đã spam xong lệnh tạo ${MAX_CLIENTS} clients. Chờ hệ thống ổn định...`);
+        console.log(`👉 Vào http://localhost:3001/metrics để xem lượng RAM/CPU của server đang tăng lên (nếu đã cài Basic Auth)`);
+        console.log(`👉 Bạn cũng sẽ thấy log terminal có thông báo tạo mới Lobby liên tục.`);
+    }
 }, CLIENT_CREATION_INTERVAL_IN_MS);
 
+// In trạng thái mỗi 5 giây
 setInterval(() => {
-  console.log(
-    `📊 guests=${spawnedCount}/${GAME_COUNT} authed=${authenticatedCount} lobbyStarts=${lobbyStartCount} gameConnected=${gameConnectedCount} finished=${finishedGameCount} errors=${errorCount}`
-  );
+    console.log(`\n📊 [Thống kê nhanh] Lỗi: ${errorCount}\n`);
 }, 5000);
