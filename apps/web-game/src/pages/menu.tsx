@@ -1,20 +1,20 @@
 import * as React from "react";
-import { useDispatch, useSelector } from "react-redux";
 
 import { useAuth0 } from "@auth0/auth0-react";
-
-import { LoadingScreen } from "~/components/ui/LoadingScreen";
-import { AUTH0_ENABLED } from "~/auth/auth0/config";
+import { Lock, LogIn, Mail, Swords, UserPlus, Users } from "lucide-react";
+import { useDispatch, useSelector } from "react-redux";
 import {
 	setStoredLocalToken,
 	setStoredMode,
 } from "~/auth/SessionBootstrapProvider";
+import { AUTH0_ENABLED } from "~/auth/auth0/config";
+import { LoadingScreen } from "~/components/ui/LoadingScreen";
 import { openConnection } from "~/services";
 import { loginLocal, registerLocal } from "~/services/authApi";
+import { AppState } from "~/store";
 import { AppShellCommands } from "~/store/appShell/state";
 import { AuthCommands } from "~/store/auth/state";
 import { ProfileCommands } from "~/store/profile/state";
-import { AppState } from "~/store";
 
 import styles from "./MenuPage.module.css";
 
@@ -86,65 +86,105 @@ export function MenuPage() {
 
 	return (
 		<div className={styles.root}>
-			<div className={styles.panel}>
-				<div>
-					<h1 className={styles.title}>Creature Chess</h1>
-					<p className={styles.muted}>
-						Auto battler prototype with a new app shell for guest play, account
-						profiles, friends, history, and the next layer of social systems.
-					</p>
+			<div className={styles.loginFrame}>
+				<div className={styles.logoBlock}>
+					<img
+						src={`${APP_IMAGE_ROOT}/ui/logo.png`}
+						alt="Creature Chess"
+						className={styles.logo}
+						onError={(event) => {
+							(event.target as HTMLImageElement).style.display = "none";
+						}}
+					/>
 				</div>
 
-				<div className={styles.form}>
+				<div className={styles.authSurface}>
+					<div className={styles.formHeader}>
+						<div className={styles.formEyebrow}>Creature Chess Account</div>
+						<div className={styles.formTitle}>
+							{formMode === "login" ? "Sign In" : "Create Account"}
+						</div>
+						<div className={styles.formSubtitle}>
+							{formMode === "login"
+								? "Return to your profile and social hub."
+								: "Start with email and password, then choose nickname and avatar."}
+						</div>
+					</div>
+
 					{AUTH0_ENABLED && authMode !== "guest" && <LandingAccountActions />}
 
 					{!AUTH0_ENABLED && (
 						<>
-							<input
-								className={styles.input}
-								value={email}
-								onChange={(event) => setEmail(event.target.value)}
-								placeholder="Email"
-							/>
-							<input
-								className={styles.input}
-								type="password"
-								value={password}
-								onChange={(event) => setPassword(event.target.value)}
-								placeholder="Password"
-							/>
+							<div className={styles.modeSwitch}>
+								<button
+									className={formMode === "login" ? styles.modeActive : ""}
+									onClick={() => setFormMode("login")}
+								>
+									<LogIn size={15} />
+									Sign In
+								</button>
+								<button
+									className={formMode === "register" ? styles.modeActive : ""}
+									onClick={() => setFormMode("register")}
+								>
+									<UserPlus size={15} />
+									Register
+								</button>
+							</div>
+							<label className={styles.inputWrap}>
+								<Mail size={18} />
+								<input
+									value={email}
+									onChange={(event) => setEmail(event.target.value)}
+									placeholder="Email"
+								/>
+							</label>
+							<label className={styles.inputWrap}>
+								<Lock size={18} />
+								<input
+									type="password"
+									value={password}
+									onChange={(event) => setPassword(event.target.value)}
+									placeholder="Password"
+									onKeyDown={(event) => {
+										if (event.key === "Enter") {
+											onLocalAuth();
+										}
+									}}
+								/>
+							</label>
 							<button className={styles.primaryBtn} onClick={onLocalAuth}>
+								{formMode === "login" ? (
+									<LogIn size={18} />
+								) : (
+									<UserPlus size={18} />
+								)}
 								{formMode === "login" ? "Sign In" : "Create Account"}
-							</button>
-							<button
-								className={styles.secondaryBtn}
-								onClick={() =>
-									setFormMode((prev) =>
-										prev === "login" ? "register" : "login"
-									)
-								}
-							>
-								{formMode === "login"
-									? "Need an account? Register"
-									: "Already have an account? Sign In"}
 							</button>
 							{error && <div className={styles.error}>{error}</div>}
 						</>
 					)}
 
-					<button className={styles.secondaryBtn} onClick={onPlayGuest}>
-						Enter as Guest
-					</button>
+					<div className={styles.quickActions}>
+						<button className={styles.secondaryBtn} onClick={onPlayGuest}>
+							<Swords size={18} />
+							Guest
+						</button>
 
-					<button
-						className={styles.secondaryBtn}
-						onClick={() => dispatch(AppShellCommands.setModal("signin-required"))}
-					>
-						Friends and Party
-					</button>
+						<button
+							className={styles.secondaryBtn}
+							onClick={() =>
+								dispatch(AppShellCommands.setModal("signin-required"))
+							}
+						>
+							<Users size={18} />
+							Social
+						</button>
+					</div>
 
 					{authMode === "guest" && (
 						<button className={styles.primaryBtn} onClick={onQuickPlay}>
+							<Swords size={18} />
 							Quick Match Now
 						</button>
 					)}

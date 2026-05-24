@@ -25,6 +25,10 @@ model users {
   nickname        String? @db.VarChar(20)
   profile_title   Int?
   profile_picture Int?
+  profile_bio     String? @db.VarChar(280)
+  role            String  @default("player") @db.VarChar(20)
+  locked_at       DateTime?
+  locked_reason   String? @db.VarChar(255)
   games_played    Int     @default(0)
   wins            Int     @default(0)
 }
@@ -118,7 +122,25 @@ model reports {
   target_user_id   String
   match_id         String?
   reason           String
+  status           String   @default("open") @db.VarChar(20)
+  admin_note       String?  @db.VarChar(500)
+  resolved_at      DateTime?
+  resolved_by_user_id String?
   created_at       DateTime @default(now())
 
   @@index([target_user_id, created_at])
+  @@index([status, created_at])
+}
+
+model game_events {
+  id          String   @id @default(uuid())
+  name        String   @db.VarChar(80)
+  description String?  @db.VarChar(500)
+  status      String   @default("draft") @db.VarChar(20)
+  starts_at   DateTime?
+  ends_at     DateTime?
+  created_at  DateTime @default(now())
+  updated_at  DateTime @default(now()) @updatedAt
+
+  @@index([status, starts_at])
 }

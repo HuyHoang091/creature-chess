@@ -55,7 +55,17 @@ export function RegistrationPage({ updateUser }: RegistrationPageProps) {
 
 	return (
 		<div className={styles.register}>
-			<h1>Registration</h1>
+			<div className={styles.header}>
+				<img
+					src={`${APP_IMAGE_ROOT}/ui/logo.png`}
+					alt="Creature Chess"
+					className={styles.logo}
+					onError={(event) => {
+						(event.target as HTMLImageElement).style.display = "none";
+					}}
+				/>
+				<h1>Complete Profile</h1>
+			</div>
 			{error && <p className={styles.error}>{error}</p>}
 			<NicknameSelection
 				nickname={nickname || ""}

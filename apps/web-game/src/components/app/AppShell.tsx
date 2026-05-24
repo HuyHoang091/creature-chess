@@ -1,19 +1,20 @@
 import React, { useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { Settings, Bell } from "lucide-react";
 
+import { Settings, Bell } from "lucide-react";
+import { useDispatch, useSelector } from "react-redux";
 import { Page } from "~/components/Page";
+import { CreatureImage } from "~/components/ui/creatureImage";
 import { AppShellCommands } from "~/store/appShell/state";
-import { RoomInviteCommands } from "~/store/roomInvites/state";
 import { JoinRequestToastCommands } from "~/store/joinRequestToasts/state";
+import { RoomInviteCommands } from "~/store/roomInvites/state";
 import { AppState } from "~/store/state";
 
+import styles from "./AppShell.module.css";
 import { DockBar } from "./DockBar";
-import { Panel } from "./Panel";
-import { RoomInviteToast } from "./RoomInviteToast";
 import { JoinRequestToast } from "./JoinRequestToast";
 import { NotificationPanel } from "./NotificationPanel";
-import styles from "./AppShell.module.css";
+import { Panel } from "./Panel";
+import { RoomInviteToast } from "./RoomInviteToast";
 
 export const AppShell = ({
 	children,
@@ -24,10 +25,18 @@ export const AppShell = ({
 }) => {
 	const dispatch = useDispatch();
 	const authMode = useSelector((state: AppState) => state.auth.mode);
-	const currentUser = useSelector((state: AppState) => state.profile.currentUser);
-	const notifications = useSelector((state: AppState) => state.notifications.items);
-	const inviteToasts = useSelector((state: AppState) => state.roomInvites.items);
-	const joinRequestToasts = useSelector((state: AppState) => state.joinRequestToasts.items);
+	const currentUser = useSelector(
+		(state: AppState) => state.profile.currentUser
+	);
+	const notifications = useSelector(
+		(state: AppState) => state.notifications.items
+	);
+	const inviteToasts = useSelector(
+		(state: AppState) => state.roomInvites.items
+	);
+	const joinRequestToasts = useSelector(
+		(state: AppState) => state.joinRequestToasts.items
+	);
 	const room = useSelector((state: AppState) => state.privateLobby.room);
 	const [panelOpen, setPanelOpen] = React.useState(false);
 
@@ -44,18 +53,27 @@ export const AppShell = ({
 				{/* Top HUD */}
 				<div className={styles.topbar}>
 					<div className={styles.identity}>
-						<div className={styles.avatar}>
-							{(currentUser as any)?.picture ? (
-								<img src={(currentUser as any).picture} alt="avatar" />
+						<button
+							className={styles.avatar}
+							title="Profile"
+							onClick={() =>
+								authMode === "account"
+									? dispatch(AppShellCommands.setPanel("profile"))
+									: undefined
+							}
+						>
+							{currentUser?.profile?.picture ? (
+								<CreatureImage definitionId={currentUser.profile.picture} />
 							) : (
 								<div className={styles.avatarFallback}>
 									{(currentUser?.nickname?.[0] ?? "G").toUpperCase()}
 								</div>
 							)}
-						</div>
+						</button>
 						<div className={styles.identityText}>
 							<div className={styles.nickname}>
-								{currentUser?.nickname || (authMode === "guest" ? "Guest" : "Player")}
+								{currentUser?.nickname ||
+									(authMode === "guest" ? "Guest" : "Player")}
 							</div>
 							<div className={styles.rank}>Unranked</div>
 						</div>
@@ -85,7 +103,11 @@ export const AppShell = ({
 								</span>
 							)}
 						</button>
-						<button className={styles.hudIcon} title="Settings">
+						<button
+							className={styles.hudIcon}
+							title="Settings"
+							onClick={() => dispatch(AppShellCommands.setPanel("settings"))}
+						>
 							<Settings size={20} />
 						</button>
 					</div>
@@ -115,7 +137,10 @@ export const AppShell = ({
 
 				{/* Join Request Toasts */}
 				{joinRequestToasts.length > 0 && (
-					<div className={styles.inviteToastArea} style={{ top: `${76 + inviteToasts.length * 64}px` }}>
+					<div
+						className={styles.inviteToastArea}
+						style={{ top: `${76 + inviteToasts.length * 64}px` }}
+					>
 						{joinRequestToasts.map((item) => (
 							<JoinRequestToast
 								key={item.id}

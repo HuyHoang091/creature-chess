@@ -1,3 +1,5 @@
+import { HandshakeRequest } from "@creature-chess/networking/handshake";
+
 import { authenticate } from "@cc-server/auth";
 
 import { logger } from "../log";
@@ -5,7 +7,6 @@ import { AuthenticatedSocket } from "../player/socket";
 import { handshakeListener } from "./listener";
 import { failHandshake, successHandshake } from "./response";
 import { HandshakeListenerDependencies } from "./types";
-import { HandshakeRequest } from "@creature-chess/networking/handshake";
 
 /**
  * Listen for incoming connections, process the handshake, and raise any connections that pass.
@@ -68,12 +69,12 @@ export const onHandshakeSuccess = (
 
 				const databaseUser = await database.user.getById(session.user_id);
 
-				if (!databaseUser) {
+				if (!databaseUser || (databaseUser as any).locked_at) {
 					failHandshake(socket, { error: { type: "authentication" } });
 					return;
 				}
 
-				const user = {
+				const localUser = {
 					id: databaseUser.id,
 					nickname: databaseUser.nickname,
 					profile: {
@@ -85,22 +86,22 @@ export const onHandshakeSuccess = (
 					),
 				};
 
-				if (!user.registered) {
+				if (!localUser.registered) {
 					failHandshake(socket, { error: { type: "not_registered" } });
 					return;
 				}
 
 				successHandshake(socket);
 
-				const authenticatedSocket = socket as AuthenticatedSocket;
-				authenticatedSocket.data = {
+				const localAuthenticatedSocket = socket as AuthenticatedSocket;
+				localAuthenticatedSocket.data = {
 					type: "player",
-					id: user.id,
-					nickname: user.nickname,
-					profile: user.profile,
+					id: localUser.id,
+					nickname: localUser.nickname,
+					profile: localUser.profile,
 				};
 
-				onReceive(authenticatedSocket, request);
+				onReceive(localAuthenticatedSocket, request);
 				return;
 			}
 
@@ -109,6 +110,11 @@ export const onHandshakeSuccess = (
 				database,
 				request.data.accessToken
 			);
+
+			if (user.locked) {
+				failHandshake(socket, { error: { type: "authentication" } });
+				return;
+			}
 
 			if (!user.registered) {
 				failHandshake(socket, { error: { type: "not_registered" } });

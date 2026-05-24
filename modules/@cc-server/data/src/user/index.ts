@@ -31,7 +31,8 @@ export type UserDatabaseFunctions = {
 	setProfileInfo: (
 		id: string,
 		nickname: string | null,
-		picture: number | null
+		picture: number | null,
+		personalInfo?: string | null
 	) => Promise<DatabaseUser | null>;
 };
 

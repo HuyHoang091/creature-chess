@@ -1,3 +1,26 @@
 .pictureList {
-	display: inline-block;
+	display: inline-grid;
+	grid-template-rows: 58px auto 16px;
+	align-items: center;
+	justify-items: center;
+	gap: 6px;
+	width: 74px;
+	padding: 8px;
+	margin: 4px;
+	border: 1px solid rgba(200, 170, 110, 0.16);
+	border-radius: 8px;
+	background: rgba(18, 18, 26, 0.72);
+	color: rgba(240, 230, 210, 0.72);
+	font-size: 11px;
+}
+
+.pictureList p {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	max-width: 100%;
+}
+
+.pictureList input {
+	accent-color: #c8aa6e;
 }

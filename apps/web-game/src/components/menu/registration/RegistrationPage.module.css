@@ -1,35 +1,63 @@
 .register {
 	display: flex;
 	flex-direction: column;
-	height: 100%;
-	padding: 1rem;
-	margin-top: 1em;
+	width: min(92vw, 560px);
+	max-height: 94vh;
+	overflow-y: auto;
+	padding: 22px;
+	margin: auto;
 	font-family: "Roboto", sans-serif;
 	color: #f0e6d2;
-	align-items: center;
-	justify-content: center;
+	align-items: stretch;
+	justify-content: flex-start;
 	text-align: center;
-	background: transparent;
-	gap: 12px;
+	background: linear-gradient(
+		180deg,
+		rgba(26, 22, 15, 0.94),
+		rgba(8, 10, 16, 0.96)
+	);
+	border: 1px solid rgba(200, 170, 110, 0.22);
+	border-radius: 8px;
+	box-shadow: 0 24px 80px rgba(0, 0, 0, 0.48);
+	gap: 14px;
 }
 
-.register h1 {
-	margin-bottom: 1rem;
-	font-size: 1.6em;
+.header {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 8px;
+}
+
+.logo {
+	width: min(62%, 260px);
+	height: auto;
+	filter: drop-shadow(0 0 22px rgba(200, 170, 110, 0.18));
+}
+
+.header h1 {
+	font-size: 1.5em;
+	font-weight: 900;
 	color: #c8aa6e;
 	letter-spacing: 1px;
+	text-transform: uppercase;
 }
 
 .registerButton {
-	padding: 0.6rem 2rem;
-	font-size: 1.1rem;
-	color: #fff;
+	width: 100%;
+	padding: 0.85rem 1rem;
+	font-size: 0.95rem;
+	color: #080a0f;
 	cursor: pointer;
-	background: linear-gradient(180deg, #4d6bff, #3a54d0);
+	background: linear-gradient(180deg, #c8aa6e, #a07c3e);
 	border: none;
-	border-radius: 12px;
-	font-weight: 700;
-	transition: transform 0.15s ease, box-shadow 0.15s ease;
+	border-radius: 8px;
+	font-weight: 900;
+	text-transform: uppercase;
+	letter-spacing: 0.8px;
+	transition:
+		transform 0.15s ease,
+		box-shadow 0.15s ease;
 }
 
 .registerButton:hover {
@@ -39,10 +67,10 @@
 
 .error {
 	padding: 0.5rem 1rem;
-	margin-bottom: 1rem;
-	border: 1px solid #a01515;
-	border-radius: 10px;
-	background: rgba(160, 21, 21, 0.12);
-	color: #ff8b8b;
+	border: 1px solid rgba(177, 62, 83, 0.5);
+	border-radius: 8px;
+	background: rgba(177, 62, 83, 0.12);
+	color: #ff9aa9;
 	font-size: 14px;
+	line-height: 1.4;
 }

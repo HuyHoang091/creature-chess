@@ -1,8 +1,10 @@
 import React from "react";
+
 import { useSelector } from "react-redux";
-import { AppState } from "../store";
 import { AppShell } from "~/components/app/AppShell";
 import { Panel } from "~/components/app/Panel";
+
+import { AdminPage } from "../pages/admin";
 import { CompleteProfilePage } from "../pages/completeProfile";
 import { FriendsPage } from "../pages/friends";
 import { GamePage } from "../pages/game";
@@ -11,21 +13,38 @@ import { HomePage } from "../pages/home";
 import { LobbyPage } from "../pages/lobby";
 import { MenuPage } from "../pages/menu";
 import { PrivateLobbyPage } from "../pages/privateLobby";
+import { ProfilePage } from "../pages/profile";
 import { ResultPage } from "../pages/result";
+import { SettingsPage } from "../pages/settings";
 import { VFXStorybook } from "../pages/storybook/VFXStorybook";
+import { AppState } from "../store";
 
 export const AppRouter = () => {
-	// ==========================================
-	// HIDDEN ROUTE: URL "/storybook" để test VFX
-	// ==========================================
-	if (window.location.pathname === "/storybook") {
-		return <VFXStorybook />;
-	}
-
+	const pathname = window.location.pathname;
 	const isInGame = useSelector((state: AppState) => state.game.ui.inGame);
 	const isInLobby = useSelector((state: AppState) => state.lobby !== null);
 	const screen = useSelector((state: AppState) => state.appShell.screen);
 	const panel = useSelector((state: AppState) => state.appShell.panel);
+	const isBootstrapped = useSelector(
+		(state: AppState) => state.appShell.isBootstrapped
+	);
+	const authMode = useSelector((state: AppState) => state.auth.mode);
+	const currentUser = useSelector((state: AppState) => state.profile.currentUser);
+
+	if (pathname === "/storybook") {
+		return <VFXStorybook />;
+	}
+
+	if (pathname === "/admin") {
+		return (
+			<AdminPage
+				standalone
+				isBootstrapped={isBootstrapped}
+				isAuthenticated={authMode === "account"}
+				canAccess={authMode === "account" && currentUser?.role === "admin"}
+			/>
+		);
+	}
 
 	if (isInGame) {
 		return <GamePage />;
@@ -48,6 +67,18 @@ export const AppRouter = () => {
 				<HistoryPage />
 			</Panel>
 		);
+	} else if (panel === "profile") {
+		panelNode = (
+			<Panel title="Profile">
+				<ProfilePage />
+			</Panel>
+		);
+	} else if (panel === "settings") {
+		panelNode = (
+			<Panel title="Settings">
+				<SettingsPage />
+			</Panel>
+		);
 	} else if (panel === "match-result") {
 		panelNode = (
 			<Panel title="Match Result">
@@ -56,7 +87,6 @@ export const AppRouter = () => {
 		);
 	}
 
-	// Full-screen pages (no AppShell wrapper)
 	switch (screen) {
 		case "auth-loading":
 		case "landing":
@@ -74,7 +104,6 @@ export const AppRouter = () => {
 			break;
 	}
 
-	// Authenticated hub: always render HomePage background + optional panel
 	return (
 		<AppShell panel={panelNode}>
 			<HomePage />

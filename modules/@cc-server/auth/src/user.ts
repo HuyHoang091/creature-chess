@@ -5,6 +5,10 @@ import { DatabaseUser } from "@cc-server/data";
 export interface UserModel {
 	id: string;
 	authId: string;
+	email: string | null;
+	role: "player" | "admin";
+	locked: boolean;
+	lockedReason: string | null;
 	stats: { gamesPlayed: number; wins: number };
 	nickname: string | null;
 	registered: boolean;
@@ -21,6 +25,7 @@ export const convertDatabaseUserToUserModel = (
 	const profile = {
 		title: null, // user.profile_title || null,
 		picture: user.profile_picture || null,
+		personalInfo: (user as any).profile_bio || null,
 	};
 
 	const stats = {
@@ -31,6 +36,12 @@ export const convertDatabaseUserToUserModel = (
 	return {
 		id: user.id,
 		authId: user.auth_id,
+		email: (user as any).email || null,
+		role: ((user as any).role === "admin" ? "admin" : "player") as
+			| "player"
+			| "admin",
+		locked: Boolean((user as any).locked_at),
+		lockedReason: (user as any).locked_reason || null,
 		stats,
 		nickname,
 		profile,

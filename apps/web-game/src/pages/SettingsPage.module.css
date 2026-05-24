@@ -1,0 +1,81 @@
+.root {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+	color: #f0e6d2;
+}
+
+.accountBlock {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	padding: 14px;
+	border: 1px solid rgba(200, 170, 110, 0.18);
+	border-radius: 8px;
+	background: linear-gradient(
+		180deg,
+		rgba(30, 25, 15, 0.9),
+		rgba(12, 14, 20, 0.94)
+	);
+}
+
+.avatar {
+	width: 42px;
+	height: 42px;
+	border-radius: 50%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border: 1px solid rgba(200, 170, 110, 0.35);
+	background: rgba(200, 170, 110, 0.13);
+	color: #c8aa6e;
+	font-weight: 800;
+}
+
+.name {
+	font-size: 15px;
+	font-weight: 800;
+	color: #f5e7c1;
+}
+
+.meta {
+	margin-top: 4px;
+	font-size: 12px;
+	color: rgba(240, 230, 210, 0.55);
+	overflow-wrap: anywhere;
+}
+
+.rowButton {
+	width: 100%;
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	padding: 12px 14px;
+	border: 1px solid rgba(200, 170, 110, 0.22);
+	border-radius: 8px;
+	background: rgba(18, 18, 26, 0.88);
+	color: #f0e6d2;
+	cursor: pointer;
+	font-weight: 700;
+	transition:
+		border-color 0.15s ease,
+		color 0.15s ease,
+		transform 0.15s ease;
+}
+
+.rowButton:hover:not(:disabled) {
+	border-color: #c8aa6e;
+	color: #c8aa6e;
+	transform: translateY(-1px);
+}
+
+.rowButton:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+
+.danger {
+	margin-top: 6px;
+	border-color: rgba(177, 62, 83, 0.4);
+	color: #ff9aa9;
+}

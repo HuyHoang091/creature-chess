@@ -1,8 +1,7 @@
 import React from "react";
 
-import styles from "./NicknameSelection.module.css";
-
 import { BaseRegistrationInput } from "./BaseRegistrationInput";
+import styles from "./NicknameSelection.module.css";
 
 export function NicknameSelection({
 	nickname,
@@ -18,7 +17,7 @@ export function NicknameSelection({
 	return (
 		<BaseRegistrationInput
 			heading="Nickname"
-			info="This nickname is permanent and cannot be changed"
+			info="You can update it later from Profile"
 		>
 			<input
 				className={styles.nameInput}

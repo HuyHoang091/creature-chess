@@ -12,7 +12,7 @@ export const fetchCurrentUser = (token: string) =>
 
 export const updateCurrentUser = (
 	token: string,
-	payload: { nickname: string; picture: string }
+	payload: { nickname?: string; picture?: string; personalInfo?: string | null }
 ) =>
 	apiFetch<UserDTO>(
 		"/user/current",

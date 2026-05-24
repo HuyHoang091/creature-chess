@@ -1,12 +1,24 @@
 .input {
-	margin-bottom: 0.5rem;
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	padding: 12px;
+	border: 1px solid rgba(200, 170, 110, 0.14);
+	border-radius: 8px;
+	background: rgba(7, 9, 14, 0.42);
+	margin-bottom: 0;
 }
 
 .inputHeading {
-	margin-bottom: 0.5rem;
-	font-size: 1.4em;
+	font-size: 0.8rem;
+	font-weight: 800;
+	color: #c8aa6e;
+	text-transform: uppercase;
+	letter-spacing: 0.8px;
 }
 
 .info {
-	margin-top: 0.5rem;
+	color: rgba(240, 230, 210, 0.58);
+	font-size: 0.78rem;
+	line-height: 1.35;
 }

@@ -3,13 +3,20 @@ import { Logger } from "winston";
 
 export const setProfileInfo =
 	(logger: Logger, client: PrismaClient) =>
-	async (id: string, nickname: string | null, picture: number | null) => {
+	async (
+		id: string,
+		nickname: string | null,
+		picture: number | null,
+		personalInfo?: string | null
+	) => {
 		try {
 			logger.info(`setProfileInfo for user ${id}`);
 			logger.info(`nickname: ${nickname}`);
 			logger.info(`picture: ${picture}`);
 
-			let userUpdate: Prisma.usersUpdateInput = {};
+			let userUpdate: Prisma.usersUpdateInput & {
+				profile_bio?: string | null;
+			} = {};
 
 			if (nickname) {
 				userUpdate = {
@@ -22,6 +29,13 @@ export const setProfileInfo =
 				userUpdate = {
 					...userUpdate,
 					profile_picture: picture,
+				};
+			}
+
+			if (personalInfo !== undefined) {
+				userUpdate = {
+					...userUpdate,
+					profile_bio: personalInfo,
 				};
 			}
 

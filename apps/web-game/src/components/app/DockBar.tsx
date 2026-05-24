@@ -1,15 +1,7 @@
 import React from "react";
-import { useDispatch, useSelector } from "react-redux";
-import {
-	Home,
-	Swords,
-	Users,
-	Clock,
-	User,
-	Settings,
-	X,
-} from "lucide-react";
 
+import { Home, Users, Clock, User, Shield } from "lucide-react";
+import { useDispatch, useSelector } from "react-redux";
 import { AppShellCommands, AppScreen } from "~/store/appShell/state";
 import { AppState } from "~/store/state";
 
@@ -24,8 +16,24 @@ type DockItem = {
 
 const dockItems: DockItem[] = [
 	{ screen: "home", icon: <Home size={22} />, label: "Home" },
-	{ screen: "friends", icon: <Users size={22} />, label: "Friends", requiresAccount: true },
-	{ screen: "history", icon: <Clock size={22} />, label: "History", requiresAccount: true },
+	{
+		screen: "profile",
+		icon: <User size={22} />,
+		label: "Profile",
+		requiresAccount: true,
+	},
+	{
+		screen: "friends",
+		icon: <Users size={22} />,
+		label: "Friends",
+		requiresAccount: true,
+	},
+	{
+		screen: "history",
+		icon: <Clock size={22} />,
+		label: "History",
+		requiresAccount: true,
+	},
 ];
 
 export const DockBar = () => {
@@ -33,12 +41,31 @@ export const DockBar = () => {
 	const screen = useSelector((state: AppState) => state.appShell.screen);
 	const panel = useSelector((state: AppState) => state.appShell.panel);
 	const authMode = useSelector((state: AppState) => state.auth.mode);
+	const role = useSelector(
+		(state: AppState) => state.profile.currentUser?.role
+	);
 
 	const activeScreen = panel ?? screen;
+	const visibleItems =
+		role === "admin"
+			? [
+					...dockItems,
+					{
+						screen: "admin" as AppScreen,
+						icon: <Shield size={22} />,
+						label: "Admin",
+						requiresAccount: true,
+					},
+				]
+			: dockItems;
 
 	const onClick = (item: DockItem) => {
 		if (item.requiresAccount && authMode !== "account") {
 			dispatch(AppShellCommands.setModal("signin-required"));
+			return;
+		}
+		if (item.screen === "admin") {
+			window.location.href = `${window.location.origin}/admin`;
 			return;
 		}
 		if (activeScreen === item.screen) {
@@ -58,7 +85,7 @@ export const DockBar = () => {
 
 	return (
 		<div className={styles.dock}>
-			{dockItems.map((item) => {
+			{visibleItems.map((item) => {
 				const isActive = activeScreen === item.screen;
 				return (
 					<button
