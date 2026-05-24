@@ -1883,6 +1883,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@creature-chess/tactical-ai@workspace:modules/@creature-chess/tactical-ai"
   dependencies:
+    "@cc-server/bot": "workspace:*"
     "@creature-chess/battle": "workspace:*"
     "@creature-chess/gamemode": "workspace:*"
     "@creature-chess/models": "workspace:*"

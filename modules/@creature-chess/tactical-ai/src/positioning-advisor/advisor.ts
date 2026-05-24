@@ -110,18 +110,25 @@ const runFormationTestInWorker = (
 	trialsPerScenario: number
 ): Promise<FormationTestResult> =>
 	new Promise((resolve, reject) => {
+		const ext = path.extname(__filename);
 		const workerPath = path.resolve(
 			__dirname,
 			"simulation",
-			"formation-test-worker.js"
+			`formation-test-worker${ext}`
 		);
-		const worker = new Worker(workerPath, {
+		const workerOptions: any = {
 			workerData: {
 				myBoard,
 				scenarios,
 				trialsPerScenario,
 			},
-		});
+		};
+
+		if (ext === ".ts") {
+			workerOptions.execArgv = ["-r", "ts-node/register"];
+		}
+
+		const worker = new Worker(workerPath, workerOptions);
 
 		worker.once("message", (result: FormationTestResult) => {
 			resolve(result);
