@@ -10,6 +10,7 @@
     "test": "yarn run -T jest --passWithNoTests"
   },
   "dependencies": {
+    "@cc-server/bot": "workspace:*",
     "@creature-chess/battle": "workspace:*",
     "@creature-chess/gamemode": "workspace:*",
     "@creature-chess/models": "workspace:*",

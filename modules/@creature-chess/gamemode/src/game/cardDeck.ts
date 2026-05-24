@@ -7,9 +7,10 @@ import { CreatureDefinition, Card, PieceModel } from "@creature-chess/models";
 import { PIECES_TO_EVOLVE } from "@creature-chess/models/config";
 
 import { getAllDefinitions, getDefinitionById } from "../definitions";
+import { getPiecesForStage } from "./evolution";
 
 // CARD_COST_CHANCES[2][5] gives the chance (/100) to roll a level 3 piece at level 6
-const CARD_COST_CHANCES = [
+export const CARD_COST_CHANCES = [
 	[100, 70, 60, 50, 40, 33, 30, 24, 22, 19],
 	[0, 30, 35, 35, 35, 30, 30, 30, 30, 25],
 	[0, 0, 5, 15, 23, 30, 30, 30, 25, 25],
@@ -17,7 +18,8 @@ const CARD_COST_CHANCES = [
 	[0, 0, 0, 0, 1, 3, 5, 7, 10, 14],
 ];
 
-const CARD_LEVEL_QUANTITIES = [45, 30, 25, 15, 10];
+// Number of copies for each individual definition at a given cost.
+export const CARD_DEFINITION_QUANTITIES = [29, 22, 18, 10, 9];
 
 const canTakeCardAtCost = (
 	level: number,
@@ -55,7 +57,7 @@ export class CardDeck {
 			.forEach((d) => {
 				for (
 					let count = 0;
-					count < CARD_LEVEL_QUANTITIES[d.cost - 1];
+					count < CARD_DEFINITION_QUANTITIES[d.cost - 1];
 					count++
 				) {
 					this.addDefinition(d);
@@ -95,7 +97,7 @@ export class CardDeck {
 			return;
 		}
 
-		const cardCount = (piece.stage + 1) * PIECES_TO_EVOLVE;
+		const cardCount = getPiecesForStage(piece.stage, PIECES_TO_EVOLVE);
 
 		for (let i = 0; i < cardCount; i++) {
 			this.addDefinition(definition);

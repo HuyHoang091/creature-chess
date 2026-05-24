@@ -6,11 +6,13 @@ import {
 	Gamemode,
 	PlayerCommands,
 	PlayerEntity,
+	PlayerState,
 } from "@creature-chess/gamemode";
 import { GameFinishEvent } from "@creature-chess/gamemode/src/game/events";
 import { PlayerStatus } from "@creature-chess/models/game/playerList";
 import { LobbyPlayer } from "@creature-chess/models/lobby";
 import { GamemodeSettings } from "@creature-chess/models/settings";
+import { createBuildAdviceContext } from "@creature-chess/tactical-ai/src/build-advisor/context";
 
 import { botLogicSaga } from "@cc-server/bot";
 import { BotPersonality } from "@cc-server/data";
@@ -251,6 +253,27 @@ export class Game {
 					const potentialOpponent = this.gamemode.getPlayerById(potentialOpponentId);
 					if (!potentialOpponent) return null;
 					return potentialOpponent.select((state) => state.board);
+				},
+				getBuildAdviceContext: (playerId: string) => {
+					const player = this.gamemode.getPlayerById(playerId);
+
+					if (!player) {
+						return null;
+					}
+
+					const playerState = player.select((state: PlayerState) => state);
+					const allPlayerStates = this.members.map(({ entity }) =>
+						entity.select((state: PlayerState) => state)
+					);
+					const roundInfo = this.gamemode.getRoundInfo();
+
+					return createBuildAdviceContext({
+						playerId,
+						playerState,
+						allPlayerStates,
+						round: roundInfo.round,
+						phase: roundInfo.phase,
+					});
 				},
 			},
 			this.settings

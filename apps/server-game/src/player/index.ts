@@ -14,7 +14,8 @@ import { PieceModel } from "@creature-chess/models";
 import { PlayerStateSelectors } from "@creature-chess/gamemode";
 import { GamemodeSettings } from "@creature-chess/models/settings";
 import { ClientToServer, GameServerToClient } from "@creature-chess/networking";
-import { registerTacticalAIEvents } from "@creature-chess/tactical-ai";
+import { registerTacticalAIEvents } from "@creature-chess/tactical-ai/src/integration/game-server-plugin";
+import { type BuildAdviceContext } from "@creature-chess/tactical-ai/src/build-advisor/types";
 
 import { playerBoard } from "./board";
 import {
@@ -28,11 +29,18 @@ type Parameters = {
 	getPlayers: () => PlayerListPlayer[];
 	getOpponentBoard: (playerId: string) => BoardState<PieceModel> | null;
 	getPotentialOpponentBoard: (playerId: string) => BoardState<PieceModel> | null;
+	getBuildAdviceContext: (playerId: string) => BuildAdviceContext | null;
 };
 
 export const playerNetworking = function* (
 	socket: Socket,
-	{ getRoundInfo, getPlayers, getOpponentBoard, getPotentialOpponentBoard }: Parameters,
+	{
+		getRoundInfo,
+		getPlayers,
+		getOpponentBoard,
+		getPotentialOpponentBoard,
+		getBuildAdviceContext,
+	}: Parameters,
 	settings: GamemodeSettings
 ) {
 	const registries = {
@@ -48,7 +56,11 @@ export const playerNetworking = function* (
 	yield* setPacketRegistries(registries);
 
 	// Register Tactical AI socket events (Positioning Advisor + RAG Coach)
-	registerTacticalAIEvents(socket, { getOpponentBoard, getPotentialOpponentBoard });
+	registerTacticalAIEvents(socket, {
+		getOpponentBoard,
+		getPotentialOpponentBoard,
+		getBuildAdviceContext,
+	});
 
 	const teardown = function* () {
 		yield* setPacketRegistries(null);

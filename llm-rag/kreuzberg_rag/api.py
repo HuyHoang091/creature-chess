@@ -1,7 +1,8 @@
 """FastAPI endpoints for RAG service."""
 
+import json
 import os
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -21,8 +22,8 @@ class QueryRequest(BaseModel):
 
 
 class BuildAdviceRequest(BaseModel):
-    traits: List[str]
-    pieces: List[Dict[str, Any]]
+    query: str = ""
+    context: Dict[str, Any] = {}
 
 
 class CounterAdviceRequest(BaseModel):
@@ -40,6 +41,10 @@ class AdviceResponse(BaseModel):
     answer: str
     sources: List[str]
     retrieved_chunks: int
+
+
+class BuildAdviceResponse(AdviceResponse):
+    plan: Optional[Dict[str, Any]] = None
 
 
 # Global instances
@@ -107,14 +112,15 @@ def query_rag(request: QueryRequest):
     )
 
 
-@app.post("/build-advice", response_model=AdviceResponse)
+@app.post("/build-advice", response_model=BuildAdviceResponse)
 def build_advice(request: BuildAdviceRequest):
-    query = f"Gợi ý build team. Traits: {', '.join(request.traits)}. Pieces: {', '.join(p.get('name', '') for p in request.pieces)}"
-    result = coach_engine.query(query, {"traits": request.traits, "pieces": request.pieces})
-    return AdviceResponse(
+    query = request.query or "Recommend the strongest realistic build for the current state."
+    result = coach_engine.build_advice(query, request.context)
+    return BuildAdviceResponse(
         answer=result["answer"],
         sources=result["sources"],
         retrieved_chunks=result["retrieved_chunks"],
+        plan=result.get("plan"),
     )
 
 
@@ -145,11 +151,25 @@ def _stream_generator(query: str, context: Dict[str, Any]):
         yield token
 
 
+def _build_stream_generator(query: str, context: Dict[str, Any]):
+    for event in coach_engine.build_advice_stream(query, context):
+        yield json.dumps(event, ensure_ascii=False) + "\n"
+
+
 @app.post("/query-stream")
 def query_stream(request: QueryRequest):
     return StreamingResponse(
         _stream_generator(request.query, request.context),
         media_type="text/event-stream",
+    )
+
+
+@app.post("/build-advice-stream")
+def build_advice_stream(request: BuildAdviceRequest):
+    query = request.query or "Recommend the strongest realistic build for the current state."
+    return StreamingResponse(
+        _build_stream_generator(query, request.context),
+        media_type="application/x-ndjson",
     )
 
 

@@ -26,6 +26,7 @@ export interface PositioningAdvice {
 export interface CoachResponse {
   answer: string;
   sources: string[];
+  plan?: any;
 }
 
 export interface BattleAnalysis {
@@ -88,10 +89,79 @@ export const requestCoachAdviceStream = async (
 };
 
 export const requestBuildAdvice = (
-  traits: string[],
-  pieces: Array<{ name: string; definitionId: number }>
+  note?: string
 ): Promise<{ success: boolean; response?: CoachResponse; error?: string }> => {
-  return emitWithAck("requestBuildAdvice", { traits, pieces });
+  return emitWithAck("requestBuildAdvice", { note });
+};
+
+export const requestBuildAdviceStream = (
+  note?: string,
+  onChunk?: (text: string) => void
+): Promise<CoachResponse> => {
+  return new Promise((resolve, reject) => {
+    const socket = getCurrentSocket();
+    if (!socket) {
+      reject(new Error("Socket not connected"));
+      return;
+    }
+
+    const requestId = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    let answer = "";
+
+    const cleanup = () => {
+      socket.off("buildAdviceStreamChunk", handleChunk);
+      socket.off("buildAdviceStreamDone", handleDone);
+      socket.off("buildAdviceStreamError", handleError);
+    };
+
+    const handleChunk = (payload: any) => {
+      if (payload?.requestId !== requestId || !payload?.chunk) {
+        return;
+      }
+
+      answer += payload.chunk;
+      onChunk?.(payload.chunk);
+    };
+
+    const handleDone = (payload: any) => {
+      if (payload?.requestId !== requestId) {
+        return;
+      }
+
+      cleanup();
+      resolve({
+        answer: payload.answer || answer,
+        sources: payload.sources || [],
+        plan: payload.plan || null,
+      });
+    };
+
+    const handleError = (payload: any) => {
+      if (payload?.requestId !== requestId) {
+        return;
+      }
+
+      cleanup();
+      reject(new Error(payload?.error || "Build advice stream failed"));
+    };
+
+    socket.on("buildAdviceStreamChunk", handleChunk);
+    socket.on("buildAdviceStreamDone", handleDone);
+    socket.on("buildAdviceStreamError", handleError);
+
+    socket.emit(
+      "requestBuildAdviceStream",
+      { requestId, note },
+      (response: any) => {
+        if (response?.success) {
+          return;
+        }
+
+        cleanup();
+        reject(new Error(response?.error || "Build advice stream request failed"));
+      }
+    );
+  });
 };
 
 export const requestCounterAdvice = (

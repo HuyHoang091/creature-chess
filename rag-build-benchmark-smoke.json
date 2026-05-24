@@ -1,0 +1,359 @@
+{
+  "totalGames": 5,
+  "completedGames": 5,
+  "top4Rate": 0.2,
+  "winRate": 0,
+  "averageRank": 6,
+  "benchmarkBotMode": "hybrid",
+  "expectedRagCalls": 10,
+  "totalRagCalls": 10,
+  "successfulRagCalls": 10,
+  "totalRateLimitRetries": 0,
+  "outputPath": "rag-build-benchmark-smoke.json",
+  "results": [
+    {
+      "gameIndex": 1,
+      "durationMs": 899193,
+      "rank": 8,
+      "finishRound": 21,
+      "top4": false,
+      "win": false,
+      "ragCalls": [
+        {
+          "round": 4,
+          "attempts": 1,
+          "rateLimitRetries": 0,
+          "durationMs": 42580,
+          "success": true,
+          "planName": "Wood Metal Early",
+          "error": null
+        },
+        {
+          "round": 15,
+          "attempts": 2,
+          "rateLimitRetries": 0,
+          "durationMs": 93955,
+          "success": true,
+          "planName": "Metal/Arcane/Cunning - Weavifly 3★",
+          "error": null
+        }
+      ],
+      "plans": [
+        {
+          "round": 4,
+          "planName": "Wood Metal Early",
+          "coreUnits": [
+            "Puparmor",
+            "Anoleaf",
+            "Budaye",
+            "Weavifly"
+          ],
+          "transitionUnits": [],
+          "shortTermSteps": [
+            "Mua Budaye từ shop, field lên board",
+            "Craft Warmog từ 2 Giant's Belt, gắn cho Puparmor",
+            "Gắn Recurve Bow cho Anoleaf",
+            "Kết thúc round 4, save vàng",
+            "Round 5: mua XP lên level 4, field Weavifly từ bench",
+            "Round 6-7: save lên level 5, sau đó slow-roll tìm Embra hoặc nâng Weavifly"
+          ]
+        },
+        {
+          "round": 15,
+          "planName": "Metal/Arcane/Cunning - Weavifly 3★",
+          "coreUnits": [
+            "Weavifly",
+            "Sampsack"
+          ],
+          "transitionUnits": [
+            "Puparmor",
+            "Anoleaf"
+          ],
+          "shortTermSteps": [
+            "Mua Sampsack, bán Puparmor, lắp Warmog vào Sampsack",
+            "Roll 3-4 lần (6-8 gold) tìm Weavifly và bản sao Noctalo/Rockat",
+            "Nếu roll trúng đủ 4 Weavifly -> ghép 3★ ngay",
+            "Sau roll, tích gold lên 10+ rồi mua XP lên level 8",
+            "Khi lên 8, lắp thêm tank Grintot hoặc 5-cost carry như Agnigon/Kirkanon"
+          ]
+        }
+      ]
+    },
+    {
+      "gameIndex": 4,
+      "durationMs": 904578,
+      "rank": 2,
+      "finishRound": 39,
+      "top4": true,
+      "win": false,
+      "ragCalls": [
+        {
+          "round": 4,
+          "attempts": 1,
+          "rateLimitRetries": 0,
+          "durationMs": 36742,
+          "success": true,
+          "planName": "Metal Valiant Bolt Carry",
+          "error": null
+        },
+        {
+          "round": 15,
+          "attempts": 1,
+          "rateLimitRetries": 0,
+          "durationMs": 43648,
+          "success": true,
+          "planName": "Metal-Valiant Midgame",
+          "error": null
+        }
+      ],
+      "plans": [
+        {
+          "round": 4,
+          "planName": "Metal Valiant Bolt Carry",
+          "coreUnits": [
+            "Bolt",
+            "Puparmor",
+            "Budaye",
+            "Weavifly"
+          ],
+          "transitionUnits": [],
+          "shortTermSteps": [
+            "Unequip items from current 1★ Bolt (Recurve Bow, Rod, Gloves)",
+            "Buy shop Bolt (2 gold) and combine with bench Bolt to make 2★ Bolt",
+            "Craft Infinity Edge from 2 BF_SWORDs and equip on 2★ Bolt",
+            "Buy Puparmor (1 gold) from shop and place on board",
+            "Sell Tweesher and Aardorn from bench (2 gold)",
+            "End round with ~3 gold, save for level 4 next round"
+          ]
+        },
+        {
+          "round": 15,
+          "planName": "Metal-Valiant Midgame",
+          "coreUnits": [
+            "Sampsack",
+            "Bolt",
+            "Dollfin",
+            "Propellorcat",
+            "Cardinale"
+          ],
+          "transitionUnits": [
+            "Cairfrey"
+          ],
+          "shortTermSteps": [
+            "Mua Sampsack thứ 3 từ shop (4g), kết hợp thành 2⭐.",
+            "Level lên 7 (16g).",
+            "Mua Propellorcat (3g), đưa lên bàn thay Cairfrey (hoặc giữ Cairfrey nếu đủ slot).",
+            "Roll 1-2 lần (5g còn lại) tìm Valiant/Metal.",
+            "Giữ vàng trên 10 để kiếm lãi, slow roll ở level 7."
+          ]
+        }
+      ]
+    },
+    {
+      "gameIndex": 3,
+      "durationMs": 937208,
+      "rank": 8,
+      "finishRound": 21,
+      "top4": false,
+      "win": false,
+      "ragCalls": [
+        {
+          "round": 4,
+          "attempts": 1,
+          "rateLimitRetries": 0,
+          "durationMs": 32059,
+          "success": true,
+          "planName": "Metal_Valiant_Arcane_Early",
+          "error": null
+        },
+        {
+          "round": 15,
+          "attempts": 1,
+          "rateLimitRetries": 0,
+          "durationMs": 35096,
+          "success": true,
+          "planName": "Valiant + Arcane Hybrid",
+          "error": null
+        }
+      ],
+      "plans": [
+        {
+          "round": 4,
+          "planName": "Metal_Valiant_Arcane_Early",
+          "coreUnits": [
+            "Weavifly",
+            "Budaye",
+            "Puparmor"
+          ],
+          "transitionUnits": [],
+          "shortTermSteps": [
+            "Sell duplicate Aardorn on bench for 1 gold",
+            "Buy Puparmor and Embra from shop",
+            "Place Budaye and Puparmor front row, Weavifly back row",
+            "Craft Warmog and equip on Budaye",
+            "Save gold to 10, level to 4 next round, then add Embra to board"
+          ]
+        },
+        {
+          "round": 15,
+          "planName": "Valiant + Arcane Hybrid",
+          "coreUnits": [
+            "Weavifly",
+            "Grintot",
+            "Agnigon",
+            "Tweesher",
+            "Fluttaflap",
+            "Puparmor"
+          ],
+          "transitionUnits": [],
+          "shortTermSteps": [
+            "Mua Grintot từ shop (giữ ghế).",
+            "Mua Tweesher từ shop.",
+            "Đặt Tweesher lên bàn, thay thế Viviphyta.",
+            "Kết thúc lượt, giữ 10 gold để lãi suất.",
+            "Vòng sau: nếu shop có thêm Weavifly hoặc Grintot thì mua, nếu không thì save gold."
+          ]
+        }
+      ]
+    },
+    {
+      "gameIndex": 5,
+      "durationMs": 1013445,
+      "rank": 5,
+      "finishRound": 29,
+      "top4": false,
+      "win": false,
+      "ragCalls": [
+        {
+          "round": 4,
+          "attempts": 1,
+          "rateLimitRetries": 0,
+          "durationMs": 44340,
+          "success": true,
+          "planName": "Early Earth Wood Sustain",
+          "error": null
+        },
+        {
+          "round": 15,
+          "attempts": 4,
+          "rateLimitRetries": 0,
+          "durationMs": 194729,
+          "success": true,
+          "planName": "6 Valiant Metal",
+          "error": null
+        }
+      ],
+      "plans": [
+        {
+          "round": 4,
+          "planName": "Early Earth Wood Sustain",
+          "coreUnits": [
+            "Bamboon",
+            "Budaye",
+            "Aardorn",
+            "Rockitten"
+          ],
+          "transitionUnits": [
+            "Grintrock"
+          ],
+          "shortTermSteps": [
+            "Buy the second Weavifly from shop (hold for later)",
+            "Buy Budaye from shop and place on board",
+            "Craft Guardian Angel from Chain Vest + Rod, equip on Bamboon",
+            "Level up to 4 next round (spend 4 gold on XP)",
+            "Roll at level 4 for Rockitten and upgrades on Budaye/Bamboon"
+          ]
+        },
+        {
+          "round": 15,
+          "planName": "6 Valiant Metal",
+          "coreUnits": [
+            "Bamboon",
+            "Agnigon",
+            "Puparmor",
+            "Nut",
+            "Rockitten"
+          ],
+          "transitionUnits": [],
+          "shortTermSteps": [
+            "Mua 2 Puparmor và 1 Nut từ shop",
+            "Bán Kirkanon và Eaglace",
+            "Đặt Puparmor và Nut lên bàn, bỏ Kirkanon và Eaglace",
+            "Trang bị Guardian Angel cho Bamboon, Rabadon cho Agnigon",
+            "Roll kiếm bản sao: ưu tiên Bamboon > Puparmor > Nut > Rockitten"
+          ]
+        }
+      ]
+    },
+    {
+      "gameIndex": 2,
+      "durationMs": 1064640,
+      "rank": 7,
+      "finishRound": 22,
+      "top4": false,
+      "win": false,
+      "ragCalls": [
+        {
+          "round": 4,
+          "attempts": 3,
+          "rateLimitRetries": 0,
+          "durationMs": 143196,
+          "success": true,
+          "planName": "Early 2★ Aggro",
+          "error": null
+        },
+        {
+          "round": 15,
+          "attempts": 2,
+          "rateLimitRetries": 0,
+          "durationMs": 92683,
+          "success": true,
+          "planName": "Hybrid Earth-Wood-Valiant Cunning",
+          "error": null
+        }
+      ],
+      "plans": [
+        {
+          "round": 4,
+          "planName": "Early 2★ Aggro",
+          "coreUnits": [
+            "Aardorn",
+            "Weavifly",
+            "Nut"
+          ],
+          "transitionUnits": [
+            "Rockitten",
+            "Anoleaf"
+          ],
+          "shortTermSteps": [
+            "Buy Nut, Weavifly, and Rockitten from shop (3 gold).",
+            "Merge the two Aardorn copies → 2★ Aardorn on board.",
+            "Merge the two Nut copies → 2★ Nut on board (replace the old 1★ Nut).",
+            "Merge the two Weavifly copies → 2★ Weavifly on board.",
+            "Craft PHANTOM_DANCER and equip to 2★ Weavifly.",
+            "End round with 3 gold, ready for interest next round."
+          ]
+        },
+        {
+          "round": 15,
+          "planName": "Hybrid Earth-Wood-Valiant Cunning",
+          "coreUnits": [
+            "Aardorn",
+            "Anoleaf",
+            "Nut",
+            "Bamboon",
+            "Eaglace"
+          ],
+          "transitionUnits": [],
+          "shortTermSteps": [
+            "Mua Nut từ shop, combine với Nut trên board thành Nut 2 sao",
+            "Mua Bamboon từ shop",
+            "Bán Ruption, đặt Bamboon lên board",
+            "Giữ vàng >20, không roll",
+            "Mua XP để lên level 7 trong 2-3 round tiếp theo"
+          ]
+        }
+      ]
+    }
+  ]
+}

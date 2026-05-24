@@ -4,11 +4,10 @@ import { useSelector } from "react-redux";
 import { useLocalPlayerId } from "~/auth/context";
 import {
 	requestPositioningAdvice,
-	requestCoachAdvice,
 	requestCoachAdviceStream,
+	requestBuildAdviceStream,
 	requestBattleAnalysis,
 	PositioningAdvice,
-	CoachResponse,
 } from "~/services/tacticalAI";
 import { AppState } from "~/store/state";
 
@@ -176,16 +175,10 @@ const TacticalAIPanel: React.FC = () => {
 				lower.startsWith("/team") ||
 				lower.startsWith("/doi")
 			) {
+				const buildNote = raw.replace(/^\/(build|team|doi)\s*/i, "").trim();
 				setCoachMessages((prev) => [...prev, { role: "ai", text: "" }]);
-				await requestCoachAdviceStream(
-					`Gợi ý build team. Traits: ${myTraits.join(", ")}. Pieces: ${myPieces.map((p) => p.definition?.name || "").join(", ")}`,
-					{
-						traits: myTraits,
-						pieces: myPieces.map((p) => ({
-							name: p.definition?.name || "",
-							definitionId: p.definitionId,
-						})),
-					},
+				const buildResponse = await requestBuildAdviceStream(
+					buildNote || undefined,
 					(chunk) => {
 						setCoachMessages((prev) => {
 							const last = prev[prev.length - 1];
@@ -199,6 +192,21 @@ const TacticalAIPanel: React.FC = () => {
 						});
 					}
 				);
+				setCoachMessages((prev) => {
+					const last = prev[prev.length - 1];
+					if (!last || last.role !== "ai" || last.text.trim()) {
+						return prev;
+					}
+
+					const updated = [...prev];
+					updated[updated.length - 1] = {
+						...last,
+						text:
+							buildResponse.answer ||
+							"Không lấy được gợi ý build từ Tactical AI.",
+					};
+					return updated;
+				});
 				setLoading(false);
 				return;
 			}

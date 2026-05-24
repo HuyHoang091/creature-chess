@@ -26,7 +26,19 @@ export type { BattleAnalysis, Issue, Recommendation, BattleReplayData } from "./
 export { getCache, hashKey } from "./cache/cache";
 export type { CacheProvider } from "./cache/cache";
 
+// Build Advisor
+export { createBuildAdviceContext } from "./build-advisor/context";
+export type {
+  BuildAdviceContext,
+  BuildAdvicePlan,
+} from "./build-advisor/types";
+
 // Integration
 export { registerTacticalAIEvents } from "./integration/game-server-plugin";
-export type { TacticalAIPluginDeps, PositioningRequest, CoachRequest, CoachResponse } from "./integration/game-server-plugin";
+export type {
+  TacticalAIPluginDeps,
+  PositioningRequest,
+  CoachRequest,
+  CoachResponse,
+} from "./integration/game-server-plugin";
 export { getPositioningAdvisor } from "./integration/advisor-instance";

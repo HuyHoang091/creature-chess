@@ -15,6 +15,7 @@ export type Entity<TState, TVariables> = {
 	runSaga: <S extends Saga>(saga: S, ...args: Parameters<S>) => Task;
 	getVariable: GetVariableFn<TVariables>;
 	put: (action: Action) => void;
+	destroy: () => void;
 };
 
 type EntitySagaContext<TDependencies, TVariables> = {
@@ -61,16 +62,25 @@ export const entity = <
 			}).concat(sagaMiddleware),
 	});
 
+	const tasks: Task[] = [];
+
 	if (rootSaga) {
-		sagaMiddleware.run(rootSaga);
+		tasks.push(sagaMiddleware.run(rootSaga));
 	}
 
 	return {
 		id,
 		select: <T>(selector: (state: TState) => T) => selector(store.getState()),
 		getVariable: variableStore.getVariable,
-		runSaga: sagaMiddleware.run,
+		runSaga: <S extends Saga>(saga: S, ...args: Parameters<S>) => {
+			const task = sagaMiddleware.run(saga, ...args);
+			tasks.push(task);
+			return task;
+		},
 		put: (action: Action) => store.dispatch(action),
+		destroy: () => {
+			tasks.forEach(task => task.cancel());
+		}
 	};
 };
 

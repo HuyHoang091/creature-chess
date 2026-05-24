@@ -42,6 +42,8 @@ export class Gamemode {
 
 	private store: Store<GameState>;
 	private sagaMiddleware: SagaMiddleware<GameSagaContext>;
+	private gameTask: any;
+	private publicEventsTask: any;
 
 	public constructor(
 		public readonly id: string,
@@ -90,8 +92,8 @@ export class Gamemode {
 
 		// todo fix these ugly typings
 		this.sagaMiddleware.run(this.gameTeardownSagaFactory() as () => Generator);
-		this.sagaMiddleware.run(gameSaga as any, this.callbacks);
-		this.sagaMiddleware.run(sendPublicEventsSaga);
+		this.gameTask = this.sagaMiddleware.run(gameSaga as any, this.callbacks);
+		this.publicEventsTask = this.sagaMiddleware.run(sendPublicEventsSaga);
 	};
 
 	public getPlayerById = (playerId: string) =>
@@ -120,6 +122,10 @@ export class Gamemode {
 		};
 
 		const teardown = () => {
+			this.gameTask?.cancel();
+			this.publicEventsTask?.cancel();
+			this.players.forEach((player) => player.destroy());
+
 			// todo this is ugly
 			(this.opponentProvider as unknown as null) = null;
 			(this.deck as unknown as null) = null;
