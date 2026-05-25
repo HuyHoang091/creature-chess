@@ -1,0 +1,23 @@
+{
+	"private": true,
+	"name": "@creature-chess-app/server-admin",
+	"version": "0.0.1",
+	"description": "Dedicated admin HTTP service",
+	"keywords": [],
+	"license": "ISC",
+	"publishConfig": {
+		"access": "public"
+	},
+	"scripts": {
+		"build": "yarn run -T tsc -p ./tsconfig.json",
+		"test": "yarn run -T jest --passWithNoTests"
+	},
+	"dependencies": {
+		"@cc-server/data": "workspace:*",
+		"cors": "^2.8.5",
+		"express": "^4.17.2",
+		"express-winston": "^4.2.0",
+		"redis": "^5.11.0",
+		"winston": "^3.3.3"
+	}
+}

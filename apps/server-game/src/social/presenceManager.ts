@@ -77,4 +77,18 @@ export class PresenceManager {
 	public hasConnectedSocket(userId: string) {
 		return this.getSockets(userId).length > 0;
 	}
+
+	public getConnectedUserCount() {
+		return this.socketsByUserId.size;
+	}
+
+	public countUsersByState(state: SocialPresence) {
+		let count = 0;
+		for (const value of this.stateByUserId.values()) {
+			if (value === state) {
+				count += 1;
+			}
+		}
+		return count;
+	}
 }

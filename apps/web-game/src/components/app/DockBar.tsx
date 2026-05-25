@@ -8,7 +8,7 @@ import { AppState } from "~/store/state";
 import styles from "./DockBar.module.css";
 
 type DockItem = {
-	screen: AppScreen;
+	screen: AppScreen | "admin-link";
 	icon: React.ReactNode;
 	label: string;
 	requiresAccount?: boolean;
@@ -16,12 +16,6 @@ type DockItem = {
 
 const dockItems: DockItem[] = [
 	{ screen: "home", icon: <Home size={22} />, label: "Home" },
-	{
-		screen: "profile",
-		icon: <User size={22} />,
-		label: "Profile",
-		requiresAccount: true,
-	},
 	{
 		screen: "friends",
 		icon: <Users size={22} />,
@@ -32,6 +26,12 @@ const dockItems: DockItem[] = [
 		screen: "history",
 		icon: <Clock size={22} />,
 		label: "History",
+		requiresAccount: true,
+	},
+	{
+		screen: "profile",
+		icon: <User size={22} />,
+		label: "Profile",
 		requiresAccount: true,
 	},
 ];
@@ -46,12 +46,12 @@ export const DockBar = () => {
 	);
 
 	const activeScreen = panel ?? screen;
-	const visibleItems =
+	const visibleItems: DockItem[] =
 		role === "admin"
 			? [
 					...dockItems,
 					{
-						screen: "admin" as AppScreen,
+						screen: "admin-link",
 						icon: <Shield size={22} />,
 						label: "Admin",
 						requiresAccount: true,
@@ -64,8 +64,8 @@ export const DockBar = () => {
 			dispatch(AppShellCommands.setModal("signin-required"));
 			return;
 		}
-		if (item.screen === "admin") {
-			window.location.href = `${window.location.origin}/admin`;
+		if (item.screen === "admin-link") {
+			window.location.href = APP_ADMIN_URL;
 			return;
 		}
 		if (activeScreen === item.screen) {

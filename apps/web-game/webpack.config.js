@@ -93,6 +93,9 @@ module.exports = {
 			),
 			APP_URL: JSON.stringify(process.env.CREATURE_CHESS_APP_URL),
 			APP_API_URL: JSON.stringify(process.env.API_INFO_URL),
+			APP_ADMIN_URL: JSON.stringify(
+				process.env.ADMIN_APP_URL || "http://localhost:8091"
+			),
 			APP_IMAGE_ROOT: JSON.stringify(process.env.CREATURE_CHESS_IMAGE_URL),
 			APP_AUTH0_ENABLED: JSON.stringify(process.env.AUTH0_ENABLED),
 			APP_AUTH0_DOMAIN: JSON.stringify(process.env.AUTH0_DOMAIN),

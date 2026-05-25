@@ -18,6 +18,18 @@ export class PrivateRoomManager {
 		return this.invitesByUserId.get(userId) ?? [];
 	}
 
+	public getRooms() {
+		return [...this.roomsById.values()];
+	}
+
+	public getRoomCount() {
+		return this.roomsById.size;
+	}
+
+	public getMemberCount() {
+		return this.getRooms().reduce((sum, room) => sum + room.members.length, 0);
+	}
+
 	public createRoom(owner: SocialUser) {
 		const existing = this.getRoomForUser(owner.userId);
 		if (existing) {

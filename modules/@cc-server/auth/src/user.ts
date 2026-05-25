@@ -19,6 +19,10 @@ export interface UserModel {
 export const convertDatabaseUserToUserModel = (
 	user: DatabaseUser
 ): UserModel => {
+	const lockedUntil = (user as any).locked_until as Date | null | undefined;
+	const locked =
+		Boolean((user as any).locked_at) &&
+		(!lockedUntil || lockedUntil.getTime() > Date.now());
 	const nickname = user.nickname || null;
 
 	// TODO reimplement Title (load from DB)
@@ -40,7 +44,7 @@ export const convertDatabaseUserToUserModel = (
 		role: ((user as any).role === "admin" ? "admin" : "player") as
 			| "player"
 			| "admin",
-		locked: Boolean((user as any).locked_at),
+		locked,
 		lockedReason: (user as any).locked_reason || null,
 		stats,
 		nickname,

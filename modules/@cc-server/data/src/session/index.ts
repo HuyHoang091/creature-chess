@@ -18,6 +18,7 @@ export type SessionDatabaseFunctions = {
 	) => Promise<DatabaseUserSession | null>;
 	getByToken: (token: string) => Promise<DatabaseUserSession | null>;
 	deleteByToken: (token: string) => Promise<boolean>;
+	deleteByUserId: (userId: string) => Promise<number>;
 	deleteExpired: (now: Date) => Promise<number>;
 };
 
@@ -63,6 +64,17 @@ export const sessionDatabase = (
 		} catch (e) {
 			logger.error("Error in @cc/data session.deleteByToken", e);
 			return false;
+		}
+	},
+	deleteByUserId: async (userId) => {
+		try {
+			const result = await (client as any).user_sessions.deleteMany({
+				where: { user_id: userId },
+			});
+			return result.count;
+		} catch (e) {
+			logger.error("Error in @cc/data session.deleteByUserId", e);
+			return 0;
 		}
 	},
 	deleteExpired: async (now) => {

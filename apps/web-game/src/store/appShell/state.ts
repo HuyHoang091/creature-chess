@@ -8,7 +8,6 @@ export type AppScreen =
 	| "friends"
 	| "profile"
 	| "settings"
-	| "admin"
 	| "party"
 	| "private-lobby"
 	| "public-queue"

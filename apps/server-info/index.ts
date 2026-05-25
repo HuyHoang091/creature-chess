@@ -7,6 +7,7 @@ import { Server } from "socket.io";
 
 import {
 	type FriendsResponseDto,
+	type MatchHistoryDetailDto,
 	type MatchHistoryResponseDto,
 } from "@creature-chess/models";
 import {
@@ -24,6 +25,7 @@ import {
 	toBlockedUserDto,
 	toFriendDto,
 	toFriendRequestDto,
+	toMatchHistoryDetailDto,
 	toMatchHistoryItemDto,
 } from "./src/util/social-dto";
 import { userModelToDto } from "./src/util/user-model-to-dto";
@@ -66,18 +68,33 @@ type RateLimitOptions = {
 	windowMs: number;
 	max: number;
 	prefix: string;
+	keyBuilder?: (req: express.Request) => string | null;
+	skip?: (req: express.Request) => boolean;
 };
 
 const rateBuckets = new Map<string, { count: number; resetAt: number }>();
 
-function rateLimit({ windowMs, max, prefix }: RateLimitOptions) {
+function getRateLimitClientIp(req: express.Request) {
+	return req.ip || req.socket.remoteAddress || "unknown";
+}
+
+function getNormalizedEmail(value: unknown) {
+	return typeof value === "string" ? value.trim().toLowerCase() : "";
+}
+
+function rateLimit({ windowMs, max, prefix, keyBuilder, skip }: RateLimitOptions) {
 	return (
 		req: express.Request,
 		res: express.Response,
 		next: express.NextFunction
 	) => {
-		const ip = req.ip || req.socket.remoteAddress || "unknown";
-		const key = `${prefix}:${ip}`;
+		if (skip?.(req)) {
+			next();
+			return;
+		}
+
+		const keySuffix = keyBuilder?.(req) || `ip:${getRateLimitClientIp(req)}`;
+		const key = `${prefix}:${keySuffix}`;
 		const now = Date.now();
 		const bucket = rateBuckets.get(key);
 
@@ -97,9 +114,10 @@ function rateLimit({ windowMs, max, prefix }: RateLimitOptions) {
 		next();
 	};
 }
-
-app.use(rateLimit({ windowMs: 60 * 1000, max: 600, prefix: "api" }));
 app.use(expressWinston({ winstonInstance: logger }));
+app.get("/health", (_req, res) => {
+	res.status(200).json({ status: "ok", service: "info" });
+});
 
 app.use((req, res, next) => {
 	const {
@@ -204,28 +222,6 @@ const REPORT_REASONS = new Set([
 	"other",
 ]);
 
-const REPORT_STATUSES = new Set(["open", "reviewing", "resolved", "dismissed"]);
-const USER_ROLES = new Set(["player", "admin"]);
-const EVENT_STATUSES = new Set(["draft", "scheduled", "active", "ended"]);
-const BOT_PERSONALITY_MIN = 1;
-const BOT_PERSONALITY_MAX = 200;
-
-function getAdminEmailSet() {
-	return new Set(
-		(process.env.ADMIN_EMAILS || process.env.ADMIN_EMAIL || "")
-			.split(",")
-			.map((item) => item.trim().toLowerCase())
-			.filter(Boolean)
-	);
-}
-
-function isAdminUser(user: { email?: string | null; role?: string | null }) {
-	const email = user.email?.toLowerCase();
-	return (
-		user.role === "admin" || Boolean(email && getAdminEmailSet().has(email))
-	);
-}
-
 function isUserLocked(user: {
 	locked?: boolean;
 	lockedReason?: string | null;
@@ -265,26 +261,6 @@ async function requireAuthenticatedUser(
 		res.status(403).json({
 			message: user.lockedReason || "Account is locked",
 		});
-		return null;
-	}
-
-	return user;
-}
-
-async function requireAdminUser(
-	req: express.Request,
-	res: express.Response,
-	authClient: ReturnType<typeof getManagementClient>,
-	database: DatabaseConnection
-) {
-	const user = await requireAuthenticatedUser(req, res, authClient, database);
-
-	if (!user) {
-		return null;
-	}
-
-	if (!isAdminUser(user)) {
-		res.status(403).json({ message: "Admin access required" });
 		return null;
 	}
 
@@ -873,6 +849,11 @@ async function startServer() {
 			windowMs: RATE_LIMIT_WINDOW_MS,
 			max: LOCAL_REGISTER_RATE_LIMIT,
 			prefix: "auth-register",
+			keyBuilder: (req) => {
+				const email = getNormalizedEmail(req.body?.email);
+				const ip = getRateLimitClientIp(req);
+				return email ? `ip:${ip}:email:${email}` : `ip:${ip}`;
+			},
 		}),
 		async (req, res) => {
 			const { email, password } = req.body as {
@@ -934,6 +915,11 @@ async function startServer() {
 			windowMs: RATE_LIMIT_WINDOW_MS,
 			max: LOCAL_LOGIN_RATE_LIMIT,
 			prefix: "auth-login",
+			keyBuilder: (req) => {
+				const email = getNormalizedEmail(req.body?.email);
+				const ip = getRateLimitClientIp(req);
+				return email ? `ip:${ip}:email:${email}` : `ip:${ip}`;
+			},
 		}),
 		async (req, res) => {
 			const { email, password } = req.body as {
@@ -1410,12 +1396,32 @@ async function startServer() {
 			20,
 			Math.max(1, parseInt((req.query.limit as string) || "20", 10) || 20)
 		);
+		const timeFilter =
+			req.query.timeFilter === "7d" ||
+			req.query.timeFilter === "30d" ||
+			req.query.timeFilter === "all"
+				? req.query.timeFilter
+				: "all";
+		const sortBy =
+			req.query.sortBy === "time_asc" ||
+			req.query.sortBy === "placement_best" ||
+			req.query.sortBy === "placement_worst"
+				? req.query.sortBy
+				: "time_desc";
+		const resultFilter =
+			req.query.resultFilter === "win" ||
+			req.query.resultFilter === "top4" ||
+			req.query.resultFilter === "loss"
+				? req.query.resultFilter
+				: "all";
 
-		const rows = await database.matchHistory.listForUser(
-			user.id,
+		const rows = await database.matchHistory.listForUser(user.id, {
 			cursor,
-			limit + 1
-		);
+			limit: limit + 1,
+			timeFilter,
+			sortBy,
+			resultFilter,
+		});
 		const hasMore = rows.length > limit;
 		const items = rows.slice(0, limit);
 
@@ -1425,6 +1431,32 @@ async function startServer() {
 			),
 			nextCursor: hasMore ? items[items.length - 1].participant.id : null,
 		};
+
+		return res.status(200).json(payload);
+	});
+
+	app.get("/matches/history/:matchId", async (req, res) => {
+		const user = await requireAuthenticatedUser(req, res, authClient, database);
+		if (!user) {
+			return;
+		}
+		if (!ensureSocialEligible(res, user)) {
+			return;
+		}
+
+		const detail = await database.matchHistory.getDetailForUser(
+			user.id,
+			req.params.matchId
+		);
+		if (!detail) {
+			return res.status(404).json({ message: "Match history entry not found" });
+		}
+
+		const payload: MatchHistoryDetailDto = toMatchHistoryDetailDto(
+			detail.match,
+			detail.participant,
+			detail.participants
+		);
 
 		return res.status(200).json(payload);
 	});
@@ -1442,6 +1474,10 @@ async function startServer() {
 		const reason = req.body?.reason;
 		const matchId =
 			typeof req.body?.matchId === "string" ? req.body.matchId : undefined;
+		const description =
+			typeof req.body?.description === "string"
+				? req.body.description.trim()
+				: "";
 
 		if (!targetUserId || typeof targetUserId !== "string") {
 			return res.status(400).json({ message: "Missing targetUserId" });
@@ -1454,10 +1490,24 @@ async function startServer() {
 		if (!REPORT_REASONS.has(reason)) {
 			return res.status(400).json({ message: "Invalid report reason" });
 		}
+		if (description.length > 500) {
+			return res.status(400).json({ message: "Description must be 500 characters or fewer" });
+		}
+		if (reason === "other" && !description) {
+			return res.status(400).json({ message: "Description is required for this report reason" });
+		}
 
 		const targetUser = await database.user.getById(targetUserId);
 		if (!targetUser) {
 			return res.status(404).json({ message: "Target user not found" });
+		}
+		const hasSharedMatch = await database.matchHistory.hasSharedMatch(
+			user.id,
+			targetUserId,
+			matchId
+		);
+		if (!hasSharedMatch) {
+			return res.status(400).json({ message: "You have not played with this user" });
 		}
 
 		const since = new Date(Date.now() - 24 * 60 * 60 * 1000);
@@ -1467,463 +1517,25 @@ async function startServer() {
 			since
 		);
 
-		if (count >= 5) {
-			return res.status(429).json({ message: "Report limit exceeded" });
+		if (count >= 1) {
+			return res.status(429).json({ message: "You have already reported this user in the last 24 hours" });
 		}
 
-		const report = await database.report.create(
-			user.id,
-			targetUserId,
-			reason,
-			matchId
-		);
+		const pendingCount = await database.report.countPendingForReporter(user.id);
+		if (pendingCount >= 10) {
+			return res.status(429).json({ message: "Too many pending reports" });
+		}
+
+		const report = await database.report.create(user.id, targetUserId, reason, {
+			matchId,
+			description: description || null,
+			reporterIp: req.ip || req.socket.remoteAddress || null,
+		});
 		if (!report) {
 			return res.status(500).json({ message: "Failed to create report" });
 		}
 
 		return res.status(201).json({ success: true });
-	});
-
-	app.get("/admin/overview", async (req, res) => {
-		const admin = await requireAdminUser(req, res, authClient, database);
-		if (!admin) {
-			return;
-		}
-
-		const [users, lockedUsers, matches, openReports, bots, events] =
-			await Promise.all([
-				(database.prisma.users as any).count(),
-				(database.prisma.users as any).count({
-					where: { locked_at: { not: null } },
-				}),
-				(database.prisma.matches as any).count(),
-				(database.prisma.reports as any).count({
-					where: { status: { in: ["open", "reviewing"] } },
-				}),
-				(database.prisma.bots as any).count(),
-				(database.prisma.game_events as any).count({
-					where: { status: { in: ["scheduled", "active"] } },
-				}),
-			]);
-		const memory = process.memoryUsage();
-
-		return res.status(200).json({
-			users,
-			lockedUsers,
-			matches,
-			openReports,
-			bots,
-			activeEvents: events,
-			server: {
-				uptimeSeconds: Math.round(process.uptime()),
-				memoryMb: Math.round(memory.rss / 1024 / 1024),
-				heapUsedMb: Math.round(memory.heapUsed / 1024 / 1024),
-				nodeVersion: process.version,
-				adminUserId: admin.id,
-			},
-		});
-	});
-
-	app.get("/admin/server", async (req, res) => {
-		const admin = await requireAdminUser(req, res, authClient, database);
-		if (!admin) {
-			return;
-		}
-
-		let databaseStatus: "ok" | "error" = "ok";
-		try {
-			await database.prisma.$queryRawUnsafe("SELECT 1");
-		} catch (error) {
-			databaseStatus = "error";
-		}
-
-		const memory = process.memoryUsage();
-		const cpu = process.cpuUsage();
-
-		return res.status(200).json({
-			status: "online",
-			databaseStatus,
-			uptimeSeconds: Math.round(process.uptime()),
-			memory: {
-				rssMb: Math.round(memory.rss / 1024 / 1024),
-				heapTotalMb: Math.round(memory.heapTotal / 1024 / 1024),
-				heapUsedMb: Math.round(memory.heapUsed / 1024 / 1024),
-			},
-			cpu,
-			nodeVersion: process.version,
-			checkedAt: new Date().toISOString(),
-		});
-	});
-
-	app.get("/admin/users", async (req, res) => {
-		const admin = await requireAdminUser(req, res, authClient, database);
-		if (!admin) {
-			return;
-		}
-
-		const query = typeof req.query.q === "string" ? req.query.q.trim() : "";
-		const where = query
-			? {
-					OR: [
-						{ id: { contains: query } },
-						{ email: { contains: query, mode: "insensitive" } },
-						{ nickname: { contains: query, mode: "insensitive" } },
-					],
-				}
-			: undefined;
-		const users = await (database.prisma.users as any).findMany({
-			where,
-			orderBy: [{ role: "desc" }, { nickname: "asc" }],
-			take: 80,
-		});
-
-		return res.status(200).json({
-			users: users.map((item: any) => ({
-				id: item.id,
-				email: item.email,
-				nickname: item.nickname,
-				profilePicture: item.profile_picture ?? null,
-				personalInfo: item.profile_bio ?? null,
-				role: item.role === "admin" ? "admin" : "player",
-				locked: Boolean(item.locked_at),
-				lockedReason: item.locked_reason ?? null,
-				gamesPlayed: item.games_played,
-				wins: item.wins,
-			})),
-		});
-	});
-
-	app.patch("/admin/users/:id", async (req, res) => {
-		const admin = await requireAdminUser(req, res, authClient, database);
-		if (!admin) {
-			return;
-		}
-
-		const existing = await database.user.getById(req.params.id);
-		if (!existing) {
-			return res.status(404).json({ message: "User not found" });
-		}
-
-		const data: Record<string, unknown> = {};
-
-		if (req.body?.nickname !== undefined) {
-			const nicknameUpdate = await getNicknameUpdate(
-				database,
-				filter,
-				req.body,
-				req.params.id
-			);
-			if (nicknameUpdate.error) {
-				return res.status(400).json({ message: nicknameUpdate.error });
-			}
-			data.nickname = nicknameUpdate.nickname;
-		}
-
-		if (req.body?.picture !== undefined) {
-			const pictureUpdate = await getPictureUpdate({
-				picture: String(req.body.picture),
-			});
-			if (pictureUpdate.error) {
-				return res.status(400).json({ message: pictureUpdate.error });
-			}
-			data.profile_picture = pictureUpdate.picture;
-		}
-
-		const personalInfoUpdate = getPersonalInfoUpdate(req.body);
-		if (personalInfoUpdate.error) {
-			return res.status(400).json({ message: personalInfoUpdate.error });
-		}
-		if (personalInfoUpdate.personalInfo !== undefined) {
-			data.profile_bio = personalInfoUpdate.personalInfo;
-		}
-
-		if (req.body?.role !== undefined) {
-			if (!USER_ROLES.has(req.body.role)) {
-				return res.status(400).json({ message: "Invalid role" });
-			}
-			data.role = req.body.role;
-		}
-
-		const updated = await (database.prisma.users as any).update({
-			where: { id: req.params.id },
-			data,
-		});
-
-		return res.status(200).json({
-			user: userModelToDto(convertDatabaseUserToUserModel(updated)),
-		});
-	});
-
-	app.post("/admin/users/:id/lock", async (req, res) => {
-		const admin = await requireAdminUser(req, res, authClient, database);
-		if (!admin) {
-			return;
-		}
-
-		if (admin.id === req.params.id) {
-			return res.status(400).json({ message: "Cannot lock your own account" });
-		}
-
-		const reason =
-			typeof req.body?.reason === "string" && req.body.reason.trim()
-				? req.body.reason.trim().slice(0, 255)
-				: "Locked by admin";
-		const updated = await (database.prisma.users as any).update({
-			where: { id: req.params.id },
-			data: {
-				locked_at: new Date(),
-				locked_reason: reason,
-			},
-		});
-
-		return res.status(200).json({
-			user: userModelToDto(convertDatabaseUserToUserModel(updated)),
-		});
-	});
-
-	app.post("/admin/users/:id/unlock", async (req, res) => {
-		const admin = await requireAdminUser(req, res, authClient, database);
-		if (!admin) {
-			return;
-		}
-
-		const updated = await (database.prisma.users as any).update({
-			where: { id: req.params.id },
-			data: {
-				locked_at: null,
-				locked_reason: null,
-			},
-		});
-
-		return res.status(200).json({
-			user: userModelToDto(convertDatabaseUserToUserModel(updated)),
-		});
-	});
-
-	app.get("/admin/reports", async (req, res) => {
-		const admin = await requireAdminUser(req, res, authClient, database);
-		if (!admin) {
-			return;
-		}
-
-		const status =
-			typeof req.query.status === "string" &&
-			REPORT_STATUSES.has(req.query.status)
-				? req.query.status
-				: undefined;
-		const reports = await (database.prisma.reports as any).findMany({
-			where: status ? { status } : undefined,
-			orderBy: { created_at: "desc" },
-			take: 100,
-		});
-		const userIdSet = new Set<string>();
-		for (const item of reports) {
-			userIdSet.add(item.reporter_user_id);
-			userIdSet.add(item.target_user_id);
-		}
-		const userIds = [...userIdSet];
-		const users = await (database.prisma.users as any).findMany({
-			where: { id: { in: userIds } },
-		});
-		const usersById = new Map<string, any>(
-			users.map((item: any) => [item.id, item])
-		);
-
-		return res.status(200).json({
-			reports: reports.map((item: any) => ({
-				id: item.id,
-				reason: item.reason,
-				status: item.status || "open",
-				adminNote: item.admin_note ?? null,
-				matchId: item.match_id ?? null,
-				createdAt: item.created_at.toISOString(),
-				resolvedAt: item.resolved_at?.toISOString() ?? null,
-				reporter: {
-					id: item.reporter_user_id,
-					nickname: usersById.get(item.reporter_user_id)?.nickname || "Unknown",
-				},
-				target: {
-					id: item.target_user_id,
-					nickname: usersById.get(item.target_user_id)?.nickname || "Unknown",
-					locked: Boolean(usersById.get(item.target_user_id)?.locked_at),
-				},
-			})),
-		});
-	});
-
-	app.patch("/admin/reports/:id", async (req, res) => {
-		const admin = await requireAdminUser(req, res, authClient, database);
-		if (!admin) {
-			return;
-		}
-
-		const status = req.body?.status;
-		if (!REPORT_STATUSES.has(status)) {
-			return res.status(400).json({ message: "Invalid report status" });
-		}
-
-		const adminNote =
-			typeof req.body?.adminNote === "string"
-				? req.body.adminNote.trim().slice(0, 500)
-				: null;
-		const closed = status === "resolved" || status === "dismissed";
-		const report = await (database.prisma.reports as any).update({
-			where: { id: req.params.id },
-			data: {
-				status,
-				admin_note: adminNote,
-				resolved_at: closed ? new Date() : null,
-				resolved_by_user_id: closed ? admin.id : null,
-			},
-		});
-
-		return res.status(200).json({
-			report: {
-				id: report.id,
-				status: report.status,
-				adminNote: report.admin_note ?? null,
-				resolvedAt: report.resolved_at?.toISOString() ?? null,
-			},
-		});
-	});
-
-	app.get("/admin/bots", async (req, res) => {
-		const admin = await requireAdminUser(req, res, authClient, database);
-		if (!admin) {
-			return;
-		}
-
-		const bots = await (database.prisma.bots as any).findMany({
-			orderBy: { nickname: "asc" },
-		});
-
-		return res.status(200).json({ bots });
-	});
-
-	app.patch("/admin/bots/:id", async (req, res) => {
-		const admin = await requireAdminUser(req, res, authClient, database);
-		if (!admin) {
-			return;
-		}
-
-		const nextValue = (value: unknown, fallback: number) =>
-			Math.max(
-				BOT_PERSONALITY_MIN,
-				Math.min(
-					BOT_PERSONALITY_MAX,
-					Number.isFinite(Number(value)) ? Number(value) : fallback
-				)
-			);
-		const current = await (database.prisma.bots as any).findUnique({
-			where: { id: req.params.id },
-		});
-		if (!current) {
-			return res.status(404).json({ message: "Bot not found" });
-		}
-
-		const bot = await (database.prisma.bots as any).update({
-			where: { id: req.params.id },
-			data: {
-				ambition: nextValue(req.body?.ambition, current.ambition),
-				composure: nextValue(req.body?.composure, current.composure),
-				vision: nextValue(req.body?.vision, current.vision),
-			},
-		});
-
-		return res.status(200).json({ bot });
-	});
-
-	app.get("/admin/events", async (req, res) => {
-		const admin = await requireAdminUser(req, res, authClient, database);
-		if (!admin) {
-			return;
-		}
-
-		const events = await (database.prisma.game_events as any).findMany({
-			orderBy: [{ status: "asc" }, { starts_at: "desc" }],
-			take: 80,
-		});
-
-		return res.status(200).json({
-			events: events.map((item: any) => ({
-				id: item.id,
-				name: item.name,
-				description: item.description ?? "",
-				status: item.status,
-				startsAt: item.starts_at?.toISOString() ?? null,
-				endsAt: item.ends_at?.toISOString() ?? null,
-			})),
-		});
-	});
-
-	app.post("/admin/events", async (req, res) => {
-		const admin = await requireAdminUser(req, res, authClient, database);
-		if (!admin) {
-			return;
-		}
-
-		const name = typeof req.body?.name === "string" ? req.body.name.trim() : "";
-		const status = req.body?.status || "draft";
-		if (!name) {
-			return res.status(400).json({ message: "Event name is required" });
-		}
-		if (!EVENT_STATUSES.has(status)) {
-			return res.status(400).json({ message: "Invalid event status" });
-		}
-
-		const event = await (database.prisma.game_events as any).create({
-			data: {
-				id: randomBytes(16).toString("hex"),
-				name: name.slice(0, 80),
-				description:
-					typeof req.body?.description === "string"
-						? req.body.description.trim().slice(0, 500)
-						: null,
-				status,
-				starts_at: req.body?.startsAt ? new Date(req.body.startsAt) : null,
-				ends_at: req.body?.endsAt ? new Date(req.body.endsAt) : null,
-			},
-		});
-
-		return res.status(201).json({ event });
-	});
-
-	app.patch("/admin/events/:id", async (req, res) => {
-		const admin = await requireAdminUser(req, res, authClient, database);
-		if (!admin) {
-			return;
-		}
-
-		const data: Record<string, unknown> = {};
-		if (req.body?.name !== undefined) {
-			const name = String(req.body.name).trim();
-			if (!name) {
-				return res.status(400).json({ message: "Event name is required" });
-			}
-			data.name = name.slice(0, 80);
-		}
-		if (req.body?.description !== undefined) {
-			data.description = String(req.body.description).trim().slice(0, 500);
-		}
-		if (req.body?.status !== undefined) {
-			if (!EVENT_STATUSES.has(req.body.status)) {
-				return res.status(400).json({ message: "Invalid event status" });
-			}
-			data.status = req.body.status;
-		}
-		if (req.body?.startsAt !== undefined) {
-			data.starts_at = req.body.startsAt ? new Date(req.body.startsAt) : null;
-		}
-		if (req.body?.endsAt !== undefined) {
-			data.ends_at = req.body.endsAt ? new Date(req.body.endsAt) : null;
-		}
-
-		const event = await (database.prisma.game_events as any).update({
-			where: { id: req.params.id },
-			data,
-		});
-
-		return res.status(200).json({ event });
 	});
 
 	app.get("/rooms/current", async (req, res) => {

@@ -21,6 +21,16 @@ export const onHandshakeSuccess = (
 
 	handshakeListener(deps, async (socket, request) => {
 		try {
+			const isLockedUser = (user: {
+				locked_at?: Date | null;
+				locked_until?: Date | null;
+			}) => {
+				if (!user.locked_at) {
+					return false;
+				}
+				return !user.locked_until || user.locked_until.getTime() > Date.now();
+			};
+
 			if (request.type === "guest") {
 				const guest = await database.prisma.guests.findFirst({
 					where: {
@@ -69,7 +79,7 @@ export const onHandshakeSuccess = (
 
 				const databaseUser = await database.user.getById(session.user_id);
 
-				if (!databaseUser || (databaseUser as any).locked_at) {
+				if (!databaseUser || isLockedUser(databaseUser as any)) {
 					failHandshake(socket, { error: { type: "authentication" } });
 					return;
 				}

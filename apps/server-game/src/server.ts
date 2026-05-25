@@ -1,4 +1,5 @@
 import { collectDefaultMetrics, register } from "prom-client";
+import { createClient } from "redis";
 import { Server } from "socket.io";
 
 import {
@@ -9,10 +10,15 @@ import {
 import { createDatabaseConnection, DatabaseConnection } from "@cc-server/data";
 
 import {
+	activePlayers,
 	activeBattles,
 	activeGames,
+	activeRooms,
 	battlesStarted,
 	gamesStarted,
+	playersInGame,
+	playersInRoom,
+	socketConnections,
 	socketInBytes,
 	socketOutBytes,
 } from "./Metrics";
@@ -142,6 +148,11 @@ export const startServer = async ({ io }: { io: Server }) => {
 	activeGames.reset();
 	battlesStarted.reset();
 	activeBattles.reset();
+	activePlayers.reset();
+	playersInRoom.reset();
+	playersInGame.reset();
+	activeRooms.reset();
+	socketConnections.reset();
 	socketInBytes.reset();
 	socketOutBytes.reset();
 
@@ -149,6 +160,14 @@ export const startServer = async ({ io }: { io: Server }) => {
 		for (const socket of presenceManager.getSockets(userId)) {
 			socket.emit(event, payload);
 		}
+	};
+
+	const refreshOperationalMetrics = () => {
+		activePlayers.set(presenceManager.getConnectedUserCount());
+		playersInRoom.set(presenceManager.countUsersByState("in_room"));
+		playersInGame.set(presenceManager.countUsersByState("in_game"));
+		activeRooms.set(roomManager.getRoomCount());
+		socketConnections.set(io.engine.clientsCount);
 	};
 
 	const friendManager = new FriendManager(database, presenceManager, emitToUser);
@@ -172,11 +191,13 @@ export const startServer = async ({ io }: { io: Server }) => {
 		state: "online" | "in_room" | "in_game"
 	) => {
 		presenceManager.setState(userId, state);
+		refreshOperationalMetrics();
 		await friendManager.emitSnapshotToFriendsOf(userId);
 	};
 
 	const onPublicGameFinished = async (game: Game) => {
 		games = games.filter((item) => item !== game);
+		refreshOperationalMetrics();
 		for (const member of game.getMembers()) {
 			if (member.type === "PLAYER" && member.id.length > 4) {
 				await updatePresence(member.id, "online");
@@ -186,6 +207,7 @@ export const startServer = async ({ io }: { io: Server }) => {
 
 	const onCustomGameFinished = async (game: Game, roomId: string) => {
 		games = games.filter((item) => item !== game);
+		refreshOperationalMetrics();
 		const room = roomManager.markWaiting(roomId);
 		if (!room) {
 			return;
@@ -218,6 +240,65 @@ export const startServer = async ({ io }: { io: Server }) => {
 				};
 			})
 			.filter(Boolean) as PlayerGameParticipant[];
+
+	const forceLogoutUser = async (
+		userId: string,
+		reason: string,
+		expiresAt: string | null
+	) => {
+		const room = roomManager.getRoomForUser(userId);
+		const affectedRoomMembers = room
+			? room.members.map((member) => member.userId)
+			: [];
+		if (room) {
+			roomManager.leaveRoom(userId);
+			emitRoomToMembers([...new Set([...affectedRoomMembers, userId])]);
+		}
+
+		emitToUser(userId, "auth:forcedLogout", {
+			reason,
+			expiresAt,
+		});
+		for (const socket of presenceManager.getSockets(userId)) {
+			socket.disconnect(true);
+		}
+		presenceManager.setState(userId, "offline");
+		refreshOperationalMetrics();
+		await friendManager.emitSnapshotToFriendsOf(userId);
+	};
+
+	if (process.env.REDIS_URL) {
+		const moderationSubscriber = createClient({ url: process.env.REDIS_URL });
+		moderationSubscriber
+			.connect()
+			.then(async () => {
+				await moderationSubscriber.subscribe("admin:moderation", (message) => {
+					try {
+						const payload = JSON.parse(message) as {
+							type?: string;
+							userId?: string;
+							reason?: string;
+							expiresAt?: string | null;
+						};
+						if (payload.type !== "force_logout" || !payload.userId) {
+							return;
+						}
+						forceLogoutUser(
+							payload.userId,
+							payload.reason || "Account access was revoked",
+							payload.expiresAt ?? null
+						).catch((error) =>
+							logger.error("Failed to force logout moderated user", error)
+						);
+					} catch (error) {
+						logger.error("Failed to parse moderation command", error);
+					}
+				});
+			})
+			.catch((error) =>
+				logger.error("Failed to connect moderation subscriber", error)
+			);
+	}
 
 	const matchmaking = async (socket: AuthenticatedSocket) => {
 		logger.info(`[Matchmaking (${socket.data.nickname})] Beginning matchmaking`);
@@ -366,6 +447,7 @@ export const startServer = async ({ io }: { io: Server }) => {
 			updatePresence(userId, "in_room").catch((error) =>
 				logger.error("Failed to update room presence", error)
 			);
+			refreshOperationalMetrics();
 			emitRoomSnapshot(userId);
 			ackOk(ack, { room: toPrivateRoomDto(room) });
 		});
@@ -380,6 +462,7 @@ export const startServer = async ({ io }: { io: Server }) => {
 				return ackError(ack, result.reason, "Unable to join room");
 			}
 			await updatePresence(userId, "in_room");
+			refreshOperationalMetrics();
 			emitRoomToMembers(result.room.members.map((member) => member.userId));
 			ackOk(ack, { room: toPrivateRoomDto(result.room) });
 		});
@@ -398,6 +481,7 @@ export const startServer = async ({ io }: { io: Server }) => {
 			updatePresence(userId, "online").catch((error) =>
 				logger.error("Failed to set presence online", error)
 			);
+			refreshOperationalMetrics();
 			if (currentRoom) {
 				emitRoomToMembers(
 					currentRoom.members.map((member) => member.userId).concat(userId)
@@ -431,6 +515,7 @@ export const startServer = async ({ io }: { io: Server }) => {
 			updatePresence(userId, "in_room").catch((error) =>
 				logger.error("Failed to update invite presence", error)
 			);
+			refreshOperationalMetrics();
 			emitRoomToMembers(result.room.members.map((member) => member.userId));
 			ackOk(ack, { room: toPrivateRoomDto(result.room) });
 		});
@@ -485,6 +570,7 @@ export const startServer = async ({ io }: { io: Server }) => {
 					return ackError(ack, result.reason, "Unable to accept request");
 				}
 				await updatePresence(request.requesterUserId, "in_room");
+				refreshOperationalMetrics();
 				emitRoomToMembers(result.room.members.map((member) => member.userId));
 				emitToUser(request.requesterUserId, "roomJoinRequestResolved", {
 					requestId: payload.requestId,
@@ -555,6 +641,7 @@ export const startServer = async ({ io }: { io: Server }) => {
 
 		if (socket.data.type === "player") {
 			presenceManager.connect(socket);
+			refreshOperationalMetrics();
 			const existingRoom = roomManager.getRoomForUser(socket.data.id);
 			if (existingRoom) {
 				await updatePresence(
@@ -571,6 +658,7 @@ export const startServer = async ({ io }: { io: Server }) => {
 
 		socket.on("disconnect", () => {
 			presenceManager.disconnect(socket, (userId) => {
+				refreshOperationalMetrics();
 				friendManager.emitSnapshotToFriendsOf(userId).catch((error) => {
 					logger.error("Failed to emit offline snapshot", error);
 				});

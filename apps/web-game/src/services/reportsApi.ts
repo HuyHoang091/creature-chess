@@ -11,13 +11,21 @@ export const reportPlayer = (
 	token: string,
 	targetUserId: string,
 	reason: ReportReason,
-	matchId?: string
+	options?: {
+		matchId?: string;
+		description?: string;
+	}
 ) =>
 	apiFetch(
 		"/reports",
 		{
 			method: "POST",
-			body: JSON.stringify({ targetUserId, reason, matchId }),
+			body: JSON.stringify({
+				targetUserId,
+				reason,
+				matchId: options?.matchId,
+				description: options?.description,
+			}),
 		},
 		token
 	);

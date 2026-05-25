@@ -69,5 +69,7 @@ export type {
 	RoomJoinRequestDto,
 	RoomSnapshotDto,
 	MatchHistoryItemDto,
+	MatchHistoryParticipantDto,
+	MatchHistoryDetailDto,
 	MatchHistoryResponseDto,
 } from "./dto/social";

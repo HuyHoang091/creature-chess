@@ -59,14 +59,22 @@ if (process.env.REDIS_URL) {
 	const pubClient = createClient({ url: process.env.REDIS_URL });
 	const subClient = pubClient.duplicate();
 
-	Promise.all([pubClient.connect(), subClient.connect()]).then(() => {
-	  io.adapter(createAdapter(pubClient, subClient));
-	  logger.info(`Redis adapter connected`);
-	});
+	Promise.all([pubClient.connect(), subClient.connect()])
+		.then(() => {
+			io.adapter(createAdapter(pubClient, subClient));
+			logger.info(`Redis adapter connected`);
+		})
+		.catch((error) => {
+			logger.error("Redis adapter connection failed, continuing without adapter", error);
+		});
 }
 // new
 
 app.use(expressWinston({ winstonInstance: logger }));
+
+app.get("/health", (_req, res) => {
+	res.status(200).json({ status: "ok", service: "game" });
+});
 
 if (process.env.METRICS_USERNAME && process.env.METRICS_PASSWORD) {
 	app.get(

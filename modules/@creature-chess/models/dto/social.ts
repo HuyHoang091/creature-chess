@@ -72,11 +72,30 @@ export interface RoomSnapshotDto {
 export interface MatchHistoryItemDto {
 	matchId: string;
 	mode: "public_casual";
+	startedAt: string;
 	endedAt: string;
 	placement: number;
 	playerCount: number;
 	durationSeconds: number;
 	result: "win" | "top4" | "loss";
+}
+
+export interface MatchHistoryParticipantDto {
+	userId: string | null;
+	displayName: string;
+	placement: number;
+	isBot: boolean;
+	result: "win" | "top4" | "loss" | "custom";
+}
+
+export interface MatchHistoryDetailDto extends MatchHistoryItemDto {
+	winnerUserId: string | null;
+	participants: MatchHistoryParticipantDto[];
+	finalBoard: null;
+	stats: {
+		totalParticipants: number;
+		durationSeconds: number;
+	};
 }
 
 export interface MatchHistoryResponseDto {

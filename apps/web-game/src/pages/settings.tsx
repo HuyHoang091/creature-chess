@@ -82,9 +82,7 @@ const SettingsContent = ({ auth0Logout }: { auth0Logout?: () => void }) => {
 			{currentUser?.role === "admin" && (
 				<button
 					className={styles.rowButton}
-					onClick={() =>
-						(window.location.href = `${window.location.origin}/admin`)
-					}
+					onClick={() => (window.location.href = APP_ADMIN_URL)}
 				>
 					<Shield size={18} />
 					<span>Admin Console</span>

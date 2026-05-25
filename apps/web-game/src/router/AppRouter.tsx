@@ -4,7 +4,6 @@ import { useSelector } from "react-redux";
 import { AppShell } from "~/components/app/AppShell";
 import { Panel } from "~/components/app/Panel";
 
-import { AdminPage } from "../pages/admin";
 import { CompleteProfilePage } from "../pages/completeProfile";
 import { FriendsPage } from "../pages/friends";
 import { GamePage } from "../pages/game";
@@ -25,25 +24,14 @@ export const AppRouter = () => {
 	const isInLobby = useSelector((state: AppState) => state.lobby !== null);
 	const screen = useSelector((state: AppState) => state.appShell.screen);
 	const panel = useSelector((state: AppState) => state.appShell.panel);
-	const isBootstrapped = useSelector(
-		(state: AppState) => state.appShell.isBootstrapped
-	);
-	const authMode = useSelector((state: AppState) => state.auth.mode);
-	const currentUser = useSelector((state: AppState) => state.profile.currentUser);
 
 	if (pathname === "/storybook") {
 		return <VFXStorybook />;
 	}
 
 	if (pathname === "/admin") {
-		return (
-			<AdminPage
-				standalone
-				isBootstrapped={isBootstrapped}
-				isAuthenticated={authMode === "account"}
-				canAccess={authMode === "account" && currentUser?.role === "admin"}
-			/>
-		);
+		window.location.replace(APP_ADMIN_URL);
+		return null;
 	}
 
 	if (isInGame) {

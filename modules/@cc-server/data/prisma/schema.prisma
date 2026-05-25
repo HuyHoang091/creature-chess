@@ -28,9 +28,13 @@ model users {
   profile_bio     String? @db.VarChar(280)
   role            String  @default("player") @db.VarChar(20)
   locked_at       DateTime?
+  locked_until    DateTime?
   locked_reason   String? @db.VarChar(255)
+  warning_count   Int     @default(0)
   games_played    Int     @default(0)
   wins            Int     @default(0)
+  last_login_at   DateTime?
+  last_logout_at  DateTime?
 }
 
 model user_sessions {
@@ -122,8 +126,12 @@ model reports {
   target_user_id   String
   match_id         String?
   reason           String
-  status           String   @default("open") @db.VarChar(20)
+  description      String?  @db.VarChar(500)
+  status           String   @default("pending") @db.VarChar(20)
   admin_note       String?  @db.VarChar(500)
+  action_type      String?  @db.VarChar(40)
+  action_expires_at DateTime?
+  reporter_ip      String?  @db.VarChar(64)
   resolved_at      DateTime?
   resolved_by_user_id String?
   created_at       DateTime @default(now())
@@ -143,4 +151,119 @@ model game_events {
   updated_at  DateTime @default(now()) @updatedAt
 
   @@index([status, starts_at])
+}
+
+model admin_sessions {
+  id           String   @id @default(uuid())
+  user_id      String
+  token        String   @unique
+  expires_at   DateTime
+  last_seen_at DateTime @default(now())
+  created_at   DateTime @default(now())
+  updated_at   DateTime @default(now()) @updatedAt
+
+  @@index([user_id, expires_at])
+}
+
+model admin_user_permissions {
+  id                 String   @id @default(uuid())
+  user_id            String
+  permission         String   @db.VarChar(64)
+  granted_by_user_id String?
+  created_at         DateTime @default(now())
+
+  @@unique([user_id, permission])
+  @@index([permission])
+}
+
+model audit_logs {
+  id             String   @id @default(uuid())
+  actor_user_id  String?
+  target_user_id String?
+  action         String   @db.VarChar(120)
+  reason         String?  @db.VarChar(500)
+  metadata       String?
+  created_at     DateTime @default(now())
+
+  @@index([target_user_id, created_at])
+  @@index([actor_user_id, created_at])
+  @@index([action, created_at])
+}
+
+model moderation_warnings {
+  id               String   @id @default(uuid())
+  target_user_id   String
+  reporter_user_id String?
+  admin_user_id    String
+  report_id        String?
+  message          String   @db.VarChar(500)
+  created_at       DateTime @default(now())
+
+  @@index([target_user_id, created_at])
+}
+
+model user_notifications {
+  id         String   @id @default(uuid())
+  user_id    String
+  type       String   @db.VarChar(50)
+  title      String   @db.VarChar(120)
+  message    String   @db.VarChar(500)
+  payload    String?
+  read_at    DateTime?
+  created_at DateTime @default(now())
+
+  @@index([user_id, created_at])
+}
+
+model email_outbox {
+  id            String   @id @default(uuid())
+  user_id       String?
+  email         String   @db.VarChar(191)
+  template      String   @db.VarChar(80)
+  subject       String   @db.VarChar(191)
+  payload       String?
+  status        String   @default("pending") @db.VarChar(20)
+  error_message String?  @db.VarChar(500)
+  sent_at       DateTime?
+  created_at    DateTime @default(now())
+
+  @@index([status, created_at])
+  @@index([email, created_at])
+}
+
+model monitoring_snapshots {
+  id                     String   @id @default(uuid())
+  captured_at            DateTime @default(now())
+  api_server_status      String   @default("unknown") @db.VarChar(20)
+  game_server_status     String   @default("unknown") @db.VarChar(20)
+  rag_service_status     String   @default("unknown") @db.VarChar(20)
+  database_status        String   @default("unknown") @db.VarChar(20)
+  redis_status           String   @default("unknown") @db.VarChar(20)
+  cpu_percent            Float?
+  rss_mb                 Int      @default(0)
+  heap_used_mb           Int      @default(0)
+  disk_used_mb           Int?
+  network_in_mb          Float?
+  network_out_mb         Float?
+  db_latency_ms          Float?
+  average_request_ms     Float?
+  api_requests           Int      @default(0)
+  api_4xx                Int      @default(0)
+  api_5xx                Int      @default(0)
+  error_count            Int      @default(0)
+  socket_connections     Int      @default(0)
+  active_players         Int      @default(0)
+  players_in_room        Int      @default(0)
+  players_in_game        Int      @default(0)
+  active_rooms           Int      @default(0)
+  active_games           Int      @default(0)
+  games_started_per_hour Float?
+  battles_started_per_hour Float?
+  avg_match_duration_s   Float?
+  socket_in_mb           Float?
+  socket_out_mb          Float?
+  open_reports           Int      @default(0)
+  locked_users           Int      @default(0)
+
+  @@index([captured_at])
 }

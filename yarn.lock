@@ -1631,6 +1631,39 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@creature-chess-app/admin-web@workspace:apps/admin-web":
+  version: 0.0.0-use.local
+  resolution: "@creature-chess-app/admin-web@workspace:apps/admin-web"
+  dependencies:
+    awesome-typescript-loader: "npm:^5.2.1"
+    circular-dependency-plugin: "npm:^5.2.2"
+    css-loader: "npm:^7.1.3"
+    html-webpack-plugin: "npm:^5.5.0"
+    lucide-react: "npm:^0.575.0"
+    react: "npm:^18.2.0"
+    react-dom: "npm:^18.2.0"
+    recharts: "npm:^3.8.1"
+    style-loader: "npm:^4.0.0"
+    ts-loader: "npm:^9.2.6"
+    webpack: "npm:^5.65.0"
+    webpack-cli: "npm:^4.9.1"
+    webpack-dev-server: "npm:^4.7.1"
+  languageName: unknown
+  linkType: soft
+
+"@creature-chess-app/server-admin@workspace:apps/server-admin":
+  version: 0.0.0-use.local
+  resolution: "@creature-chess-app/server-admin@workspace:apps/server-admin"
+  dependencies:
+    "@cc-server/data": "workspace:*"
+    cors: "npm:^2.8.5"
+    express: "npm:^4.17.2"
+    express-winston: "npm:^4.2.0"
+    redis: "npm:^5.11.0"
+    winston: "npm:^3.3.3"
+  languageName: unknown
+  linkType: soft
+
 "@creature-chess-app/server-game@workspace:apps/server-game":
   version: 0.0.0-use.local
   resolution: "@creature-chess-app/server-game@workspace:apps/server-game"
@@ -8415,7 +8448,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"cors@npm:~2.8.5":
+"cors@npm:^2.8.5, cors@npm:~2.8.5":
   version: 2.8.6
   resolution: "cors@npm:2.8.6"
   dependencies:

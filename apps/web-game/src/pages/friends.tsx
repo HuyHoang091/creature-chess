@@ -7,7 +7,6 @@ import {
 	searchFriends,
 	unblockUser,
 } from "~/services/friendsApi";
-import { reportPlayer, ReportReason } from "~/services/reportsApi";
 import { socialEmit } from "~/services/socialSocket";
 import { FriendsCommands } from "~/store/friends/state";
 import { PrivateLobbyCommands } from "~/store/privateLobby/state";
@@ -41,10 +40,6 @@ export const FriendsPage = () => {
 	const [pendingInvite, setPendingInvite] = React.useState<PendingById>({});
 	const [pendingAccept, setPendingAccept] = React.useState<PendingById>({});
 	const [pendingBlock, setPendingBlock] = React.useState<PendingById>({});
-	const [pendingReport, setPendingReport] = React.useState<PendingById>({});
-	const [reportReasons, setReportReasons] = React.useState<
-		Record<string, ReportReason>
-	>({});
 
 	const refreshFriends = React.useCallback(async () => {
 		if (!token || !currentUserId) {
@@ -225,50 +220,9 @@ export const FriendsPage = () => {
 		}
 	};
 
-	const onReport = async (targetUserId: string) => {
-		if (!token) {
-			return;
-		}
-		setPendingReport((prev) => ({ ...prev, [targetUserId]: true }));
-		try {
-			await reportPlayer(
-				token,
-				targetUserId,
-				reportReasons[targetUserId] || "abuse"
-			);
-			dispatch(FriendsCommands.setError("Report submitted"));
-		} catch (error) {
-			dispatch(FriendsCommands.setError((error as Error).message));
-		} finally {
-			setPendingReport((prev) => ({ ...prev, [targetUserId]: false }));
-		}
-	};
-
 	const renderSafetyActions = (targetUserId: string) => (
 		<div className={styles.safetyActions}>
 			<span className={styles.safetyLabel}>Safety</span>
-			<select
-				value={reportReasons[targetUserId] || "abuse"}
-				onChange={(event) =>
-					setReportReasons((prev) => ({
-						...prev,
-						[targetUserId]: event.target.value as ReportReason,
-					}))
-				}
-			>
-				<option value="abuse">Abuse</option>
-				<option value="spam">Spam</option>
-				<option value="offensive_name">Offensive Name</option>
-				<option value="cheating">Cheating</option>
-				<option value="other">Other</option>
-			</select>
-			<button
-				className={styles.smallAction}
-				disabled={!!pendingReport[targetUserId]}
-				onClick={() => onReport(targetUserId)}
-			>
-				{pendingReport[targetUserId] ? "Reporting..." : "Report"}
-			</button>
 			<button
 				className={styles.dangerAction}
 				disabled={!!pendingBlock[targetUserId]}

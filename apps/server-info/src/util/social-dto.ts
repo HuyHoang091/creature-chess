@@ -2,7 +2,9 @@ import {
 	type BlockedUserDto,
 	type FriendDto,
 	type FriendRequestDto,
+	type MatchHistoryDetailDto,
 	type MatchHistoryItemDto,
+	type MatchHistoryParticipantDto,
 	type PresenceState,
 } from "@creature-chess/models";
 
@@ -57,6 +59,7 @@ export const toMatchHistoryItemDto = (
 ): MatchHistoryItemDto => ({
 	matchId: match.id,
 	mode: "public_casual",
+	startedAt: match.started_at.toISOString(),
 	endedAt: match.ended_at.toISOString(),
 	placement: participant.placement,
 	playerCount: match.player_count,
@@ -74,4 +77,40 @@ export const toMatchHistoryItemDto = (
 				: participant.placement <= 4
 					? "top4"
 					: "loss",
+});
+
+export const toMatchHistoryParticipantDto = (
+	participant: DatabaseMatchParticipant
+): MatchHistoryParticipantDto => ({
+	userId: participant.user_id ?? null,
+	displayName: participant.display_name,
+	placement: participant.placement,
+	isBot: participant.is_bot,
+	result:
+		participant.result === "win" ||
+		participant.result === "top4" ||
+		participant.result === "loss"
+			? participant.result
+			: "custom",
+});
+
+export const toMatchHistoryDetailDto = (
+	match: DatabaseMatch,
+	participant: DatabaseMatchParticipant,
+	participants: DatabaseMatchParticipant[]
+): MatchHistoryDetailDto => ({
+	...toMatchHistoryItemDto(match, participant),
+	winnerUserId: match.winner_user_id ?? null,
+	participants: participants
+		.slice()
+		.sort((left, right) => left.placement - right.placement)
+		.map(toMatchHistoryParticipantDto),
+	finalBoard: null,
+	stats: {
+		totalParticipants: participants.length,
+		durationSeconds: Math.max(
+			0,
+			Math.round((match.ended_at.getTime() - match.started_at.getTime()) / 1000)
+		),
+	},
 });

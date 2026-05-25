@@ -4,12 +4,17 @@ import { Socket } from "socket.io-client";
 import { all, call, cancel, delay, fork, put, select, take } from "typed-redux-saga";
 import { gameSaga } from "~/sagas";
 import { AUTH0_ENABLED } from "~/auth/auth0/config";
+import {
+	setStoredLocalToken,
+	setStoredMode,
+} from "~/auth/SessionBootstrapProvider";
 import { AppShellCommands } from "~/store/appShell/state";
+import { AuthCommands } from "~/store/auth/state";
 import { FriendsCommands } from "~/store/friends/state";
-import { LobbyCommands } from "~/store/lobby/state";
 import { MenuCommands } from "~/store/menu/state";
 import { NotificationCommands } from "~/store/notifications/state";
 import { PrivateLobbyCommands } from "~/store/privateLobby/state";
+import { ProfileCommands } from "~/store/profile/state";
 import { RoomInviteCommands } from "~/store/roomInvites/state";
 import { JoinRequestToastCommands } from "~/store/joinRequestToasts/state";
 import { AppState } from "~/store/state";
@@ -23,6 +28,7 @@ import { HandshakeIntent, HandshakeRequest } from "@creature-chess/networking/ha
 
 import { gameNetworking } from "./game";
 import { lobbyNetworking } from "./lobby/networking";
+import { clearCurrentSocket } from "./socket";
 import { getSocket } from "./socket";
 
 type ConnectionResult =
@@ -37,6 +43,10 @@ type ConnectionResult =
 	| {
 			type: "action";
 			payload: any;
+	  }
+	| {
+			type: "forced-logout";
+			payload: { reason?: string; expiresAt?: string | null };
 	  };
 
 type BoardSlices = {
@@ -95,6 +105,10 @@ const listenForConnection = function* (socket: Socket, slices: BoardSlices) {
 					durationMs: 10000,
 				}),
 			});
+		const onForcedLogout = (payload: {
+			reason?: string;
+			expiresAt?: string | null;
+		}) => emit({ type: "forced-logout", payload });
 
 		socket.on("connected", onLobbyConnected);
 		socket.on("gameConnected", onGameConnected);
@@ -103,6 +117,7 @@ const listenForConnection = function* (socket: Socket, slices: BoardSlices) {
 		socket.on("roomJoinRequestResolved", onJoinRequestResolved);
 		socket.on("roomJoinRequestReceived", onJoinRequestReceived);
 		socket.on("roomInviteReceived", onRoomInviteReceived);
+		socket.on("auth:forcedLogout", onForcedLogout);
 
 		return () => {
 			socket.off("connected", onLobbyConnected);
@@ -112,6 +127,7 @@ const listenForConnection = function* (socket: Socket, slices: BoardSlices) {
 			socket.off("roomJoinRequestResolved", onJoinRequestResolved);
 			socket.off("roomJoinRequestReceived", onJoinRequestReceived);
 			socket.off("roomInviteReceived", onRoomInviteReceived);
+			socket.off("auth:forcedLogout", onForcedLogout);
 		};
 	});
 
@@ -132,6 +148,32 @@ const listenForConnection = function* (socket: Socket, slices: BoardSlices) {
 				call(gameNetworking, socket, connection.payload),
 				call(gameSaga, connection.payload, slices),
 			]);
+			continue;
+		}
+
+		if (connection.type === "forced-logout") {
+			clearCurrentSocket();
+			setStoredLocalToken(null);
+			setStoredMode("anonymous");
+			yield put(FriendsCommands.reset());
+			yield put(ProfileCommands.setCurrentUser(null));
+			yield put(AuthCommands.resetAuth());
+			yield put(PrivateLobbyCommands.setSnapshot({ room: null, invites: [] }));
+			yield put(
+				NotificationCommands.pushNotification({
+					id: `forced-logout-${Date.now()}`,
+					message:
+						connection.payload.reason ||
+						"Tài khoản của bạn đã bị thu hồi quyền truy cập.",
+				})
+			);
+			yield put(
+				MenuCommands.setLoadingMessage(
+					connection.payload.reason || "Phiên đăng nhập đã bị kết thúc."
+				)
+			);
+			yield put(AppShellCommands.setPanel(null));
+			yield put(AppShellCommands.setScreen("landing"));
 			continue;
 		}
 
