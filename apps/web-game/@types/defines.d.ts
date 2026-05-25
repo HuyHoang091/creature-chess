@@ -7,3 +7,8 @@ declare const APP_AUTH0_ENABLED: string;
 declare const APP_AUTH0_DOMAIN: string;
 declare const APP_AUTH0_SPA_CLIENT_ID: string;
 declare const APP_AUTH0_API_AUDIENCE: string;
+
+declare module '*.module.css' {
+	const content: Record<string, string>;
+	export default content;
+}
