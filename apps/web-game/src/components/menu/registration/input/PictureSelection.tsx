@@ -10,33 +10,38 @@ import { BaseRegistrationInput } from "./BaseRegistrationInput";
 const PictureSelection: React.FunctionComponent<{
 	currentImage: number;
 	onChange: (picture: number) => void;
-}> = ({ currentImage, onChange }) => {
-	return (
+}> = ({ currentImage, onChange }) => (
 		<BaseRegistrationInput
 			heading="Profile Picture"
 			info="Choose a profile picture - more can be unlocked!"
 		>
-			{Object.entries(AVAILABLE_PROFILE_PICTURES).map(
-				([pictureString, creatureName]) => {
-					const picture = parseInt(pictureString, 10);
-					const onSelect = () => onChange(picture);
+			<div className={styles.pictureGrid}>
+				{Object.entries(AVAILABLE_PROFILE_PICTURES).map(
+					([pictureString, creatureName]) => {
+						const picture = parseInt(pictureString, 10);
+						const selected = currentImage === picture;
 
-					return (
-						<div className={styles.pictureList} key={picture}>
-							<CreatureImage definitionId={picture} />
-							<p>{creatureName}</p>
-							<input
-								type="radio"
-								value={picture}
-								checked={currentImage === picture}
-								onChange={onSelect}
-							/>
-						</div>
-					);
-				}
-			)}
+						return (
+							<button
+								type="button"
+								className={`${styles.pictureCard} ${
+									selected ? styles.pictureSelected : ""
+								}`}
+								key={picture}
+								onClick={() => onChange(picture)}
+								aria-pressed={selected}
+								title={creatureName}
+							>
+								<span className={styles.pictureImage}>
+									<CreatureImage definitionId={picture} />
+								</span>
+								<span className={styles.pictureName}>{creatureName}</span>
+							</button>
+						);
+					}
+				)}
+			</div>
 		</BaseRegistrationInput>
-	);
-};
+);
 
 export { PictureSelection };

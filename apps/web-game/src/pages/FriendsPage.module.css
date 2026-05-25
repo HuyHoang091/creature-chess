@@ -29,7 +29,8 @@
 
 .searchRow button,
 .item button,
-.item select {
+.item select,
+.profileModal button {
 	min-height: 36px;
 	background: linear-gradient(
 		180deg,
@@ -51,14 +52,16 @@
 
 .searchRow button:hover,
 .item button:hover,
-.item select:hover {
+.item select:hover,
+.profileModal button:hover {
 	border-color: #c8aa6e;
 	color: #c8aa6e;
 	transform: translateY(-1px);
 }
 
 .searchRow button:disabled,
-.item button:disabled {
+.item button:disabled,
+.profileModal button:disabled {
 	opacity: 0.5;
 	cursor: not-allowed;
 	transform: none;
@@ -81,9 +84,9 @@
 
 .item {
 	display: grid;
-	grid-template-columns: minmax(0, 1fr) minmax(116px, auto);
+	grid-template-columns: minmax(0, 1fr) minmax(120px, auto);
 	gap: 10px;
-	align-items: start;
+	align-items: center;
 	background: linear-gradient(
 		180deg,
 		rgba(30, 25, 15, 0.94),
@@ -93,9 +96,57 @@
 	border-radius: 8px;
 	padding: 12px;
 	box-shadow: inset 0 0 0 1px rgba(200, 170, 110, 0.04);
+	cursor: pointer;
+	transition:
+		border-color 0.15s ease,
+		transform 0.15s ease,
+		background 0.15s ease;
+}
+
+.item:hover {
+	border-color: rgba(200, 170, 110, 0.34);
+	background: linear-gradient(
+		180deg,
+		rgba(39, 31, 18, 0.96),
+		rgba(16, 18, 27, 0.96)
+	);
+	transform: translateY(-1px);
 }
 
 .playerInfo {
+	min-width: 0;
+	display: grid;
+	grid-template-columns: 46px minmax(0, 1fr);
+	gap: 10px;
+	align-items: center;
+}
+
+.avatar,
+.modalAvatar {
+	display: grid;
+	place-items: center;
+	border: 1px solid rgba(200, 170, 110, 0.22);
+	border-radius: 8px;
+	background: radial-gradient(
+		circle at 50% 35%,
+		rgba(200, 170, 110, 0.18),
+		rgba(8, 10, 16, 0.78)
+	);
+	overflow: hidden;
+}
+
+.avatar {
+	width: 46px;
+	height: 46px;
+}
+
+.avatar span,
+.modalAvatar span {
+	color: #c8aa6e;
+	font-weight: 900;
+}
+
+.playerText {
 	min-width: 0;
 	display: flex;
 	flex-direction: column;
@@ -126,30 +177,6 @@
 	width: 100%;
 }
 
-.safetyActions {
-	grid-column: 1 / -1;
-	display: grid;
-	grid-template-columns: auto minmax(118px, 1fr) auto auto;
-	gap: 8px;
-	align-items: center;
-	padding-top: 9px;
-	border-top: 1px solid rgba(200, 170, 110, 0.1);
-}
-
-.safetyLabel {
-	color: rgba(240, 230, 210, 0.48);
-	font-size: 11px;
-	font-weight: 800;
-	text-transform: uppercase;
-	letter-spacing: 0.8px;
-}
-
-.safetyActions select {
-	min-width: 0;
-	width: 100%;
-	outline: none;
-}
-
 .smallAction {
 	min-width: 76px;
 }
@@ -170,10 +197,104 @@
 	line-height: 1.4;
 }
 
+.modalBackdrop {
+	position: fixed;
+	inset: 0;
+	z-index: 40;
+	display: grid;
+	place-items: center;
+	padding: 18px;
+	background: rgba(5, 7, 12, 0.74);
+}
+
+.profileModal {
+	width: min(460px, 100%);
+	color: #f0e6d2;
+	border: 1px solid rgba(200, 170, 110, 0.22);
+	border-radius: 8px;
+	background: linear-gradient(
+		180deg,
+		rgba(25, 21, 14, 0.98),
+		rgba(9, 11, 18, 0.98)
+	);
+	box-shadow: 0 24px 70px rgba(0, 0, 0, 0.48);
+	overflow: hidden;
+}
+
+.modalHeader {
+	display: grid;
+	grid-template-columns: 72px minmax(0, 1fr) auto;
+	gap: 12px;
+	align-items: center;
+	padding: 16px;
+	border-bottom: 1px solid rgba(200, 170, 110, 0.12);
+}
+
+.modalAvatar {
+	width: 72px;
+	height: 72px;
+}
+
+.modalTitleBlock {
+	min-width: 0;
+}
+
+.modalTitle {
+	font-size: 18px;
+	font-weight: 900;
+	color: #f5e7c1;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.closeButton {
+	min-width: 72px;
+}
+
+.profileStats {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 10px;
+	padding: 16px;
+}
+
+.profileStats div {
+	display: grid;
+	gap: 4px;
+	padding: 10px;
+	border: 1px solid rgba(200, 170, 110, 0.12);
+	border-radius: 8px;
+	background: rgba(8, 10, 16, 0.5);
+}
+
+.profileStats span {
+	color: rgba(240, 230, 210, 0.52);
+	font-size: 11px;
+	font-weight: 800;
+	text-transform: uppercase;
+	letter-spacing: 0.7px;
+}
+
+.profileStats strong {
+	min-width: 0;
+	color: #f0e6d2;
+	font-size: 13px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.modalActions {
+	display: flex;
+	justify-content: flex-end;
+	gap: 10px;
+	padding: 0 16px 16px;
+}
+
 @media (max-width: 520px) {
 	.searchRow,
-	.item,
-	.safetyActions {
+	.item {
 		grid-template-columns: 1fr;
 	}
 
@@ -182,7 +303,16 @@
 		min-width: 0;
 	}
 
-	.safetyActions {
-		align-items: stretch;
+	.modalHeader {
+		grid-template-columns: 56px minmax(0, 1fr);
+	}
+
+	.modalAvatar {
+		width: 56px;
+		height: 56px;
+	}
+
+	.closeButton {
+		grid-column: 1 / -1;
 	}
 }

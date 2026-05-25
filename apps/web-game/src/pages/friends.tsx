@@ -7,6 +7,7 @@ import {
 	searchFriends,
 	unblockUser,
 } from "~/services/friendsApi";
+import { CreatureImage } from "~/components/ui/creatureImage";
 import { socialEmit } from "~/services/socialSocket";
 import { FriendsCommands } from "~/store/friends/state";
 import { PrivateLobbyCommands } from "~/store/privateLobby/state";
@@ -15,6 +16,13 @@ import { AppState } from "~/store/state";
 import styles from "./FriendsPage.module.css";
 
 type PendingById = Record<string, boolean>;
+type FriendProfile = {
+	userId: string;
+	nickname: string;
+	profilePicture: number | null;
+	presence?: string;
+	context: "friend" | "search" | "request" | "blocked";
+};
 
 const presenceLabel: Record<string, string> = {
 	offline: "Offline",
@@ -40,6 +48,8 @@ export const FriendsPage = () => {
 	const [pendingInvite, setPendingInvite] = React.useState<PendingById>({});
 	const [pendingAccept, setPendingAccept] = React.useState<PendingById>({});
 	const [pendingBlock, setPendingBlock] = React.useState<PendingById>({});
+	const [selectedProfile, setSelectedProfile] =
+		React.useState<FriendProfile | null>(null);
 
 	const refreshFriends = React.useCallback(async () => {
 		if (!token || !currentUserId) {
@@ -195,12 +205,13 @@ export const FriendsPage = () => {
 			return;
 		}
 		setPendingBlock((prev) => ({ ...prev, [targetUserId]: true }));
-		try {
-			await blockUser(token, targetUserId);
-			await refreshFriends();
-		} catch (error) {
-			dispatch(FriendsCommands.setError((error as Error).message));
-		} finally {
+	try {
+		await blockUser(token, targetUserId);
+		await refreshFriends();
+		setSelectedProfile(null);
+	} catch (error) {
+		dispatch(FriendsCommands.setError((error as Error).message));
+	} finally {
 			setPendingBlock((prev) => ({ ...prev, [targetUserId]: false }));
 		}
 	};
@@ -210,28 +221,16 @@ export const FriendsPage = () => {
 			return;
 		}
 		setPendingBlock((prev) => ({ ...prev, [targetUserId]: true }));
-		try {
-			await unblockUser(token, targetUserId);
-			await refreshFriends();
-		} catch (error) {
-			dispatch(FriendsCommands.setError((error as Error).message));
-		} finally {
+	try {
+		await unblockUser(token, targetUserId);
+		await refreshFriends();
+		setSelectedProfile(null);
+	} catch (error) {
+		dispatch(FriendsCommands.setError((error as Error).message));
+	} finally {
 			setPendingBlock((prev) => ({ ...prev, [targetUserId]: false }));
 		}
 	};
-
-	const renderSafetyActions = (targetUserId: string) => (
-		<div className={styles.safetyActions}>
-			<span className={styles.safetyLabel}>Safety</span>
-			<button
-				className={styles.dangerAction}
-				disabled={!!pendingBlock[targetUserId]}
-				onClick={() => onBlock(targetUserId)}
-			>
-				{pendingBlock[targetUserId] ? "Blocking..." : "Block"}
-			</button>
-		</div>
-	);
 
 	return (
 		<div className={styles.wrapper}>
@@ -259,11 +258,32 @@ export const FriendsPage = () => {
 
 			<div className={styles.list}>
 				{friendsState.searchResults.map((item) => (
-					<div key={item.userId} className={styles.item}>
+					<div
+						key={item.userId}
+						className={styles.item}
+						onClick={() =>
+							setSelectedProfile({
+								userId: item.userId,
+								nickname: item.nickname,
+								profilePicture: item.profilePicture,
+								presence: item.presence,
+								context: "search",
+							})
+						}
+					>
 						<div className={styles.playerInfo}>
+							<div className={styles.avatar}>
+								{item.profilePicture ? (
+									<CreatureImage definitionId={item.profilePicture} />
+								) : (
+									<span>{item.nickname[0]?.toUpperCase() ?? "?"}</span>
+								)}
+							</div>
+							<div className={styles.playerText}>
 							<div className={styles.nickname}>{item.nickname}</div>
 							<div className={styles.presence}>
 								{presenceLabel[item.presence] ?? item.presence}
+							</div>
 							</div>
 						</div>
 						<div className={styles.primaryActions}>
@@ -275,7 +295,8 @@ export const FriendsPage = () => {
 									blockedUserIds.has(item.userId) ||
 									!!pendingAdd[item.userId]
 								}
-								onClick={async () => {
+								onClick={async (event) => {
+									event.stopPropagation();
 									setPendingAdd((prev) => ({ ...prev, [item.userId]: true }));
 									try {
 										await socialEmit("friendsRequestSend", {
@@ -304,7 +325,6 @@ export const FriendsPage = () => {
 												: "Add Friend"}
 							</button>
 						</div>
-						{renderSafetyActions(item.userId)}
 					</div>
 				))}
 			</div>
@@ -312,15 +332,33 @@ export const FriendsPage = () => {
 			<div className={styles.sectionTitle}>Incoming Requests</div>
 			<div className={styles.list}>
 				{friendsState.incomingRequests.map((item) => (
-					<div key={item.id} className={styles.item}>
+					<div
+						key={item.id}
+						className={styles.item}
+						onClick={() =>
+							setSelectedProfile({
+								userId: item.senderUserId,
+								nickname: item.senderNickname,
+								profilePicture: null,
+								presence: "offline",
+								context: "request",
+							})
+						}
+					>
 						<div className={styles.playerInfo}>
+							<div className={styles.avatar}>
+								<span>{item.senderNickname[0]?.toUpperCase() ?? "?"}</span>
+							</div>
+							<div className={styles.playerText}>
 							<div className={styles.nickname}>{item.senderNickname}</div>
 							<div className={styles.presence}>Friend request</div>
+							</div>
 						</div>
 						<div className={styles.primaryActions}>
 							<button
 								disabled={!!pendingAccept[item.id]}
-								onClick={async () => {
+								onClick={async (event) => {
+									event.stopPropagation();
 									setPendingAccept((prev) => ({ ...prev, [item.id]: true }));
 									try {
 										await socialEmit("friendsRequestAccept", {
@@ -338,7 +376,6 @@ export const FriendsPage = () => {
 								{pendingAccept[item.id] ? "Accepting..." : "Accept"}
 							</button>
 						</div>
-						{renderSafetyActions(item.senderUserId)}
 					</div>
 				))}
 			</div>
@@ -346,15 +383,40 @@ export const FriendsPage = () => {
 			<div className={styles.sectionTitle}>Friends</div>
 			<div className={styles.list}>
 				{friendsState.friends.map((item) => (
-					<div key={item.userId} className={styles.item}>
+					<div
+						key={item.userId}
+						className={styles.item}
+						onClick={() =>
+							setSelectedProfile({
+								userId: item.userId,
+								nickname: item.nickname,
+								profilePicture: item.profilePicture,
+								presence: item.presence,
+								context: "friend",
+							})
+						}
+					>
 						<div className={styles.playerInfo}>
+							<div className={styles.avatar}>
+								{item.profilePicture ? (
+									<CreatureImage definitionId={item.profilePicture} />
+								) : (
+									<span>{item.nickname[0]?.toUpperCase() ?? "?"}</span>
+								)}
+							</div>
+							<div className={styles.playerText}>
 							<div className={styles.nickname}>{item.nickname}</div>
 							<div className={styles.presence}>
 								{presenceLabel[item.presence] ?? item.presence}
 							</div>
+							</div>
 						</div>
-						<div className={styles.primaryActions}>{renderAction(item)}</div>
-						{renderSafetyActions(item.userId)}
+						<div
+							className={styles.primaryActions}
+							onClick={(event) => event.stopPropagation()}
+						>
+							{renderAction(item)}
+						</div>
 					</div>
 				))}
 			</div>
@@ -362,15 +424,38 @@ export const FriendsPage = () => {
 			<div className={styles.sectionTitle}>Blocked Users</div>
 			<div className={styles.list}>
 				{friendsState.blockedUsers.map((item) => (
-					<div key={item.userId} className={styles.item}>
+					<div
+						key={item.userId}
+						className={styles.item}
+						onClick={() =>
+							setSelectedProfile({
+								userId: item.userId,
+								nickname: item.nickname,
+								profilePicture: item.profilePicture,
+								context: "blocked",
+							})
+						}
+					>
 						<div className={styles.playerInfo}>
+							<div className={styles.avatar}>
+								{item.profilePicture ? (
+									<CreatureImage definitionId={item.profilePicture} />
+								) : (
+									<span>{item.nickname[0]?.toUpperCase() ?? "?"}</span>
+								)}
+							</div>
+							<div className={styles.playerText}>
 							<div className={styles.nickname}>{item.nickname}</div>
 							<div className={styles.presence}>Blocked</div>
+							</div>
 						</div>
 						<div className={styles.primaryActions}>
 							<button
 								disabled={!!pendingBlock[item.userId]}
-								onClick={() => onUnblock(item.userId)}
+								onClick={(event) => {
+									event.stopPropagation();
+									onUnblock(item.userId);
+								}}
 							>
 								{pendingBlock[item.userId] ? "Unblocking..." : "Unblock"}
 							</button>
@@ -378,6 +463,84 @@ export const FriendsPage = () => {
 					</div>
 				))}
 			</div>
+
+			{selectedProfile && (
+				<div
+					className={styles.modalBackdrop}
+					onClick={() => setSelectedProfile(null)}
+				>
+					<div
+						className={styles.profileModal}
+						onClick={(event) => event.stopPropagation()}
+					>
+						<div className={styles.modalHeader}>
+							<div className={styles.modalAvatar}>
+								{selectedProfile.profilePicture ? (
+									<CreatureImage definitionId={selectedProfile.profilePicture} />
+								) : (
+									<span>
+										{selectedProfile.nickname[0]?.toUpperCase() ?? "?"}
+									</span>
+								)}
+							</div>
+							<div className={styles.modalTitleBlock}>
+								<div className={styles.modalTitle}>
+									{selectedProfile.nickname}
+								</div>
+								<div className={styles.presence}>
+									{selectedProfile.context === "blocked"
+										? "Blocked"
+										: presenceLabel[selectedProfile.presence || "offline"] ||
+											selectedProfile.presence}
+								</div>
+							</div>
+							<button
+								className={styles.closeButton}
+								onClick={() => setSelectedProfile(null)}
+							>
+								Close
+							</button>
+						</div>
+						<div className={styles.profileStats}>
+							<div>
+								<span>Status</span>
+								<strong>
+									{selectedProfile.context === "blocked"
+										? "Blocked"
+										: presenceLabel[selectedProfile.presence || "offline"] ||
+											"Offline"}
+								</strong>
+							</div>
+							<div>
+								<span>User ID</span>
+								<strong>{selectedProfile.userId.slice(0, 12)}</strong>
+							</div>
+						</div>
+						<div className={styles.modalActions}>
+							{selectedProfile.context === "blocked" ? (
+								<button
+									disabled={!!pendingBlock[selectedProfile.userId]}
+									onClick={() => onUnblock(selectedProfile.userId)}
+								>
+									{pendingBlock[selectedProfile.userId]
+										? "Unblocking..."
+										: "Unblock"}
+								</button>
+							) : (
+								<button
+									className={styles.dangerAction}
+									disabled={!!pendingBlock[selectedProfile.userId]}
+									onClick={() => onBlock(selectedProfile.userId)}
+								>
+									{pendingBlock[selectedProfile.userId]
+										? "Blocking..."
+										: "Block Player"}
+								</button>
+							)}
+						</div>
+					</div>
+				</div>
+			)}
 		</div>
 	);
 };

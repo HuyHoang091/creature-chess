@@ -1,26 +1,67 @@
-.pictureList {
-	display: inline-grid;
-	grid-template-rows: 58px auto 16px;
+.pictureGrid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(88px, 1fr));
+	gap: 10px;
+	max-height: 318px;
+	overflow-y: auto;
+	padding: 2px 2px 4px;
+}
+
+.pictureCard {
+	display: grid;
+	grid-template-rows: 64px 28px;
 	align-items: center;
 	justify-items: center;
 	gap: 6px;
-	width: 74px;
+	min-width: 0;
 	padding: 8px;
-	margin: 4px;
 	border: 1px solid rgba(200, 170, 110, 0.16);
 	border-radius: 8px;
 	background: rgba(18, 18, 26, 0.72);
-	color: rgba(240, 230, 210, 0.72);
-	font-size: 11px;
+	color: rgba(240, 230, 210, 0.76);
+	cursor: pointer;
+	transition:
+		border-color 0.15s ease,
+		transform 0.15s ease,
+		background 0.15s ease,
+		color 0.15s ease;
 }
 
-.pictureList p {
+.pictureCard:hover,
+.pictureSelected {
+	border-color: #c8aa6e;
+	background: rgba(200, 170, 110, 0.13);
+	color: #f5e7c1;
+	transform: translateY(-1px);
+}
+
+.pictureImage {
+	display: grid;
+	place-items: center;
+	width: 64px;
+	height: 64px;
+	border-radius: 8px;
+	background: radial-gradient(
+		circle at 50% 35%,
+		rgba(200, 170, 110, 0.16),
+		rgba(7, 9, 14, 0.48)
+	);
+	overflow: hidden;
+}
+
+.pictureName {
+	width: 100%;
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
-	max-width: 100%;
+	font-size: 11px;
+	font-weight: 800;
+	line-height: 1;
 }
 
-.pictureList input {
-	accent-color: #c8aa6e;
+@media (max-width: 520px) {
+	.pictureGrid {
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+		max-height: 286px;
+	}
 }
