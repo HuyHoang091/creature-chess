@@ -9,9 +9,13 @@ import { BoardSelectors } from "@shoki/board";
 
 import { GamePhase, PieceModel } from "@creature-chess/models";
 
+import { BattleAnalysis, requestBattleAnalysis } from "~/services/tacticalAI";
 import { Footer } from "../../ui/Footer";
-import { TacticalAIPanel, BattleReportOverlay } from "../../tactical-ai";
-import { BattleAnalysis } from "~/services/tacticalAI";
+import {
+	TacticalAIPanel,
+	BattleReportOverlay,
+	BattleLossCard,
+} from "../../tactical-ai";
 import { BoardContainer } from "../board";
 import { CardShop } from "../cardShop/cardShop";
 import { InventoryPanel } from "../inventory/InventoryPanel";
@@ -67,6 +71,11 @@ const DesktopGame: React.FunctionComponent = () => {
 	const [isShopCollapsed, setIsShopCollapsed] = React.useState(false);
 	const [battleAnalysis, setBattleAnalysis] =
 		React.useState<BattleAnalysis | null>(null);
+	const [pendingLossAnalysis, setPendingLossAnalysis] =
+		React.useState<BattleAnalysis | null>(null);
+
+	const lastMatchBoardRef = React.useRef<AppState["game"]["match"]["board"]>(null);
+	const analyzedRoundRef = React.useRef<number | null>(null);
 
 	const ownedPieces = useSelector<AppState, PieceModel[]>((state) =>
 		[...BoardSelectors.getAllPieces(state.game.board)].filter(
@@ -75,10 +84,70 @@ const DesktopGame: React.FunctionComponent = () => {
 	);
 
 	const stats = useSelector<AppState, StatsState>((state) => state.game.stats);
+	const matchBoard = useSelector<AppState, AppState["game"]["match"]["board"]>(
+		(state) => state.game.match.board
+	);
+	const roundNumber = useSelector<AppState, number>(
+		(state) => state.game.roundInfo.round
+	);
 
 	const inPreparingPhase = useSelector<AppState, boolean>(
 		(state) => state.game.roundInfo.phase === GamePhase.PREPARING
 	);
+
+	React.useEffect(() => {
+		if (matchBoard) {
+			lastMatchBoardRef.current = matchBoard;
+			return;
+		}
+
+		const finalBoard = lastMatchBoardRef.current;
+		if (!finalBoard || analyzedRoundRef.current === roundNumber) {
+			return;
+		}
+
+		const pieces = BoardSelectors.getAllPieces(finalBoard);
+		const myPieces = pieces.filter((piece) => piece.ownerId === localPlayerId);
+		const enemyPieces = pieces.filter((piece) => piece.ownerId !== localPlayerId);
+
+		if (
+			myPieces.length === 0 ||
+			enemyPieces.length === 0 ||
+			!pieces.some((piece) => piece.lastBattleStats)
+		) {
+			lastMatchBoardRef.current = null;
+			return;
+		}
+
+		const mySurvivors = myPieces.filter((piece) => piece.currentHealth > 0).length;
+		const enemySurvivors = enemyPieces.filter(
+			(piece) => piece.currentHealth > 0
+		).length;
+		const result =
+			mySurvivors > enemySurvivors
+				? "win"
+				: enemySurvivors > mySurvivors
+					? "loss"
+					: "draw";
+
+		analyzedRoundRef.current = roundNumber;
+		lastMatchBoardRef.current = null;
+
+		requestBattleAnalysis({
+			myPieces,
+			enemyPieces,
+			result,
+			roundNumber,
+		})
+			.then((response) => {
+				if (response.success && response.analysis?.winner === "loss") {
+					setPendingLossAnalysis(response.analysis);
+				}
+			})
+			.catch((error) => {
+				console.error("Battle analysis failed:", error);
+			});
+	}, [localPlayerId, matchBoard, roundNumber]);
 
 	return (
 		<div
@@ -187,6 +256,17 @@ const DesktopGame: React.FunctionComponent = () => {
 			)}
 
 			<TacticalAIPanel />
+
+			{pendingLossAnalysis && !battleAnalysis && (
+				<BattleLossCard
+					analysis={pendingLossAnalysis}
+					onOpen={() => {
+						setBattleAnalysis(pendingLossAnalysis);
+						setPendingLossAnalysis(null);
+					}}
+					onDismiss={() => setPendingLossAnalysis(null)}
+				/>
+			)}
 
 			<BattleReportOverlay
 				analysis={battleAnalysis}
