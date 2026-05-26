@@ -531,6 +531,9 @@ function buildAdminCommandPublisher() {
 	return {
 		client,
 		publish: async (channel: string, payload: Record<string, unknown>) => {
+			if (!client.isReady) {
+				return;
+			}
 			try {
 				await client.publish(channel, JSON.stringify(payload));
 			} catch (error) {
