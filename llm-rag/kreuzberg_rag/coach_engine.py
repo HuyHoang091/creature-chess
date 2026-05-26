@@ -196,7 +196,7 @@ class CoachEngine:
                 model=self.model,
                 messages=messages,
                 temperature=0.7,
-                max_tokens=5000,
+                max_tokens=10000,
             )
             answer = response.choices[0].message.content
             return {
@@ -221,7 +221,7 @@ class CoachEngine:
                 model=self.model,
                 messages=messages,
                 temperature=0.4,
-                max_tokens=5000,
+                max_tokens=10000,
             )
             raw_answer = response.choices[0].message.content or ""
             answer, plan = self._extract_json_plan(raw_answer)
@@ -252,7 +252,7 @@ class CoachEngine:
                 model=self.model,
                 messages=messages,
                 temperature=0.4,
-                max_tokens=5000,
+                max_tokens=10000,
                 stream=True,
             )
 
@@ -296,7 +296,7 @@ class CoachEngine:
                 model=self.model,
                 messages=messages,
                 temperature=0.7,
-                max_tokens=5000,
+                max_tokens=10000,
                 stream=True,
             )
             for chunk in stream:

@@ -49,11 +49,19 @@ class Retriever:
         semantic_max = semantic_scores.max() if semantic_scores.max() > 0 else 1
         semantic_normalized = semantic_scores / semantic_max
 
-        # Combine scores
+        # Combine scores and apply source_type boost
         combined = (
             self.bm25_weight * bm25_normalized +
             self.semantic_weight * semantic_normalized
         )
+
+        # Apply weight boost for factual data vs editorial opinions
+        for i in range(len(self.chunks)):
+            source_type = self.chunks[i].metadata.get("source_type", "editorial")
+            if source_type == "auto-generated":
+                combined[i] *= 1.5  # Heavy boost for exact engine formulas/stats
+            elif source_type == "battle-data":
+                combined[i] *= 1.3  # Moderate boost for empirical sim results
 
         # Get top-k
         top_indices = np.argsort(combined)[::-1][:top_k]

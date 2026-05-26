@@ -17,22 +17,32 @@ class DocumentChunk:
 
 
 class DocumentProcessor:
-    def __init__(self, guides_dir: str = None):
-        if guides_dir is None:
-            # Default to data/game-guides relative to this file
-            self.guides_dir = Path(__file__).parent.parent / "data" / "game-guides"
+    def __init__(self, data_dir: str = None):
+        if data_dir is None:
+            # Default to data directory relative to this file
+            self.data_dir = Path(__file__).parent.parent / "data"
         else:
-            self.guides_dir = Path(guides_dir)
+            self.data_dir = Path(data_dir)
+            
+        self.source_dirs = {
+            "game-guides": "editorial",
+            "auto-generated": "auto-generated",
+            "battle-data": "battle-data"
+        }
 
     def process_all(self) -> List[DocumentChunk]:
-        """Process all markdown files in the guides directory."""
+        """Process all markdown files in the configured data directories."""
         chunks = []
-        for md_file in self.guides_dir.glob("*.md"):
-            file_chunks = self.process_file(md_file)
-            chunks.extend(file_chunks)
+        for dir_name, source_type in self.source_dirs.items():
+            target_dir = self.data_dir / dir_name
+            if not target_dir.exists():
+                continue
+            for md_file in target_dir.glob("*.md"):
+                file_chunks = self.process_file(md_file, source_type)
+                chunks.extend(file_chunks)
         return chunks
 
-    def process_file(self, file_path: Path) -> List[DocumentChunk]:
+    def process_file(self, file_path: Path, source_type: str = "editorial") -> List[DocumentChunk]:
         """Process a single markdown file using Kreuzberg."""
         try:
             result = extract_file_sync(
@@ -73,6 +83,7 @@ class DocumentProcessor:
                             "file": file_path.name,
                             "heading": heading,
                             "position": metadata.get("chunk_index", idx),
+                            "source_type": source_type,
                         },
                     )
                 )
@@ -82,5 +93,10 @@ class DocumentProcessor:
             return []
 
     def get_guide_names(self) -> List[str]:
-        """Return list of available guide files."""
-        return [f.name for f in self.guides_dir.glob("*.md")]
+        """Return list of available guide files across all directories."""
+        names = []
+        for dir_name in self.source_dirs.keys():
+            target_dir = self.data_dir / dir_name
+            if target_dir.exists():
+                names.extend([f.name for f in target_dir.glob("*.md")])
+        return names
