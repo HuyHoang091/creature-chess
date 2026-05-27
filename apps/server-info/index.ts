@@ -1682,6 +1682,372 @@ async function startServer() {
 		return res.status(removed ? 200 : 404).json({ success: removed });
 	});
 
+	// ======================================================
+	// AI Coach Subscription / Upgrade Routes (UC-016)
+	// ======================================================
+
+	const AI_COACH_PLANS: Record<
+		string,
+		{
+			name: string;
+			priceUsd: number;
+			priceVnd: number;
+			queries: number;
+			positioning: number;
+			build: number;
+			battleAnalysis: number;
+			description: string;
+		}
+	> = {
+		free: {
+			name: "Free",
+			priceUsd: 0,
+			priceVnd: 0,
+			queries: 5,
+			positioning: 3,
+			build: 2,
+			battleAnalysis: 1,
+			description: "Basic AI coaching with limited daily usage",
+		},
+		basic: {
+			name: "Basic",
+			priceUsd: 2.99,
+			priceVnd: 75000,
+			queries: 30,
+			positioning: 20,
+			build: 15,
+			battleAnalysis: 10,
+			description: "Enhanced coaching with more daily queries",
+		},
+		pro: {
+			name: "Pro",
+			priceUsd: 7.99,
+			priceVnd: 199000,
+			queries: 100,
+			positioning: 60,
+			build: 50,
+			battleAnalysis: 30,
+			description: "Professional coaching for competitive players",
+		},
+		unlimited: {
+			name: "Unlimited",
+			priceUsd: 14.99,
+			priceVnd: 375000,
+			queries: 999999,
+			positioning: 999999,
+			build: 999999,
+			battleAnalysis: 999999,
+			description: "Unlimited access to all AI coaching features",
+		},
+	};
+
+	// GET /ai-coach/subscription - Get current subscription for authenticated user
+	app.get("/ai-coach/subscription", async (req, res) => {
+		const user = await requireAuthenticatedUser(req, res, authClient, database);
+		if (!user) {
+			return;
+		}
+
+		let subscription = await database.prisma.ai_coach_subscriptions.findUnique({
+			where: { user_id: user.id },
+		});
+
+		if (!subscription) {
+			subscription = await database.prisma.ai_coach_subscriptions.create({
+				data: {
+					user_id: user.id,
+					plan: "free",
+					queries_limit: AI_COACH_PLANS.free.queries,
+					positioning_limit: AI_COACH_PLANS.free.positioning,
+					build_limit: AI_COACH_PLANS.free.build,
+					battle_analysis_limit: AI_COACH_PLANS.free.battleAnalysis,
+				},
+			});
+		}
+
+		const planDef = AI_COACH_PLANS[subscription.plan] || AI_COACH_PLANS.free;
+
+		return res.status(200).json({
+			id: subscription.id,
+			plan: subscription.plan,
+			planName: planDef.name,
+			usage: {
+				queries: { used: subscription.queries_used, limit: subscription.queries_limit },
+				positioning: { used: subscription.positioning_used, limit: subscription.positioning_limit },
+				build: { used: subscription.build_used, limit: subscription.build_limit },
+				battleAnalysis: { used: subscription.battle_analysis_used, limit: subscription.battle_analysis_limit },
+			},
+			periodStart: subscription.period_start,
+			periodEnd: subscription.period_end,
+			activatedAt: subscription.activated_at,
+		});
+	});
+
+	// GET /ai-coach/plans - List all available plans
+	app.get("/ai-coach/plans", (_req, res) => {
+		const plans = Object.entries(AI_COACH_PLANS).map(([key, plan]) => ({
+			id: key,
+			name: plan.name,
+			priceUsd: plan.priceUsd,
+			priceVnd: plan.priceVnd,
+			limits: {
+				queries: plan.queries,
+				positioning: plan.positioning,
+				build: plan.build,
+				battleAnalysis: plan.battleAnalysis,
+			},
+			description: plan.description,
+		}));
+
+		return res.status(200).json({ plans });
+	});
+
+	// POST /ai-coach/create-order - Create a PayPal order for a plan upgrade
+	app.post("/ai-coach/create-order", async (req, res) => {
+		const user = await requireAuthenticatedUser(req, res, authClient, database);
+		if (!user) {
+			return;
+		}
+
+		const { planId, amountVnd } = req.body as {
+			planId?: string;
+			amountVnd?: number;
+		};
+
+		if (!planId || !AI_COACH_PLANS[planId]) {
+			return res.status(400).json({ message: "Invalid plan" });
+		}
+
+		if (planId === "free") {
+			return res.status(400).json({ message: "Cannot purchase free plan" });
+		}
+
+		const plan = AI_COACH_PLANS[planId];
+
+		// Check if user already has this plan or higher
+		const currentSub = await database.prisma.ai_coach_subscriptions.findUnique({
+			where: { user_id: user.id },
+		});
+
+		const planOrder = ["free", "basic", "pro", "unlimited"];
+		const currentPlanIndex = planOrder.indexOf(currentSub?.plan || "free");
+		const targetPlanIndex = planOrder.indexOf(planId);
+
+		if (targetPlanIndex <= currentPlanIndex) {
+			return res.status(400).json({
+				message: "Cannot downgrade or purchase same plan",
+			});
+		}
+
+		// Create payment record
+		const amountUsd = plan.priceUsd;
+		const orderId = `ORDER-${Date.now()}-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
+
+		await database.prisma.ai_coach_payments.create({
+			data: {
+				user_id: user.id,
+				paypal_order_id: orderId,
+				plan: planId,
+				amount_usd: amountUsd,
+				amount_vnd: amountVnd || plan.priceVnd,
+				status: "pending",
+			},
+		});
+
+		return res.status(201).json({
+			orderId,
+			amountUsd: amountUsd.toFixed(2),
+			planId,
+			planName: plan.name,
+		});
+	});
+
+	// POST /ai-coach/verify-payment - Verify and activate a PayPal payment
+	app.post("/ai-coach/verify-payment", async (req, res) => {
+		const user = await requireAuthenticatedUser(req, res, authClient, database);
+		if (!user) {
+			return;
+		}
+
+		const { orderId, paypalOrderId, payerName, payerEmail, captureId } = req.body as {
+			orderId?: string;
+			paypalOrderId?: string;
+			payerName?: string;
+			payerEmail?: string;
+			captureId?: string;
+		};
+
+		if (!orderId) {
+			return res.status(400).json({ message: "Missing orderId" });
+		}
+
+		const payment = await database.prisma.ai_coach_payments.findUnique({
+			where: { paypal_order_id: orderId },
+		});
+
+		if (!payment) {
+			return res.status(404).json({ message: "Payment not found" });
+		}
+
+		if (payment.user_id !== user.id) {
+			return res.status(403).json({ message: "Unauthorized" });
+		}
+
+		if (payment.status === "completed") {
+			return res.status(409).json({ message: "Payment already completed" });
+		}
+
+		const plan = AI_COACH_PLANS[payment.plan];
+		if (!plan) {
+			return res.status(500).json({ message: "Invalid plan in payment" });
+		}
+
+		// Update payment status
+		await database.prisma.ai_coach_payments.update({
+			where: { id: payment.id },
+			data: {
+				status: "completed",
+				paypal_order_id: paypalOrderId || orderId,
+				payer_name: payerName || null,
+				payer_email: payerEmail || null,
+				paypal_capture_id: captureId || null,
+			},
+		});
+
+		// Activate the new plan
+		const now = new Date();
+		const periodEnd = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000); // 30 days
+
+		await database.prisma.ai_coach_subscriptions.upsert({
+			where: { user_id: user.id },
+			update: {
+				plan: payment.plan,
+				queries_used: 0,
+				queries_limit: plan.queries,
+				positioning_used: 0,
+				positioning_limit: plan.positioning,
+				build_used: 0,
+				build_limit: plan.build,
+				battle_analysis_used: 0,
+				battle_analysis_limit: plan.battleAnalysis,
+				period_start: now,
+				period_end: periodEnd,
+				activated_at: now,
+			},
+			create: {
+				user_id: user.id,
+				plan: payment.plan,
+				queries_limit: plan.queries,
+				positioning_limit: plan.positioning,
+				build_limit: plan.build,
+				battle_analysis_limit: plan.battleAnalysis,
+				period_start: now,
+				period_end: periodEnd,
+				activated_at: now,
+			},
+		});
+
+		// Create notification for the user
+		await database.prisma.user_notifications.create({
+			data: {
+				user_id: user.id,
+				type: "ai_coach_upgrade",
+				title: "AI Coach Upgraded!",
+				message: `Your AI Coach has been upgraded to the ${plan.name} plan. Enjoy enhanced coaching features!`,
+				payload: JSON.stringify({
+					plan: payment.plan,
+					amountUsd: payment.amount_usd,
+				}),
+			},
+		});
+
+		// Create email confirmation record
+		const userRecord = await database.prisma.users.findUnique({
+			where: { id: user.id },
+		});
+
+		if (userRecord?.email) {
+			await database.prisma.email_outbox.create({
+				data: {
+					user_id: user.id,
+					email: userRecord.email,
+					template: "ai_coach_upgrade_confirmation",
+					subject: `AI Coach Upgraded to ${plan.name}`,
+					payload: JSON.stringify({
+						planName: plan.name,
+						amountUsd: payment.amount_usd,
+						activatedAt: now.toISOString(),
+						periodEnd: periodEnd.toISOString(),
+					}),
+				},
+			});
+		}
+
+		return res.status(200).json({
+			success: true,
+			plan: payment.plan,
+			planName: plan.name,
+			periodEnd: periodEnd.toISOString(),
+			message: `Successfully upgraded to ${plan.name} plan`,
+		});
+	});
+
+	// POST /ai-coach/payment-failed - Record a failed payment
+	app.post("/ai-coach/payment-failed", async (req, res) => {
+		const user = await requireAuthenticatedUser(req, res, authClient, database);
+		if (!user) {
+			return;
+		}
+
+		const { orderId, errorMessage } = req.body as {
+			orderId?: string;
+			errorMessage?: string;
+		};
+
+		if (!orderId) {
+			return res.status(400).json({ message: "Missing orderId" });
+		}
+
+		await database.prisma.ai_coach_payments.updateMany({
+			where: {
+				paypal_order_id: orderId,
+				user_id: user.id,
+			},
+			data: {
+				status: "failed",
+				error_message: errorMessage || "Payment failed",
+			},
+		});
+
+		return res.status(200).json({ success: true });
+	});
+
+	// GET /ai-coach/payment-history - Get payment history for user
+	app.get("/ai-coach/payment-history", async (req, res) => {
+		const user = await requireAuthenticatedUser(req, res, authClient, database);
+		if (!user) {
+			return;
+		}
+
+		const payments = await database.prisma.ai_coach_payments.findMany({
+			where: { user_id: user.id },
+			orderBy: { created_at: "desc" },
+			take: 20,
+		});
+
+		return res.status(200).json({
+			payments: payments.map((p) => ({
+				id: p.id,
+				plan: p.plan,
+				planName: AI_COACH_PLANS[p.plan]?.name || p.plan,
+				amountUsd: p.amount_usd,
+				amountVnd: p.amount_vnd,
+				status: p.status,
+				createdAt: p.created_at,
+			})),
+		});
+	});
+
 	// Start the server
 	httpServer.listen(PORT, () => {
 		console.log(`Server is listening on port ${PORT}`);

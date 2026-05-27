@@ -1,6 +1,6 @@
 import React from "react";
 
-import { Home, Users, Clock, User, Shield } from "lucide-react";
+import { Home, Users, Clock, User, Shield, Brain } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import { AppShellCommands, AppScreen } from "~/store/appShell/state";
 import { AppState } from "~/store/state";
@@ -8,7 +8,7 @@ import { AppState } from "~/store/state";
 import styles from "./DockBar.module.css";
 
 type DockItem = {
-	screen: AppScreen | "admin-link";
+	screen: AppScreen | "admin-link" | "ai-coach";
 	icon: React.ReactNode;
 	label: string;
 	requiresAccount?: boolean;
@@ -20,6 +20,12 @@ const dockItems: DockItem[] = [
 		screen: "friends",
 		icon: <Users size={22} />,
 		label: "Friends",
+		requiresAccount: true,
+	},
+	{
+		screen: "ai-coach",
+		icon: <Brain size={22} />,
+		label: "AI Coach",
 		requiresAccount: true,
 	},
 	{
@@ -68,6 +74,10 @@ export const DockBar = () => {
 			window.location.href = APP_ADMIN_URL;
 			return;
 		}
+		if (item.screen === "ai-coach") {
+			dispatch(AppShellCommands.setPanel(item.screen as any));
+			return;
+		}
 		if (activeScreen === item.screen) {
 			dispatch(AppShellCommands.setPanel(null));
 			if (screen !== "home") {
@@ -78,7 +88,7 @@ export const DockBar = () => {
 				dispatch(AppShellCommands.setScreen("home"));
 				dispatch(AppShellCommands.setPanel(null));
 			} else {
-				dispatch(AppShellCommands.setPanel(item.screen));
+				dispatch(AppShellCommands.setPanel(item.screen as AppScreen));
 			}
 		}
 	};

@@ -1,0 +1,577 @@
+/* ─── AI Coach Upgrade Page ─── */
+
+.root {
+	display: flex;
+	flex-direction: column;
+	gap: 20px;
+	padding-bottom: 24px;
+	animation: fadeInPage 0.4s ease;
+}
+
+@keyframes fadeInPage {
+	from { opacity: 0; transform: translateY(8px); }
+	to { opacity: 1; transform: translateY(0); }
+}
+
+/* ─── Current Plan Banner ─── */
+.currentPlanBanner {
+	display: flex;
+	align-items: center;
+	gap: 14px;
+	padding: 16px 18px;
+	border-radius: 14px;
+	background: linear-gradient(135deg, rgba(200, 170, 110, 0.08), rgba(200, 170, 110, 0.03));
+	border: 1px solid rgba(200, 170, 110, 0.2);
+}
+
+.planIconWrap {
+	width: 48px;
+	height: 48px;
+	border-radius: 14px;
+	background: linear-gradient(135deg, #c8aa6e, #a07c3e);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	color: #0a0e13;
+	flex-shrink: 0;
+}
+
+.currentPlanInfo {
+	flex: 1;
+	min-width: 0;
+}
+
+.currentPlanLabel {
+	font-size: 11px;
+	text-transform: uppercase;
+	letter-spacing: 1px;
+	color: rgba(240, 230, 210, 0.5);
+	margin-bottom: 2px;
+}
+
+.currentPlanName {
+	font-size: 18px;
+	font-weight: 700;
+	color: #c8aa6e;
+}
+
+.currentPlanExpiry {
+	font-size: 11px;
+	color: rgba(240, 230, 210, 0.4);
+	margin-top: 2px;
+}
+
+/* ─── Usage Stats Grid ─── */
+.usageSection {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+}
+
+.usageSectionTitle {
+	font-size: 13px;
+	text-transform: uppercase;
+	letter-spacing: 1px;
+	color: rgba(240, 230, 210, 0.5);
+	font-weight: 600;
+}
+
+.usageGrid {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 10px;
+}
+
+.usageCard {
+	padding: 12px 14px;
+	border-radius: 12px;
+	background: rgba(255, 255, 255, 0.03);
+	border: 1px solid rgba(200, 170, 110, 0.1);
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+}
+
+.usageLabel {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	font-size: 12px;
+	color: rgba(240, 230, 210, 0.6);
+}
+
+.usageBarOuter {
+	height: 6px;
+	border-radius: 3px;
+	background: rgba(255, 255, 255, 0.06);
+	overflow: hidden;
+}
+
+.usageBarInner {
+	height: 100%;
+	border-radius: 3px;
+	background: linear-gradient(90deg, #c8aa6e, #a07c3e);
+	transition: width 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.usageBarInner.warning {
+	background: linear-gradient(90deg, #e2a737, #d4483b);
+}
+
+.usageBarInner.full {
+	background: linear-gradient(90deg, #d4483b, #c33030);
+}
+
+.usageCount {
+	font-size: 11px;
+	color: rgba(240, 230, 210, 0.4);
+	text-align: right;
+}
+
+/* ─── Plans Grid ─── */
+.plansTitle {
+	font-size: 16px;
+	font-weight: 700;
+	color: #f0e6d2;
+	letter-spacing: 0.5px;
+}
+
+.plansSubtitle {
+	font-size: 12px;
+	color: rgba(240, 230, 210, 0.4);
+	margin-top: 2px;
+}
+
+.plansGrid {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+}
+
+.planCard {
+	position: relative;
+	padding: 18px;
+	border-radius: 14px;
+	background: rgba(255, 255, 255, 0.02);
+	border: 1px solid rgba(200, 170, 110, 0.12);
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+	transition: border-color 0.2s ease, background 0.2s ease, transform 0.15s ease;
+	cursor: pointer;
+}
+
+.planCard:hover {
+	border-color: rgba(200, 170, 110, 0.35);
+	background: rgba(200, 170, 110, 0.04);
+	transform: translateY(-2px);
+}
+
+.planCard.active {
+	border-color: #c8aa6e;
+	background: rgba(200, 170, 110, 0.08);
+	box-shadow: 0 0 20px rgba(200, 170, 110, 0.08);
+}
+
+.planCard.selected {
+	border-color: #6ecfc8;
+	background: rgba(110, 207, 200, 0.06);
+	box-shadow: 0 0 24px rgba(110, 207, 200, 0.08);
+}
+
+.planCard.current {
+	border-color: rgba(200, 170, 110, 0.3);
+	opacity: 0.6;
+	pointer-events: none;
+}
+
+.planCardTop {
+	display: flex;
+	justify-content: space-between;
+	align-items: flex-start;
+}
+
+.planNameWrap {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+}
+
+.planName {
+	font-size: 16px;
+	font-weight: 700;
+	color: #f0e6d2;
+}
+
+.planDesc {
+	font-size: 11px;
+	color: rgba(240, 230, 210, 0.4);
+}
+
+.planPrice {
+	text-align: right;
+}
+
+.planPriceUsd {
+	font-size: 22px;
+	font-weight: 800;
+	color: #c8aa6e;
+}
+
+.planPriceVnd {
+	font-size: 11px;
+	color: rgba(240, 230, 210, 0.4);
+}
+
+.planPricePeriod {
+	font-size: 11px;
+	color: rgba(240, 230, 210, 0.35);
+}
+
+.planLimits {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 6px;
+}
+
+.planLimit {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	font-size: 12px;
+	color: rgba(240, 230, 210, 0.5);
+}
+
+.planLimitValue {
+	color: #c8aa6e;
+	font-weight: 600;
+}
+
+.planBadge {
+	position: absolute;
+	top: -8px;
+	right: 16px;
+	padding: 3px 10px;
+	border-radius: 8px;
+	font-size: 10px;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.5px;
+}
+
+.planBadge.currentBadge {
+	background: rgba(200, 170, 110, 0.2);
+	color: #c8aa6e;
+	border: 1px solid rgba(200, 170, 110, 0.3);
+}
+
+.planBadge.popularBadge {
+	background: rgba(110, 207, 200, 0.15);
+	color: #6ecfc8;
+	border: 1px solid rgba(110, 207, 200, 0.3);
+}
+
+/* ─── Upgrade Action Area ─── */
+.upgradeAction {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+	padding: 16px;
+	border-radius: 14px;
+	background: rgba(255, 255, 255, 0.02);
+	border: 1px solid rgba(200, 170, 110, 0.12);
+}
+
+.selectedPlanSummary {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding-bottom: 12px;
+	border-bottom: 1px solid rgba(200, 170, 110, 0.08);
+}
+
+.selectedPlanLabel {
+	font-size: 12px;
+	color: rgba(240, 230, 210, 0.5);
+}
+
+.selectedPlanNameLg {
+	font-size: 16px;
+	font-weight: 700;
+	color: #f0e6d2;
+}
+
+.selectedPlanPriceLg {
+	font-size: 24px;
+	font-weight: 800;
+	color: #c8aa6e;
+}
+
+.paypalContainer {
+	min-height: 48px;
+}
+
+.upgradeBtn {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 10px;
+	width: 100%;
+	padding: 14px 24px;
+	border: none;
+	border-radius: 12px;
+	background: linear-gradient(180deg, #c8aa6e, #a07c3e);
+	color: #0a0e13;
+	font-size: 15px;
+	font-weight: 700;
+	letter-spacing: 0.5px;
+	cursor: pointer;
+	transition: transform 0.15s ease, box-shadow 0.2s ease;
+	box-shadow: 0 4px 16px rgba(200, 170, 110, 0.2);
+}
+
+.upgradeBtn:hover {
+	transform: translateY(-2px);
+	box-shadow: 0 8px 24px rgba(200, 170, 110, 0.3);
+}
+
+.upgradeBtn:active {
+	transform: translateY(0);
+}
+
+.upgradeBtn:disabled {
+	opacity: 0.5;
+	pointer-events: none;
+}
+
+/* ─── Payment States ─── */
+.loadingState {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 12px;
+	padding: 48px 0;
+	color: rgba(240, 230, 210, 0.5);
+	font-size: 13px;
+}
+
+.spinner {
+	width: 32px;
+	height: 32px;
+	border: 3px solid rgba(200, 170, 110, 0.15);
+	border-top: 3px solid #c8aa6e;
+	border-radius: 50%;
+	animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+	0% { transform: rotate(0deg); }
+	100% { transform: rotate(360deg); }
+}
+
+.successState {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 14px;
+	padding: 32px 16px;
+	text-align: center;
+	animation: fadeInPage 0.5s ease;
+}
+
+.successIcon {
+	width: 64px;
+	height: 64px;
+	border-radius: 50%;
+	background: linear-gradient(135deg, rgba(34, 197, 94, 0.15), rgba(34, 197, 94, 0.05));
+	border: 2px solid rgba(34, 197, 94, 0.3);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	color: #22c55e;
+	animation: successPulse 2s ease-in-out infinite;
+}
+
+@keyframes successPulse {
+	0%, 100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.15); }
+	50% { box-shadow: 0 0 20px 6px rgba(34, 197, 94, 0.1); }
+}
+
+.successTitle {
+	font-size: 20px;
+	font-weight: 700;
+	color: #22c55e;
+}
+
+.successMessage {
+	font-size: 13px;
+	color: rgba(240, 230, 210, 0.5);
+	line-height: 1.5;
+}
+
+.successDetails {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	font-size: 12px;
+	color: rgba(240, 230, 210, 0.4);
+}
+
+.closeSuccessBtn {
+	padding: 10px 28px;
+	border: 1px solid rgba(200, 170, 110, 0.3);
+	border-radius: 10px;
+	background: transparent;
+	color: #c8aa6e;
+	font-size: 13px;
+	font-weight: 600;
+	cursor: pointer;
+	transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.closeSuccessBtn:hover {
+	border-color: #c8aa6e;
+	background: rgba(200, 170, 110, 0.08);
+}
+
+/* ─── Error ─── */
+.errorBanner {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	padding: 12px 14px;
+	border-radius: 10px;
+	background: rgba(212, 72, 59, 0.08);
+	border: 1px solid rgba(212, 72, 59, 0.2);
+	color: #f5a0a0;
+	font-size: 13px;
+}
+
+.retryBtn {
+	padding: 6px 14px;
+	border: 1px solid rgba(212, 72, 59, 0.3);
+	border-radius: 8px;
+	background: transparent;
+	color: #f5a0a0;
+	font-size: 12px;
+	cursor: pointer;
+	flex-shrink: 0;
+	transition: background 0.15s ease;
+}
+
+.retryBtn:hover {
+	background: rgba(212, 72, 59, 0.1);
+}
+
+/* ─── Security Badge ─── */
+.securityBadge {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 6px;
+	padding: 10px;
+	border-radius: 10px;
+	background: rgba(255, 255, 255, 0.02);
+}
+
+.securityBadge svg {
+	color: #22c55e;
+}
+
+.securityBadge span {
+	font-size: 11px;
+	color: rgba(240, 230, 210, 0.35);
+}
+
+/* ─── Payment History ─── */
+.historySection {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.historyTitle {
+	font-size: 13px;
+	text-transform: uppercase;
+	letter-spacing: 1px;
+	color: rgba(240, 230, 210, 0.5);
+	font-weight: 600;
+}
+
+.historyItem {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding: 10px 14px;
+	border-radius: 10px;
+	background: rgba(255, 255, 255, 0.02);
+	border: 1px solid rgba(200, 170, 110, 0.08);
+}
+
+.historyItemLeft {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+}
+
+.historyPlan {
+	font-size: 13px;
+	font-weight: 600;
+	color: #f0e6d2;
+}
+
+.historyDate {
+	font-size: 11px;
+	color: rgba(240, 230, 210, 0.35);
+}
+
+.historyAmount {
+	font-size: 14px;
+	font-weight: 700;
+	color: #c8aa6e;
+}
+
+.historyStatus {
+	font-size: 10px;
+	padding: 2px 8px;
+	border-radius: 6px;
+	font-weight: 600;
+	text-transform: uppercase;
+}
+
+.historyStatus.completed {
+	background: rgba(34, 197, 94, 0.1);
+	color: #22c55e;
+}
+
+.historyStatus.pending {
+	background: rgba(234, 179, 8, 0.1);
+	color: #eab308;
+}
+
+.historyStatus.failed {
+	background: rgba(212, 72, 59, 0.1);
+	color: #d4483b;
+}
+
+.emptyHistory {
+	text-align: center;
+	padding: 20px;
+	font-size: 12px;
+	color: rgba(240, 230, 210, 0.3);
+}
+
+/* ─── Responsive ─── */
+@media (max-width: 420px) {
+	.usageGrid {
+		grid-template-columns: 1fr;
+	}
+
+	.planLimits {
+		grid-template-columns: 1fr;
+	}
+
+	.planPriceUsd {
+		font-size: 18px;
+	}
+}

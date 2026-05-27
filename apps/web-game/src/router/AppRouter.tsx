@@ -4,6 +4,7 @@ import { useSelector } from "react-redux";
 import { AppShell } from "~/components/app/AppShell";
 import { Panel } from "~/components/app/Panel";
 
+import { AiCoachUpgradePage } from "../pages/aiCoachUpgrade";
 import { CompleteProfilePage } from "../pages/completeProfile";
 import { FriendsPage } from "../pages/friends";
 import { GamePage } from "../pages/game";
@@ -71,6 +72,12 @@ export const AppRouter = () => {
 		panelNode = (
 			<Panel title="Match Result">
 				<ResultPage />
+			</Panel>
+		);
+	} else if (panel === "ai-coach" as any) {
+		panelNode = (
+			<Panel title="AI Coach">
+				<AiCoachUpgradePage />
 			</Panel>
 		);
 	}
