@@ -1,0 +1,78 @@
+/* Voice Chat bar – used inside the Private Lobby panel */
+.bar {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	padding: 9px 14px;
+	margin-top: 14px;
+	background: rgba(0, 0, 0, 0.22);
+	border-radius: 12px;
+	border: 1px solid rgba(200, 170, 110, 0.12);
+}
+
+.barLabel {
+	font-size: 11px;
+	font-weight: 700;
+	letter-spacing: 1.2px;
+	text-transform: uppercase;
+	color: rgba(200, 170, 110, 0.45);
+	white-space: nowrap;
+	flex: 0 0 auto;
+	user-select: none;
+}
+
+.barLabel::after {
+	content: "";
+	display: inline-block;
+	width: 1px;
+	height: 12px;
+	background: rgba(200, 170, 110, 0.2);
+	margin-left: 10px;
+	vertical-align: middle;
+}
+
+.btns {
+	display: flex;
+	gap: 6px;
+	flex: 1;
+	justify-content: flex-start;
+}
+
+/* Base button */
+.btn {
+	display: inline-flex;
+	align-items: center;
+	gap: 5px;
+	padding: 5px 11px;
+	border-radius: 8px;
+	border: 1px solid rgba(200, 170, 110, 0.2);
+	background: rgba(0, 0, 0, 0.3);
+	color: rgba(240, 230, 210, 0.38);
+	cursor: pointer;
+	font-size: 12px;
+	font-weight: 600;
+	letter-spacing: 0.3px;
+	transition: all 0.18s ease;
+	white-space: nowrap;
+	line-height: 1;
+}
+
+.btn:hover {
+	border-color: rgba(200, 170, 110, 0.45);
+	color: #c8aa6e;
+	background: rgba(200, 170, 110, 0.08);
+}
+
+/* Active / ON state */
+.btnOn {
+	background: rgba(76, 175, 80, 0.14) !important;
+	border-color: rgba(76, 175, 80, 0.45) !important;
+	color: #4caf50 !important;
+}
+
+/* OFF / muted state (explicit off) */
+.btnOff {
+	background: rgba(80, 80, 90, 0.18) !important;
+	border-color: rgba(120, 120, 130, 0.25) !important;
+	color: rgba(240, 230, 210, 0.28) !important;
+}

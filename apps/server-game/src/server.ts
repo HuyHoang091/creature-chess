@@ -33,6 +33,7 @@ import { FriendManager } from "./social/friendManager";
 import { PresenceManager } from "./social/presenceManager";
 import { PrivateRoomManager } from "./social/privateRoomManager";
 import { SocialUser, toPrivateRoomDto } from "./social/types";
+import { VoiceChatManager } from "./social/voiceChatManager";
 
 register.setDefaultLabels({
 	nodeId: process.env.NODE_APP_INSTANCE || "default",
@@ -51,7 +52,9 @@ type StartGameOptions = {
 	onFinish: (game: Game) => void | Promise<void>;
 };
 
-const buildSocialUserFromSocket = (socket: AuthenticatedSocket): SocialUser => ({
+const buildSocialUserFromSocket = (
+	socket: AuthenticatedSocket
+): SocialUser => ({
 	userId: socket.data.id,
 	nickname: socket.data.nickname || "Unknown",
 	profilePicture: socket.data.profile?.picture ?? null,
@@ -93,7 +96,8 @@ const createGameRunner = async ({
 						playerCount: members.length,
 						winnerUserId:
 							winner &&
-							members.find((member) => member.id === winner.id)?.type === "PLAYER"
+							members.find((member) => member.id === winner.id)?.type ===
+								"PLAYER"
 								? winner.id
 								: null,
 						participants: event.players.map((player) => {
@@ -101,7 +105,9 @@ const createGameRunner = async ({
 							return {
 								userId: member?.type === "PLAYER" ? member.id : null,
 								guestId:
-									member?.type === "PLAYER" && member.id.length <= 4 ? member.id : null,
+									member?.type === "PLAYER" && member.id.length <= 4
+										? member.id
+										: null,
 								displayName: member?.name || player.id,
 								placement: player.position,
 								isBot: member?.type === "BOT",
@@ -116,7 +122,9 @@ const createGameRunner = async ({
 					});
 
 					if (winner) {
-						const winnerMember = members.find((member) => member.id === winner.id);
+						const winnerMember = members.find(
+							(member) => member.id === winner.id
+						);
 						if (winnerMember?.type === "PLAYER" && winner.id.length > 4) {
 							await database.user.addWin(winner.id);
 						}
@@ -140,6 +148,7 @@ export const startServer = async ({ io }: { io: Server }) => {
 
 	const presenceManager = new PresenceManager();
 	const roomManager = new PrivateRoomManager();
+	const voiceChatManager = new VoiceChatManager();
 
 	let lobbies: Lobby[] = [];
 	let games: Game[] = [];
@@ -170,7 +179,11 @@ export const startServer = async ({ io }: { io: Server }) => {
 		socketConnections.set(io.engine.clientsCount);
 	};
 
-	const friendManager = new FriendManager(database, presenceManager, emitToUser);
+	const friendManager = new FriendManager(
+		database,
+		presenceManager,
+		emitToUser
+	);
 
 	const emitRoomSnapshot = (userId: string) => {
 		const room = roomManager.getRoomForUser(userId);
@@ -301,13 +314,17 @@ export const startServer = async ({ io }: { io: Server }) => {
 	}
 
 	const matchmaking = async (socket: AuthenticatedSocket) => {
-		logger.info(`[Matchmaking (${socket.data.nickname})] Beginning matchmaking`);
+		logger.info(
+			`[Matchmaking (${socket.data.nickname})] Beginning matchmaking`
+		);
 
 		if (socket.data.type === "player") {
 			await updatePresence(socket.data.id, "in_game");
 		}
 
-		const matchingLobby = lobbies.find((lobby) => lobby.isInLobby(socket.data.id));
+		const matchingLobby = lobbies.find((lobby) =>
+			lobby.isInLobby(socket.data.id)
+		);
 		if (matchingLobby) {
 			logger.info(`[Matchmaking (${socket.data.nickname})] Lobby found`);
 			matchingLobby.connect(socket);
@@ -323,7 +340,9 @@ export const startServer = async ({ io }: { io: Server }) => {
 
 		const openLobby = lobbies.find((lobby) => lobby.getFreeSlotCount() > 0);
 		if (openLobby) {
-			logger.info(`[Matchmaking (${socket.data.nickname})] Joined existing lobby`);
+			logger.info(
+				`[Matchmaking (${socket.data.nickname})] Joined existing lobby`
+			);
 			openLobby.connect(socket);
 			return;
 		}
@@ -372,75 +391,107 @@ export const startServer = async ({ io }: { io: Server }) => {
 		const userId = socket.data.id;
 		const socialUser = buildSocialUserFromSocket(socket);
 
-		socket.on("socialBootstrap", async (_payload, ack?: (payload: unknown) => void) => {
-			await friendManager.emitSnapshot(userId);
-			emitRoomSnapshot(userId);
-			ackOk(ack);
-		});
+		socket.on(
+			"socialBootstrap",
+			async (_payload, ack?: (payload: unknown) => void) => {
+				await friendManager.emitSnapshot(userId);
+				emitRoomSnapshot(userId);
+				ackOk(ack);
+			}
+		);
 
 		socket.on("queue:joinPublic", async () => {
 			await matchmaking(socket);
 		});
 
-		socket.on("friendsRequestSend", async (payload: { targetUserId?: string }, ack?: (payload: unknown) => void) => {
-			const targetUserId = payload?.targetUserId;
-			if (!targetUserId) {
-				return ackError(ack, "BAD_REQUEST", "Missing targetUserId");
-			}
-			if (targetUserId === userId) {
-				return ackError(ack, "SELF", "Cannot add yourself");
-			}
+		socket.on(
+			"friendsRequestSend",
+			async (
+				payload: { targetUserId?: string },
+				ack?: (payload: unknown) => void
+			) => {
+				const targetUserId = payload?.targetUserId;
+				if (!targetUserId) {
+					return ackError(ack, "BAD_REQUEST", "Missing targetUserId");
+				}
+				if (targetUserId === userId) {
+					return ackError(ack, "SELF", "Cannot add yourself");
+				}
 
-			const [targetUser, blocked, existingFriendship, existingRequest] =
-				await Promise.all([
-					database.user.getById(targetUserId),
-					database.block.existsEitherDirection(userId, targetUserId),
-					database.friendship.exists(userId, targetUserId),
-					database.friendRequest.findBetweenUsers(userId, targetUserId),
-				]);
+				const [targetUser, blocked, existingFriendship, existingRequest] =
+					await Promise.all([
+						database.user.getById(targetUserId),
+						database.block.existsEitherDirection(userId, targetUserId),
+						database.friendship.exists(userId, targetUserId),
+						database.friendRequest.findBetweenUsers(userId, targetUserId),
+					]);
 
-			if (!targetUser) {
-				return ackError(ack, "TARGET_NOT_FOUND", "Target user not found");
-			}
-			if (blocked) {
-				return ackError(ack, "BLOCKED", "Blocked users cannot become friends");
-			}
-			if (existingFriendship) {
-				return ackError(ack, "ALREADY_FRIEND", "Already friends");
-			}
-			if (existingRequest) {
-				return ackError(ack, "REQUEST_EXISTS", "A pending request already exists");
-			}
+				if (!targetUser) {
+					return ackError(ack, "TARGET_NOT_FOUND", "Target user not found");
+				}
+				if (blocked) {
+					return ackError(
+						ack,
+						"BLOCKED",
+						"Blocked users cannot become friends"
+					);
+				}
+				if (existingFriendship) {
+					return ackError(ack, "ALREADY_FRIEND", "Already friends");
+				}
+				if (existingRequest) {
+					return ackError(
+						ack,
+						"REQUEST_EXISTS",
+						"A pending request already exists"
+					);
+				}
 
-			const created = await database.friendRequest.create(userId, targetUserId);
-			if (!created.ok) {
-				return ackError(
-					ack,
-					created.reason === "conflict" ? "REQUEST_EXISTS" : "SERVER_ERROR",
-					created.reason === "conflict"
-						? "A pending request already exists"
-						: "Failed to create friend request"
+				const created = await database.friendRequest.create(
+					userId,
+					targetUserId
 				);
-			}
+				if (!created.ok) {
+					return ackError(
+						ack,
+						created.reason === "conflict" ? "REQUEST_EXISTS" : "SERVER_ERROR",
+						created.reason === "conflict"
+							? "A pending request already exists"
+							: "Failed to create friend request"
+					);
+				}
 
-			await friendManager.emitSnapshot(userId);
-			await friendManager.emitSnapshot(targetUserId);
-			ackOk(ack, { requestId: created.value.id });
-		});
+				await friendManager.emitSnapshot(userId);
+				await friendManager.emitSnapshot(targetUserId);
+				ackOk(ack, { requestId: created.value.id });
+			}
+		);
 
-		socket.on("friendsRequestAccept", async (payload: { requestId?: string }, ack?: (payload: unknown) => void) => {
-			if (!payload?.requestId) {
-				return ackError(ack, "BAD_REQUEST", "Missing requestId");
+		socket.on(
+			"friendsRequestAccept",
+			async (
+				payload: { requestId?: string },
+				ack?: (payload: unknown) => void
+			) => {
+				if (!payload?.requestId) {
+					return ackError(ack, "BAD_REQUEST", "Missing requestId");
+				}
+				const request = await database.friendRequest.accept(
+					payload.requestId,
+					userId
+				);
+				if (!request) {
+					return ackError(ack, "NOT_FOUND", "Request not found");
+				}
+				await database.friendship.createPair(
+					request.sender_id,
+					request.receiver_id
+				);
+				await friendManager.emitSnapshot(request.sender_id);
+				await friendManager.emitSnapshot(request.receiver_id);
+				ackOk(ack);
 			}
-			const request = await database.friendRequest.accept(payload.requestId, userId);
-			if (!request) {
-				return ackError(ack, "NOT_FOUND", "Request not found");
-			}
-			await database.friendship.createPair(request.sender_id, request.receiver_id);
-			await friendManager.emitSnapshot(request.sender_id);
-			await friendManager.emitSnapshot(request.receiver_id);
-			ackOk(ack);
-		});
+		);
 
 		socket.on("roomCreate", (_payload, ack?: (payload: unknown) => void) => {
 			const room = roomManager.createRoom(socialUser);
@@ -452,28 +503,34 @@ export const startServer = async ({ io }: { io: Server }) => {
 			ackOk(ack, { room: toPrivateRoomDto(room) });
 		});
 
-		socket.on("roomJoinByCode", async (payload: { code?: string }, ack?: (payload: unknown) => void) => {
-			const code = payload?.code?.trim().toUpperCase();
-			if (!code) {
-				return ackError(ack, "BAD_REQUEST", "Missing room code");
+		socket.on(
+			"roomJoinByCode",
+			async (payload: { code?: string }, ack?: (payload: unknown) => void) => {
+				const code = payload?.code?.trim().toUpperCase();
+				if (!code) {
+					return ackError(ack, "BAD_REQUEST", "Missing room code");
+				}
+				const result = roomManager.joinRoomByCode(socialUser, code);
+				if (!result.ok) {
+					return ackError(ack, result.reason, "Unable to join room");
+				}
+				await updatePresence(userId, "in_room");
+				refreshOperationalMetrics();
+				emitRoomToMembers(result.room.members.map((member) => member.userId));
+				ackOk(ack, { room: toPrivateRoomDto(result.room) });
 			}
-			const result = roomManager.joinRoomByCode(socialUser, code);
-			if (!result.ok) {
-				return ackError(ack, result.reason, "Unable to join room");
-			}
-			await updatePresence(userId, "in_room");
-			refreshOperationalMetrics();
-			emitRoomToMembers(result.room.members.map((member) => member.userId));
-			ackOk(ack, { room: toPrivateRoomDto(result.room) });
-		});
+		);
 
-		socket.on("roomGetSnapshot", (_payload, ack?: (payload: unknown) => void) => {
-			const room = roomManager.getRoomForUser(userId);
-			ackOk(ack, {
-				room: room ? toPrivateRoomDto(room) : null,
-				invites: roomManager.getInvitesForUser(userId),
-			});
-		});
+		socket.on(
+			"roomGetSnapshot",
+			(_payload, ack?: (payload: unknown) => void) => {
+				const room = roomManager.getRoomForUser(userId);
+				ackOk(ack, {
+					room: room ? toPrivateRoomDto(room) : null,
+					invites: roomManager.getInvitesForUser(userId),
+				});
+			}
+		);
 
 		socket.on("roomLeave", (_payload, ack?: (payload: unknown) => void) => {
 			const currentRoom = roomManager.getRoomForUser(userId);
@@ -490,74 +547,103 @@ export const startServer = async ({ io }: { io: Server }) => {
 			ackOk(ack, { room: room ? toPrivateRoomDto(room) : null });
 		});
 
-		socket.on("roomInvite", (payload: { targetUserId?: string }, ack?: (payload: unknown) => void) => {
-			const targetUserId = payload?.targetUserId;
-			if (!targetUserId) {
-				return ackError(ack, "BAD_REQUEST", "Missing targetUserId");
+		socket.on(
+			"roomInvite",
+			(
+				payload: { targetUserId?: string },
+				ack?: (payload: unknown) => void
+			) => {
+				const targetUserId = payload?.targetUserId;
+				if (!targetUserId) {
+					return ackError(ack, "BAD_REQUEST", "Missing targetUserId");
+				}
+				const result = roomManager.createInvite(socialUser, targetUserId);
+				if (!result.ok) {
+					return ackError(ack, result.reason, "Unable to create invite");
+				}
+				emitRoomSnapshot(targetUserId);
+				emitToUser(targetUserId, "roomInviteReceived", result.invite);
+				ackOk(ack, { invite: result.invite });
 			}
-			const result = roomManager.createInvite(socialUser, targetUserId);
-			if (!result.ok) {
-				return ackError(ack, result.reason, "Unable to create invite");
-			}
-			emitRoomSnapshot(targetUserId);
-			emitToUser(targetUserId, "roomInviteReceived", result.invite);
-			ackOk(ack, { invite: result.invite });
-		});
+		);
 
-		socket.on("roomInviteAccept", (payload: { inviteId?: string }, ack?: (payload: unknown) => void) => {
-			if (!payload?.inviteId) {
-				return ackError(ack, "BAD_REQUEST", "Missing inviteId");
+		socket.on(
+			"roomInviteAccept",
+			(payload: { inviteId?: string }, ack?: (payload: unknown) => void) => {
+				if (!payload?.inviteId) {
+					return ackError(ack, "BAD_REQUEST", "Missing inviteId");
+				}
+				const result = roomManager.acceptInvite(socialUser, payload.inviteId);
+				if (!result.ok) {
+					return ackError(ack, result.reason, "Unable to accept invite");
+				}
+				updatePresence(userId, "in_room").catch((error) =>
+					logger.error("Failed to update invite presence", error)
+				);
+				refreshOperationalMetrics();
+				emitRoomToMembers(result.room.members.map((member) => member.userId));
+				ackOk(ack, { room: toPrivateRoomDto(result.room) });
 			}
-			const result = roomManager.acceptInvite(socialUser, payload.inviteId);
-			if (!result.ok) {
-				return ackError(ack, result.reason, "Unable to accept invite");
-			}
-			updatePresence(userId, "in_room").catch((error) =>
-				logger.error("Failed to update invite presence", error)
-			);
-			refreshOperationalMetrics();
-			emitRoomToMembers(result.room.members.map((member) => member.userId));
-			ackOk(ack, { room: toPrivateRoomDto(result.room) });
-		});
+		);
 
-		socket.on("roomInviteDecline", (payload: { inviteId?: string }, ack?: (payload: unknown) => void) => {
-			if (!payload?.inviteId) {
-				return ackError(ack, "BAD_REQUEST", "Missing inviteId");
+		socket.on(
+			"roomInviteDecline",
+			(payload: { inviteId?: string }, ack?: (payload: unknown) => void) => {
+				if (!payload?.inviteId) {
+					return ackError(ack, "BAD_REQUEST", "Missing inviteId");
+				}
+				const removed = roomManager.declineInvite(userId, payload.inviteId);
+				if (!removed) {
+					return ackError(ack, "INVITE_NOT_FOUND", "Invite not found");
+				}
+				emitRoomSnapshot(userId);
+				ackOk(ack);
 			}
-			const removed = roomManager.declineInvite(userId, payload.inviteId);
-			if (!removed) {
-				return ackError(ack, "INVITE_NOT_FOUND", "Invite not found");
-			}
-			emitRoomSnapshot(userId);
-			ackOk(ack);
-		});
+		);
 
-		socket.on("roomRequestJoin", (payload: { targetUserId?: string }, ack?: (payload: unknown) => void) => {
-			const targetUserId = payload?.targetUserId;
-			if (!targetUserId) {
-				return ackError(ack, "BAD_REQUEST", "Missing targetUserId");
+		socket.on(
+			"roomRequestJoin",
+			(
+				payload: { targetUserId?: string },
+				ack?: (payload: unknown) => void
+			) => {
+				const targetUserId = payload?.targetUserId;
+				if (!targetUserId) {
+					return ackError(ack, "BAD_REQUEST", "Missing targetUserId");
+				}
+				const result = roomManager.requestJoin(targetUserId, socialUser);
+				if (!result.ok) {
+					return ackError(ack, result.reason, "Room not available");
+				}
+				emitRoomToMembers(result.room.members.map((member) => member.userId));
+				emitToUser(
+					result.room.ownerUserId,
+					"roomJoinRequestReceived",
+					result.request
+				);
+				ackOk(ack, { requestId: result.request.id });
 			}
-			const result = roomManager.requestJoin(targetUserId, socialUser);
-			if (!result.ok) {
-				return ackError(ack, result.reason, "Room not available");
-			}
-			emitRoomToMembers(result.room.members.map((member) => member.userId));
-			emitToUser(result.room.ownerUserId, "roomJoinRequestReceived", result.request);
-			ackOk(ack, { requestId: result.request.id });
-		});
+		);
 
 		socket.on(
 			"roomJoinRequestAccept",
-			async (payload: { requestId?: string }, ack?: (payload: unknown) => void) => {
+			async (
+				payload: { requestId?: string },
+				ack?: (payload: unknown) => void
+			) => {
 				if (!payload?.requestId) {
 					return ackError(ack, "BAD_REQUEST", "Missing requestId");
 				}
 				const room = roomManager.getRoomForUser(userId);
-				const request = room?.pendingJoinRequests.find((item) => item.id === payload.requestId);
+				const request = room?.pendingJoinRequests.find(
+					(item) => item.id === payload.requestId
+				);
 				if (!request) {
 					return ackError(ack, "REQUEST_NOT_FOUND", "Request not found");
 				}
-				const requesterSocket = presenceManager.getPrimarySocket(request.requesterUserId);
+				const requesterSocket = presenceManager.getPrimarySocket(
+					request.requesterUserId
+				);
 				if (!requesterSocket) {
 					return ackError(ack, "REQUESTER_OFFLINE", "Requester is offline");
 				}
@@ -586,7 +672,10 @@ export const startServer = async ({ io }: { io: Server }) => {
 				if (!payload?.requestId) {
 					return ackError(ack, "BAD_REQUEST", "Missing requestId");
 				}
-				const result = roomManager.declineJoinRequest(userId, payload.requestId);
+				const result = roomManager.declineJoinRequest(
+					userId,
+					payload.requestId
+				);
 				if (!result.ok) {
 					return ackError(ack, result.reason, "Unable to decline request");
 				}
@@ -599,41 +688,149 @@ export const startServer = async ({ io }: { io: Server }) => {
 			}
 		);
 
-		socket.on("roomReadyToggle", (payload, ack?: (payload: unknown) => void) => {
-			const result = roomManager.toggleReady(userId);
-			if (!result.ok) {
-				return ackError(ack, result.reason, "Unable to toggle ready");
+		socket.on(
+			"roomReadyToggle",
+			(payload, ack?: (payload: unknown) => void) => {
+				const result = roomManager.toggleReady(userId);
+				if (!result.ok) {
+					return ackError(ack, result.reason, "Unable to toggle ready");
+				}
+				emitRoomToMembers(result.room.members.map((member) => member.userId));
+				ackOk(ack, { room: toPrivateRoomDto(result.room) });
 			}
-			emitRoomToMembers(result.room.members.map((member) => member.userId));
-			ackOk(ack, { room: toPrivateRoomDto(result.room) });
+		);
+
+		socket.on(
+			"roomStart",
+			async (_payload, ack?: (payload: unknown) => void) => {
+				const result = roomManager.startRoom(userId);
+				if (!result.ok) {
+					return ackError(ack, result.reason, "Cannot start room");
+				}
+
+				const memberIds = result.room.members.map((member) => member.userId);
+				const players = buildRoomPlayers(memberIds);
+				if (players.length !== memberIds.length) {
+					return ackError(ack, "MEMBER_OFFLINE", "A room member is offline");
+				}
+
+				// Preserve voice chat channel before dissolving the room
+				voiceChatManager.authorizeChannel(result.room.id, memberIds);
+				const voiceChatChannelId = result.room.id;
+				for (const memberId of memberIds) {
+					emitToUser(memberId, "voiceChat:channelReady", {
+						channelId: voiceChatChannelId,
+					});
+				}
+
+				// Remove members from private room and send them to public matchmaking
+				for (const memberId of memberIds) {
+					roomManager.leaveRoom(memberId);
+				}
+
+				for (const memberId of memberIds) {
+					const memberSocket = presenceManager.getPrimarySocket(memberId);
+					if (memberSocket) {
+						await matchmaking(memberSocket);
+					}
+				}
+
+				ackOk(ack);
+			}
+		);
+
+		// ── Voice Chat ──────────────────────────────────────────────────────────────
+		socket.on("voiceChat:join", (payload: { channelId?: string } = {}) => {
+			let resolvedChannelId: string | null = null;
+
+			// If user is currently in a room, use that room's ID as the channel
+			const room = roomManager.getRoomForUser(userId);
+			if (room) {
+				// Auto-authorize room members when they join voice chat
+				voiceChatManager.authorizeChannel(room.id, [userId]);
+				resolvedChannelId = room.id;
+			} else if (
+				payload?.channelId &&
+				voiceChatManager.isAuthorized(userId, payload.channelId)
+			) {
+				// Rejoin an authorized channel (e.g., user refreshed during game)
+				resolvedChannelId = payload.channelId;
+			}
+
+			if (!resolvedChannelId) {
+				socket.emit("voiceChat:error", {
+					message: "Not authorized for voice chat",
+				});
+				return;
+			}
+
+			const peers = voiceChatManager.join(userId, resolvedChannelId);
+
+			// Tell this user about existing active peers
+			socket.emit("voiceChat:members", { channelId: resolvedChannelId, peers });
+
+			// Tell existing active peers that this user joined
+			for (const peerId of peers) {
+				emitToUser(peerId, "voiceChat:peer-joined", { peerId: userId });
+			}
 		});
 
-		socket.on("roomStart", async (_payload, ack?: (payload: unknown) => void) => {
-			const result = roomManager.startRoom(userId);
-			if (!result.ok) {
-				return ackError(ack, result.reason, "Cannot start room");
-			}
-
-			const memberIds = result.room.members.map((member) => member.userId);
-			const players = buildRoomPlayers(memberIds);
-			if (players.length !== memberIds.length) {
-				return ackError(ack, "MEMBER_OFFLINE", "A room member is offline");
-			}
-
-			// Remove members from private room and send them to public matchmaking
-			for (const memberId of memberIds) {
-				roomManager.leaveRoom(memberId);
-			}
-
-			for (const memberId of memberIds) {
-				const memberSocket = presenceManager.getPrimarySocket(memberId);
-				if (memberSocket) {
-					await matchmaking(memberSocket);
+		socket.on("voiceChat:leave", () => {
+			const { channelId, remainingPeers } = voiceChatManager.leave(userId);
+			if (channelId) {
+				for (const peerId of remainingPeers) {
+					emitToUser(peerId, "voiceChat:peer-left", { peerId: userId });
 				}
 			}
-
-			ackOk(ack);
 		});
+
+		socket.on(
+			"voiceChat:offer",
+			(payload: { targetUserId?: string; sdp?: RTCSessionDescriptionInit }) => {
+				if (!payload?.targetUserId || !payload?.sdp) {
+					return;
+				}
+				if (!voiceChatManager.canSignal(userId, payload.targetUserId)) {
+					return;
+				}
+				emitToUser(payload.targetUserId, "voiceChat:offer", {
+					fromId: userId,
+					sdp: payload.sdp,
+				});
+			}
+		);
+
+		socket.on(
+			"voiceChat:answer",
+			(payload: { targetUserId?: string; sdp?: RTCSessionDescriptionInit }) => {
+				if (!payload?.targetUserId || !payload?.sdp) {
+					return;
+				}
+				if (!voiceChatManager.canSignal(userId, payload.targetUserId)) {
+					return;
+				}
+				emitToUser(payload.targetUserId, "voiceChat:answer", {
+					fromId: userId,
+					sdp: payload.sdp,
+				});
+			}
+		);
+
+		socket.on(
+			"voiceChat:ice",
+			(payload: { targetUserId?: string; candidate?: RTCIceCandidateInit }) => {
+				if (!payload?.targetUserId || !payload?.candidate) {
+					return;
+				}
+				if (!voiceChatManager.canSignal(userId, payload.targetUserId)) {
+					return;
+				}
+				emitToUser(payload.targetUserId, "voiceChat:ice", {
+					fromId: userId,
+					candidate: payload.candidate,
+				});
+			}
+		);
 	};
 
 	onHandshakeSuccess({ io, authClient, database }, async (socket, request) => {
@@ -657,6 +854,14 @@ export const startServer = async ({ io }: { io: Server }) => {
 		}
 
 		socket.on("disconnect", () => {
+			const { channelId: voiceChatChannel, remainingPeers: voiceChatPeers } =
+				voiceChatManager.leave(socket.data.id);
+			if (voiceChatChannel) {
+				for (const peerId of voiceChatPeers) {
+					emitToUser(peerId, "voiceChat:peer-left", { peerId: socket.data.id });
+				}
+			}
+
 			presenceManager.disconnect(socket, (userId) => {
 				refreshOperationalMetrics();
 				friendManager.emitSnapshotToFriendsOf(userId).catch((error) => {
