@@ -248,6 +248,60 @@ export type MonitoringResponse = {
 	}[];
 };
 
+export type AdminSubscriptionItem = {
+	id: string;
+	userId: string;
+	userNickname: string | null;
+	userEmail: string | null;
+	plan: string;
+	planName: string;
+	queriesUsed: number;
+	queriesLimit: number;
+	positioningUsed: number;
+	positioningLimit: number;
+	buildUsed: number;
+	buildLimit: number;
+	battleAnalysisUsed: number;
+	battleAnalysisLimit: number;
+	periodStart: string;
+	periodEnd: string | null;
+	activatedAt: string;
+	updatedAt: string;
+};
+
+export type AdminPaymentItem = {
+	id: string;
+	userId: string;
+	userNickname: string | null;
+	userEmail: string | null;
+	paypalOrderId: string;
+	plan: string;
+	planName: string;
+	amountUsd: number;
+	amountVnd: number | null;
+	currency: string;
+	status: string;
+	payerEmail: string | null;
+	payerName: string | null;
+	paypalCaptureId: string | null;
+	errorMessage: string | null;
+	createdAt: string;
+	updatedAt: string;
+};
+
+export type AdminSubscriptionStats = {
+	totalByPlan: Record<string, number>;
+	total: number;
+};
+
+export type AdminPaymentStats = {
+	total: number;
+	completed: number;
+	pending: number;
+	failed: number;
+	totalRevenueUsd: number;
+};
+
 const ADMIN_TOKEN_STORAGE_KEY = "cc-admin-token";
 
 export const getStoredAdminToken = () => {
@@ -498,5 +552,63 @@ export const adminApi = {
 		query.set("format", params.format);
 		query.set("token", token);
 		return `${APP_ADMIN_API_URL}/monitoring/export?${query.toString()}`;
+	},
+	subscriptions: (token: string, params: { plan?: string; q?: string }) => {
+		const query = new URLSearchParams();
+		if (params.plan) query.set("plan", params.plan);
+		if (params.q) query.set("q", params.q);
+		return adminFetch<{ subscriptions: AdminSubscriptionItem[]; stats: AdminSubscriptionStats }>(
+			`/subscriptions?${query.toString()}`,
+			{ method: "GET" },
+			token
+		);
+	},
+	payments: (token: string, params: { status?: string; plan?: string; q?: string }) => {
+		const query = new URLSearchParams();
+		if (params.status) query.set("status", params.status);
+		if (params.plan) query.set("plan", params.plan);
+		if (params.q) query.set("q", params.q);
+		return adminFetch<{ payments: AdminPaymentItem[]; stats: AdminPaymentStats }>(
+			`/payments?${query.toString()}`,
+			{ method: "GET" },
+			token
+		);
+	},
+	updateSubscription: (token: string, userId: string, plan: string) =>
+		adminFetch<{ success: boolean; plan: string; planName: string }>(
+			`/subscriptions/${userId}`,
+			{ method: "PATCH", body: JSON.stringify({ plan }) },
+			token
+		),
+	refundPayment: (token: string, paymentId: string) =>
+		adminFetch<{ success: boolean }>(
+			`/payments/${paymentId}/refund`,
+			{ method: "POST" },
+			token
+		),
+	revenueReport: (token: string, params: { groupBy?: string; from?: string; to?: string }) => {
+		const query = new URLSearchParams();
+		if (params.groupBy) query.set("groupBy", params.groupBy);
+		if (params.from) query.set("from", params.from);
+		if (params.to) query.set("to", params.to);
+		return adminFetch<{
+			groupBy: string;
+			from: string | null;
+			to: string | null;
+			rows: { period: string; count: number; totalUsd: number; totalVnd: number; plans: Record<string, number> }[];
+			summary: { totalPayments: number; totalUsd: number; totalVnd: number };
+		}>(
+			`/revenue/report?${query.toString()}`,
+			{ method: "GET" },
+			token
+		);
+	},
+	revenueExportUrl: (token: string, params: { groupBy: string; from?: string; to?: string }) => {
+		const query = new URLSearchParams();
+		query.set("groupBy", params.groupBy);
+		if (params.from) query.set("from", params.from);
+		if (params.to) query.set("to", params.to);
+		query.set("token", token);
+		return `${APP_ADMIN_API_URL}/revenue/export?${query.toString()}`;
 	},
 };

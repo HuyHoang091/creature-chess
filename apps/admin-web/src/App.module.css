@@ -1061,3 +1061,102 @@
 .toastError {
 	background: #ef4444;
 }
+
+/* Data Tables */
+.tableWrapper {
+	overflow-x: auto;
+	margin: 0 -24px -24px;
+	padding: 0 24px 24px;
+}
+
+.dataTable {
+	width: 100%;
+	border-collapse: separate;
+	border-spacing: 0;
+	font-size: 14px;
+}
+
+.dataTable thead th {
+	text-align: left;
+	padding: 12px 14px;
+	font-size: 11px;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
+	color: var(--text-muted);
+	border-bottom: 2px solid var(--border-color);
+	white-space: nowrap;
+	position: sticky;
+	top: 0;
+	background: var(--bg-secondary);
+	z-index: 1;
+}
+
+.dataTable tbody td {
+	padding: 14px 14px;
+	border-bottom: 1px solid var(--border-light);
+	vertical-align: middle;
+}
+
+.dataTable tbody tr {
+	transition: background 0.15s ease;
+}
+
+.dataTable tbody tr:hover {
+	background: var(--bg-tertiary);
+}
+
+.dataTable tbody tr:last-child td {
+	border-bottom: none;
+}
+
+/* User avatar badge in detail modal */
+.userAvatarBadge {
+	width: 64px;
+	height: 64px;
+	border-radius: 14px;
+	overflow: hidden;
+	background: var(--bg-tertiary);
+	border: 2px solid var(--border-color);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex-shrink: 0;
+}
+
+.userAvatarBadge img {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+
+.userAvatarBadge svg {
+	color: var(--text-muted);
+}
+
+/* Revenue report section */
+.revenueGrid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+	gap: 14px;
+}
+
+/* Custom Global Scrollbar */
+:global(::-webkit-scrollbar) {
+	width: 10px;
+	height: 10px;
+}
+:global(::-webkit-scrollbar-track) {
+	background: var(--bg-primary);
+}
+:global(::-webkit-scrollbar-thumb) {
+	background: var(--border-color);
+	border-radius: 5px;
+	border: 2px solid var(--bg-primary);
+}
+:global(::-webkit-scrollbar-thumb:hover) {
+	background: var(--text-muted);
+}
+:global(::-webkit-scrollbar-corner) {
+	background: var(--bg-primary);
+}

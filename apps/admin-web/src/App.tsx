@@ -8,6 +8,7 @@ import {
 	ChevronLeft,
 	ChevronRight,
 	Clock3,
+	CreditCard,
 	Download,
 	Flag,
 	Globe,
@@ -39,10 +40,14 @@ import {
 	type AdminBot,
 	type AdminEvent,
 	type AdminOverview,
+	type AdminPaymentItem,
+	type AdminPaymentStats,
 	type AdminPermission,
 	type AdminReportDetail,
 	type AdminReportListItem,
 	type AdminSessionUser,
+	type AdminSubscriptionItem,
+	type AdminSubscriptionStats,
 	type AdminUserDetail,
 	type AdminUserListItem,
 	type MonitoringResponse,
@@ -54,6 +59,7 @@ import { TRANSLATIONS, type TranslationKey } from "./translations";
 import {
 	ALL_PERMISSIONS,
 	APP_ADMIN_API_URL,
+	APP_IMAGE_URL,
 	APP_VERSION,
 	BOT_LABELS,
 	downloadWithToken,
@@ -77,7 +83,8 @@ type TabId =
 	| "reports"
 	| "monitoring"
 	| "bots"
-	| "events";
+	| "events"
+	| "subscriptions";
 
 type TabConfig = {
 	id: TabId;
@@ -117,6 +124,12 @@ const TABS: TabConfig[] = [
 		label: "Sự kiện",
 		icon: <CalendarDays size={18} />,
 		permission: "event_management",
+	},
+	{
+		id: "subscriptions",
+		label: "Thanh toán",
+		icon: <CreditCard size={18} />,
+		permission: "user_management",
 	},
 ];
 export const App = () => {
@@ -248,6 +261,22 @@ export const App = () => {
 	const [monitoringRange, setMonitoringRange] = React.useState("1h");
 	const [logLevel, setLogLevel] = React.useState("all");
 	const [pageError, setPageError] = React.useState<string | null>(null);
+
+	const [adminSubs, setAdminSubs] = React.useState<AdminSubscriptionItem[]>([]);
+	const [adminSubStats, setAdminSubStats] = React.useState<AdminSubscriptionStats | null>(null);
+	const [adminPayments, setAdminPayments] = React.useState<AdminPaymentItem[]>([]);
+	const [adminPayStats, setAdminPayStats] = React.useState<AdminPaymentStats | null>(null);
+	const [subsBusy, setSubsBusy] = React.useState(false);
+	const [subView, setSubView] = React.useState<"subs" | "payments" | "revenue">("subs");
+	const [subPlanFilter, setSubPlanFilter] = React.useState("all");
+	const [payStatusFilter, setPayStatusFilter] = React.useState("all");
+	const [payPlanFilter, setPayPlanFilter] = React.useState("all");
+	const [subSearch, setSubSearch] = React.useState("");
+	const [revenueRows, setRevenueRows] = React.useState<{ period: string; count: number; totalUsd: number; totalVnd: number; plans: Record<string, number> }[]>([]);
+	const [revenueSummary, setRevenueSummary] = React.useState<{ totalPayments: number; totalUsd: number; totalVnd: number } | null>(null);
+	const [revenueGroupBy, setRevenueGroupBy] = React.useState("day");
+	const [revenueDateFrom, setRevenueDateFrom] = React.useState("");
+	const [revenueDateTo, setRevenueDateTo] = React.useState("");
 
 	const visibleTabs = React.useMemo(
 		() => TABS.filter((item) => hasPermission(currentUser, item.permission)),
@@ -398,6 +427,25 @@ export const App = () => {
 		}
 	}, [currentUser, logLevel, monitoringRange, token]);
 
+	const loadSubscriptions = React.useCallback(async () => {
+		if (!token || !hasPermission(currentUser, "user_management")) return;
+		setSubsBusy(true);
+		try {
+			const [subData, payData] = await Promise.all([
+				adminApi.subscriptions(token, { plan: subPlanFilter !== "all" ? subPlanFilter : undefined, q: subSearch || undefined }),
+				adminApi.payments(token, { status: payStatusFilter !== "all" ? payStatusFilter : undefined, plan: payPlanFilter !== "all" ? payPlanFilter : undefined, q: subSearch || undefined }),
+			]);
+			setAdminSubs(subData.subscriptions);
+			setAdminSubStats(subData.stats);
+			setAdminPayments(payData.payments);
+			setAdminPayStats(payData.stats);
+		} catch (error) {
+			setPageError((error as Error).message);
+		} finally {
+			setSubsBusy(false);
+		}
+	}, [currentUser, payPlanFilter, payStatusFilter, subPlanFilter, subSearch, token]);
+
 	React.useEffect(() => {
 		document.title = "Creature Chess Admin";
 	}, []);
@@ -456,6 +504,8 @@ export const App = () => {
 			loadEvents().catch(() => undefined);
 		} else if (tab === "monitoring") {
 			loadMonitoring().catch(() => undefined);
+		} else if (tab === "subscriptions") {
+			loadSubscriptions().catch(() => undefined);
 		}
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [currentUser, tab, refreshKey]);
@@ -995,7 +1045,9 @@ export const App = () => {
 									<span>{t("stats")}</span>
 									<span></span>
 								</div>
-								{users.map((user) => (
+								{users
+									.filter((u) => u.id !== currentUser?.id)
+									.map((user) => (
 									<div key={user.id} className={styles.tableRow}>
 										<div>
 											<div className={styles.rowTitle}>{user.nickname || user.email || user.id}</div>
@@ -1392,7 +1444,365 @@ export const App = () => {
 						</div>
 					</section>
 				)}
+
+				{tab === "subscriptions" && (
+					<section className={styles.sectionStack}>
+						{/* Stats cards */}
+						<div className={styles.statsGrid}>
+							<StatCard label={t("subCount")} value={adminSubStats?.total ?? "-"} />
+							<StatCard label={t("totalRevenue")} value={adminPayStats ? `$${adminPayStats.totalRevenueUsd.toFixed(2)}` : "-"} />
+							<StatCard label={t("completedPayments")} value={adminPayStats?.completed ?? "-"} />
+							<StatCard label={t("pendingPayments")} value={adminPayStats?.pending ?? "-"} />
+							<StatCard label={t("failedPayments")} value={adminPayStats?.failed ?? "-"} />
+						</div>
+
+						{/* Plan distribution bar */}
+						{adminSubStats && adminSubStats.total > 0 && (
+							<div className={styles.panel}>
+								<div className={styles.panelHeader}>
+									<h2>{lang === "vi" ? "Phân bố gói" : "Plan Distribution"}</h2>
+								</div>
+								<div style={{ display: "flex", gap: 16, flexWrap: "wrap", padding: "8px 0" }}>
+									{Object.entries(adminSubStats.totalByPlan).map(([planKey, count]) => (
+										<div key={planKey} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13 }}>
+											<span style={{
+												display: "inline-block",
+												width: 10, height: 10, borderRadius: 3,
+												background: planKey === "free" ? "var(--text-muted)"
+													: planKey === "basic" ? "#3b82f6"
+													: planKey === "pro" ? "#8b5cf6"
+													: "#f59e0b",
+											}} />
+											<strong>{planKey.charAt(0).toUpperCase() + planKey.slice(1)}</strong>
+											<span style={{ color: "var(--text-muted)" }}>{count}</span>
+										</div>
+									))}
+								</div>
+							</div>
+						)}
+
+						{/* Sub-tabs toggle */}
+						<div className={styles.toolbar}>
+							<div style={{ display: "flex", gap: 4 }}>
+								<button
+									className={`${styles.ghostButton} ${subView === "subs" ? styles.primaryButton : ""}`}
+									onClick={() => setSubView("subs")}
+								>
+									{t("subViewSubs")}
+								</button>
+								<button
+									className={`${styles.ghostButton} ${subView === "payments" ? styles.primaryButton : ""}`}
+									onClick={() => setSubView("payments")}
+								>
+									{t("subViewPayments")}
+								</button>
+								<button
+									className={`${styles.ghostButton} ${subView === "revenue" ? styles.primaryButton : ""}`}
+									onClick={() => setSubView("revenue")}
+								>
+									{t("subViewRevenue")}
+								</button>
+							</div>
+							<div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+								{subView !== "revenue" && (
+									<input
+										className={styles.searchInput}
+										placeholder={t("searchUserPlaceholder")}
+										value={subSearch}
+										onChange={(e) => setSubSearch(e.target.value)}
+										style={{ width: 200 }}
+									/>
+								)}
+								{subView === "subs" && (
+									<select value={subPlanFilter} onChange={(e) => setSubPlanFilter(e.target.value)}>
+										<option value="all">{t("allPlans")}</option>
+										<option value="free">Free</option>
+										<option value="basic">Basic</option>
+										<option value="pro">Pro</option>
+										<option value="unlimited">Unlimited</option>
+									</select>
+								)}
+								{subView === "payments" && (
+									<>
+										<select value={payStatusFilter} onChange={(e) => setPayStatusFilter(e.target.value)}>
+											<option value="all">{t("allStatuses")}</option>
+											<option value="completed">{t("completedPayments")}</option>
+											<option value="pending">{t("pendingPayments")}</option>
+											<option value="failed">{t("failedPayments")}</option>
+											<option value="refunded">{t("refund")}</option>
+										</select>
+										<select value={payPlanFilter} onChange={(e) => setPayPlanFilter(e.target.value)}>
+											<option value="all">{t("allPlans")}</option>
+											<option value="basic">Basic</option>
+											<option value="pro">Pro</option>
+											<option value="unlimited">Unlimited</option>
+										</select>
+									</>
+								)}
+								{subView === "revenue" && (
+									<>
+										<select value={revenueGroupBy} onChange={(e) => setRevenueGroupBy(e.target.value)}>
+											<option value="day">{t("groupByDay")}</option>
+											<option value="month">{t("groupByMonth")}</option>
+											<option value="year">{t("groupByYear")}</option>
+										</select>
+										<label style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 12, color: "var(--text-muted)" }}>
+											{t("dateFrom")}
+											<input type="date" value={revenueDateFrom} onChange={(e) => setRevenueDateFrom(e.target.value)} style={{ fontSize: 12, padding: "6px 8px", background: "var(--input-bg)", border: "1px solid var(--border-color)", borderRadius: 8, color: "var(--text-primary)" }} />
+										</label>
+										<label style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 12, color: "var(--text-muted)" }}>
+											{t("dateTo")}
+											<input type="date" value={revenueDateTo} onChange={(e) => setRevenueDateTo(e.target.value)} style={{ fontSize: 12, padding: "6px 8px", background: "var(--input-bg)", border: "1px solid var(--border-color)", borderRadius: 8, color: "var(--text-primary)" }} />
+										</label>
+										<button className={styles.primaryButton} style={{ fontSize: 12, padding: "8px 14px" }} onClick={async () => {
+											if (!token) return;
+											setSubsBusy(true);
+											try {
+												const data = await adminApi.revenueReport(token, { groupBy: revenueGroupBy, from: revenueDateFrom || undefined, to: revenueDateTo || undefined });
+												setRevenueRows(data.rows);
+												setRevenueSummary(data.summary);
+											} catch (err) {
+												showToast((err as Error).message || t("toastError"), "error");
+											} finally {
+												setSubsBusy(false);
+											}
+										}}>
+											{t("reload")}
+										</button>
+										{token && (
+											<a
+												href={adminApi.revenueExportUrl(token, { groupBy: revenueGroupBy, from: revenueDateFrom || undefined, to: revenueDateTo || undefined })}
+												target="_blank"
+												rel="noopener noreferrer"
+												className={styles.ghostButton}
+												style={{ fontSize: 12, padding: "8px 14px", textDecoration: "none" }}
+											>
+												<Download size={14} />
+												{t("exportCsv")}
+											</a>
+										)}
+									</>
+								)}
+								{subView !== "revenue" && (
+									<button className={styles.ghostButton} onClick={() => loadSubscriptions()} disabled={subsBusy}>
+										<RefreshCw size={14} />
+									</button>
+								)}
+							</div>
+						</div>
+
+						{/* Subscriptions table */}
+						{subView === "subs" && (
+							<div className={styles.panel}>
+								<div className={styles.panelHeader}>
+									<h2>{t("subscriptionsList")}</h2>
+									<span className={styles.muted}>
+										{subsBusy ? t("loading") : `${adminSubs.length} ${lang === "vi" ? "gói" : "subs"}`}
+									</span>
+								</div>
+								<div className={styles.tableWrapper}>
+									<table className={styles.dataTable}>
+										<thead>
+											<tr>
+												<th>{t("user")}</th>
+												<th>{t("plan")}</th>
+												<th>{t("usage")}</th>
+												<th>{t("expires")}</th>
+												<th>{lang === "vi" ? "Kích hoạt" : "Activated"}</th>
+											</tr>
+										</thead>
+										<tbody>
+											{adminSubs.map((sub) => (
+												<tr key={sub.id}>
+													<td>
+														<div style={{ fontWeight: 600 }}>{sub.userNickname || sub.userId.slice(0, 8)}</div>
+														<div style={{ fontSize: 11, color: "var(--text-muted)" }}>{sub.userEmail || "-"}</div>
+													</td>
+													<td>
+														<span style={{
+															padding: "3px 10px", borderRadius: 6, fontSize: 12, fontWeight: 600,
+															background: sub.plan === "free" ? "var(--bg-tertiary)"
+																: sub.plan === "basic" ? "rgba(59, 130, 246, 0.12)"
+																: sub.plan === "pro" ? "rgba(139, 92, 246, 0.12)"
+																: "rgba(245, 158, 11, 0.12)",
+															color: sub.plan === "free" ? "var(--text-muted)"
+																: sub.plan === "basic" ? "#3b82f6"
+																: sub.plan === "pro" ? "#8b5cf6"
+																: "#f59e0b",
+														}}>
+															{sub.planName}
+														</span>
+													</td>
+													<td>
+														<div style={{ fontSize: 12, color: "var(--text-secondary)" }}>
+															Q: {sub.queriesUsed}/{sub.queriesLimit >= 999999 ? "∞" : sub.queriesLimit}
+															{" · "}P: {sub.positioningUsed}/{sub.positioningLimit >= 999999 ? "∞" : sub.positioningLimit}
+														</div>
+														<div style={{ fontSize: 12, color: "var(--text-secondary)" }}>
+															B: {sub.buildUsed}/{sub.buildLimit >= 999999 ? "∞" : sub.buildLimit}
+															{" · "}A: {sub.battleAnalysisUsed}/{sub.battleAnalysisLimit >= 999999 ? "∞" : sub.battleAnalysisLimit}
+														</div>
+													</td>
+													<td style={{ fontSize: 12, color: "var(--text-muted)" }}>
+														{sub.periodEnd ? formatDateTime(sub.periodEnd, lang) : "-"}
+													</td>
+													<td style={{ fontSize: 12, color: "var(--text-muted)" }}>
+														{formatDateTime(sub.activatedAt, lang)}
+													</td>
+												</tr>
+											))}
+											{adminSubs.length === 0 && !subsBusy && (
+												<tr>
+													<td colSpan={5} style={{ textAlign: "center", color: "var(--text-muted)", padding: 24 }}>
+														{lang === "vi" ? "Không có dữ liệu" : "No data"}
+													</td>
+												</tr>
+											)}
+										</tbody>
+									</table>
+								</div>
+							</div>
+						)}
+
+						{/* Payments table */}
+						{subView === "payments" && (
+							<div className={styles.panel}>
+								<div className={styles.panelHeader}>
+									<h2>{t("paymentsList")}</h2>
+									<span className={styles.muted}>
+										{subsBusy ? t("loading") : `${adminPayments.length} ${lang === "vi" ? "giao dịch" : "transactions"}`}
+									</span>
+								</div>
+								<div className={styles.tableWrapper}>
+									<table className={styles.dataTable}>
+										<thead>
+											<tr>
+												<th>{t("user")}</th>
+												<th>{t("plan")}</th>
+												<th>{t("amount")}</th>
+												<th>{t("status")}</th>
+												<th>{t("paypalOrder")}</th>
+												<th>{lang === "vi" ? "Thời gian" : "Date"}</th>
+											</tr>
+										</thead>
+										<tbody>
+											{adminPayments.map((pay) => (
+												<tr key={pay.id}>
+													<td>
+														<div style={{ fontWeight: 600 }}>{pay.userNickname || pay.userId.slice(0, 8)}</div>
+														<div style={{ fontSize: 11, color: "var(--text-muted)" }}>{pay.userEmail || "-"}</div>
+													</td>
+													<td>
+														<span style={{ fontSize: 12, fontWeight: 600 }}>{pay.planName}</span>
+													</td>
+													<td>
+														<div style={{ fontWeight: 700, color: "var(--primary-color)" }}>
+															${pay.amountUsd.toFixed(2)}
+														</div>
+														{pay.amountVnd ? (
+															<div style={{ fontSize: 11, color: "var(--text-muted)" }}>
+																~{pay.amountVnd.toLocaleString()}₫
+															</div>
+														) : null}
+													</td>
+													<td>
+														<span style={{
+															padding: "3px 10px", borderRadius: 6, fontSize: 11, fontWeight: 600,
+															background: pay.status === "completed" ? "rgba(16, 185, 129, 0.1)"
+																: pay.status === "pending" ? "rgba(245, 158, 11, 0.1)"
+																: pay.status === "refunded" ? "rgba(59, 130, 246, 0.1)"
+																: "rgba(239, 68, 68, 0.1)",
+															color: pay.status === "completed" ? "#10b981"
+																: pay.status === "pending" ? "#f59e0b"
+																: pay.status === "refunded" ? "#3b82f6"
+																: "#ef4444",
+														}}>
+															{pay.status}
+														</span>
+													</td>
+													<td>
+														<div style={{ fontSize: 11, fontFamily: "monospace", color: "var(--text-muted)" }}>
+															{pay.paypalOrderId.length > 20 ? pay.paypalOrderId.slice(0, 20) + "…" : pay.paypalOrderId}
+														</div>
+														{pay.payerName && (
+															<div style={{ fontSize: 11, color: "var(--text-muted)" }}>{pay.payerName}</div>
+														)}
+													</td>
+													<td style={{ fontSize: 12, color: "var(--text-muted)" }}>
+														{formatDateTime(pay.createdAt, lang)}
+													</td>
+												</tr>
+											))}
+											{adminPayments.length === 0 && !subsBusy && (
+												<tr>
+													<td colSpan={6} style={{ textAlign: "center", color: "var(--text-muted)", padding: 24 }}>
+														{lang === "vi" ? "Không có dữ liệu" : "No data"}
+													</td>
+												</tr>
+											)}
+										</tbody>
+									</table>
+								</div>
+							</div>
+						)}
+
+						{/* Revenue report */}
+						{subView === "revenue" && (
+							<div className={styles.panel}>
+								<div className={styles.panelHeader}>
+									<h2>{t("revenueReport")}</h2>
+									{revenueSummary && (
+										<span className={styles.muted}>
+											{revenueSummary.totalPayments} {t("transactions")} · ${revenueSummary.totalUsd.toFixed(2)} USD
+										</span>
+									)}
+								</div>
+
+								{revenueSummary && (
+									<div className={styles.statsGrid} style={{ marginBottom: 16 }}>
+										<StatCard label={t("transactions")} value={revenueSummary.totalPayments} />
+										<StatCard label={t("revenueUsd")} value={`$${revenueSummary.totalUsd.toFixed(2)}`} />
+										<StatCard label={t("revenueVnd")} value={`${revenueSummary.totalVnd.toLocaleString()}₫`} />
+									</div>
+								)}
+
+								<div className={styles.tableWrapper}>
+									<table className={styles.dataTable}>
+										<thead>
+											<tr>
+												<th>{t("period")}</th>
+												<th>{t("transactions")}</th>
+												<th>{t("revenueUsd")}</th>
+												<th>{t("revenueVnd")}</th>
+											</tr>
+										</thead>
+										<tbody>
+											{revenueRows.map((row) => (
+												<tr key={row.period}>
+													<td style={{ fontWeight: 600 }}>{row.period}</td>
+													<td>{row.count}</td>
+													<td style={{ fontWeight: 700, color: "var(--primary-color)" }}>${row.totalUsd.toFixed(2)}</td>
+													<td style={{ color: "var(--text-secondary)" }}>{row.totalVnd.toLocaleString()}₫</td>
+												</tr>
+											))}
+											{revenueRows.length === 0 && !subsBusy && (
+												<tr>
+													<td colSpan={4} style={{ textAlign: "center", color: "var(--text-muted)", padding: 24 }}>
+														{lang === "vi" ? "Nhấn 'Tải lại' để xem báo cáo" : "Click 'Reload' to load report"}
+													</td>
+												</tr>
+											)}
+										</tbody>
+									</table>
+								</div>
+							</div>
+						)}
+					</section>
+				)}
+	
 			</main>
+
+
 
 			{selectedUserId ? (
 				<Modal
@@ -1442,6 +1852,22 @@ export const App = () => {
 												<span className={styles.statusOk}>{t("active")}</span>
 											)}
 										</div>
+										<div style={{ display: "flex", gap: 16, alignItems: "center", marginBottom: 12 }}>
+											<div className={styles.userAvatarBadge}>
+												{selectedUser.user.profilePicture ? (
+													<img
+														src={`${APP_IMAGE_URL}/creatures/front/${selectedUser.user.profilePicture}.png`}
+														alt="avatar"
+														onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+													/>
+												) : (
+													<Users size={28} />
+												)}
+											</div>
+											<div style={{ color: "var(--text-muted)", fontSize: 13 }}>
+												Avatar ID: {selectedUser.user.profilePicture || t("noUser")}
+											</div>
+										</div>
 										<div className={styles.formGrid}>
 											<label className={styles.field}>
 												<span>Nickname</span>
@@ -1452,20 +1878,13 @@ export const App = () => {
 												<input name="email" defaultValue={selectedUser.user.email || ""} />
 											</label>
 											<label className={styles.field}>
-												<span>Avatar ID</span>
-												<input
-													type="number"
-													name="picture"
-													defaultValue={selectedUser.user.profilePicture ?? ""}
-												/>
-											</label>
-											<label className={styles.field}>
 												<span>{t("role")}</span>
 												<select name="role" defaultValue={selectedUser.user.role}>
 													<option value="player">player</option>
 													<option value="admin">admin</option>
 												</select>
 											</label>
+											<input type="hidden" name="picture" value={selectedUser.user.profilePicture ?? ""} />
 											<label className={`${styles.field} ${styles.fieldWide}`}>
 												<span>{lang === "vi" ? "Thông tin cá nhân" : "Personal Info"}</span>
 												<textarea

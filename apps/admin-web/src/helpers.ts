@@ -10,6 +10,13 @@ export const APP_ADMIN_API_URL =
 		? process.env.ADMIN_API_URL
 		: "http://localhost:3003";
 
+export const APP_IMAGE_URL =
+	typeof window !== "undefined" && (window as any).__CC_IMAGE_URL
+		? (window as any).__CC_IMAGE_URL
+		: typeof process !== "undefined" && process.env?.CREATURE_CHESS_IMAGE_URL
+		? process.env.CREATURE_CHESS_IMAGE_URL
+		: "http://localhost:8090/images";
+
 export const ALL_PERMISSIONS: AdminPermission[] = [
 	"user_management",
 	"report_management",

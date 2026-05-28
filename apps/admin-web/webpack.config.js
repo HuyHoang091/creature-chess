@@ -67,6 +67,9 @@ module.exports = {
 			APP_GAME_URL: JSON.stringify(
 				process.env.CREATURE_CHESS_APP_URL || "http://localhost:8090"
 			),
+			APP_IMAGE_URL: JSON.stringify(
+				process.env.CREATURE_CHESS_IMAGE_URL || "http://localhost:8090/images"
+			),
 		}),
 		new HtmlWebpackPlugin({
 			scriptLoading: "blocking",

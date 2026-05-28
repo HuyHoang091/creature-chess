@@ -16,7 +16,6 @@
 		"start-server-info": "env-cmd -f .env.example ts-node-dev apps/server-info/index.ts",
 		"dev-all": "concurrently \"yarn start-server-game\" \"yarn start-server-info\" \"yarn dev-web-game\"",
 		"dev-admin-all": "concurrently \"yarn start-server-game\" \"yarn start-server-info\" \"yarn start-server-admin\" \"yarn dev-web-game\" \"yarn dev-admin-web\"",
-		"dev-admin": "concurrently \"yarn start-server-game\" \"yarn start-server-info\" \"yarn start-server-admin\" \"yarn dev-admin-web\"",
 		"test": "yarn workspaces foreach --all run test",
 		"lint": "eslint \"apps/**/*.ts\" \"modules/**/*.ts\" \"apps/**/*.tsx\" \"modules/**/*.tsx\"",
 		"prettier": "prettier -w ./",

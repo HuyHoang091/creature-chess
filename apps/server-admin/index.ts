@@ -2298,7 +2298,432 @@ async function startServer() {
 		}
 	);
 
+	// ======================================================
+	// AI Coach Subscription / Payment Admin Routes
+	// ======================================================
+
+	const AI_COACH_PLAN_DEFS: Record<string, { name: string; queries: number; positioning: number; build: number; battleAnalysis: number }> = {
+		free: { name: "Free", queries: 5, positioning: 3, build: 2, battleAnalysis: 1 },
+		basic: { name: "Basic", queries: 30, positioning: 20, build: 15, battleAnalysis: 10 },
+		pro: { name: "Pro", queries: 100, positioning: 60, build: 50, battleAnalysis: 30 },
+		unlimited: { name: "Unlimited", queries: 999999, positioning: 999999, build: 999999, battleAnalysis: 999999 },
+	};
+
+	// GET /subscriptions — list all subscriptions with user info
+	app.get(
+		"/subscriptions",
+		rateLimit({ windowMs: RATE_LIMIT_WINDOW_MS, max: 120, prefix: "admin-sub-list", keyBuilder: getAdminRateLimitActorKey }),
+		async (req, res) => {
+			const admin = await requireAdminPermission(req, res, database, ADMIN_PERMISSIONS.user_management);
+			if (!admin) return;
+
+			const plan = typeof req.query.plan === "string" ? req.query.plan : undefined;
+			const q = typeof req.query.q === "string" ? req.query.q.trim() : "";
+
+			const where: any = {};
+			if (plan && plan !== "all") {
+				where.plan = plan;
+			}
+
+			const subscriptions = await (database.prisma as any).ai_coach_subscriptions.findMany({
+				where,
+				orderBy: { updated_at: "desc" },
+				take: 200,
+			});
+
+			// Enrich with user info
+			const userIds = subscriptions.map((s: any) => s.user_id);
+			const users = userIds.length > 0 ? await (database.prisma.users as any).findMany({
+				where: { id: { in: userIds } },
+				select: { id: true, nickname: true, email: true },
+			}) : [];
+			const userMap = new Map(users.map((u: any) => [u.id, u]));
+
+			let enriched = subscriptions.map((s: any) => {
+				const user: any = userMap.get(s.user_id);
+				return {
+					id: s.id,
+					userId: s.user_id,
+					userNickname: user?.nickname || null,
+					userEmail: user?.email || null,
+					plan: s.plan,
+					planName: AI_COACH_PLAN_DEFS[s.plan]?.name || s.plan,
+					queriesUsed: s.queries_used,
+					queriesLimit: s.queries_limit,
+					positioningUsed: s.positioning_used,
+					positioningLimit: s.positioning_limit,
+					buildUsed: s.build_used,
+					buildLimit: s.build_limit,
+					battleAnalysisUsed: s.battle_analysis_used,
+					battleAnalysisLimit: s.battle_analysis_limit,
+					periodStart: s.period_start,
+					periodEnd: s.period_end,
+					activatedAt: s.activated_at,
+					updatedAt: s.updated_at,
+				};
+			});
+
+			if (q) {
+				const lower = q.toLowerCase();
+				enriched = enriched.filter((item: any) =>
+					(item.userNickname || "").toLowerCase().includes(lower) ||
+					(item.userEmail || "").toLowerCase().includes(lower) ||
+					item.userId.toLowerCase().includes(lower)
+				);
+			}
+
+			// Stats
+			const totalByPlan: Record<string, number> = {};
+			for (const s of subscriptions) {
+				totalByPlan[s.plan] = (totalByPlan[s.plan] || 0) + 1;
+			}
+
+			return res.status(200).json({
+				subscriptions: enriched,
+				stats: { totalByPlan, total: subscriptions.length },
+			});
+		}
+	);
+
+	// GET /payments — list all payments
+	app.get(
+		"/payments",
+		rateLimit({ windowMs: RATE_LIMIT_WINDOW_MS, max: 120, prefix: "admin-pay-list", keyBuilder: getAdminRateLimitActorKey }),
+		async (req, res) => {
+			const admin = await requireAdminPermission(req, res, database, ADMIN_PERMISSIONS.user_management);
+			if (!admin) return;
+
+			const status = typeof req.query.status === "string" ? req.query.status : undefined;
+			const plan = typeof req.query.plan === "string" ? req.query.plan : undefined;
+			const q = typeof req.query.q === "string" ? req.query.q.trim() : "";
+
+			const where: any = {};
+			if (status && status !== "all") {
+				where.status = status;
+			}
+			if (plan && plan !== "all") {
+				where.plan = plan;
+			}
+
+			const payments = await (database.prisma as any).ai_coach_payments.findMany({
+				where,
+				orderBy: { created_at: "desc" },
+				take: 200,
+			});
+
+			const userIds = [...new Set(payments.map((p: any) => p.user_id))];
+			const users = userIds.length > 0 ? await (database.prisma.users as any).findMany({
+				where: { id: { in: userIds } },
+				select: { id: true, nickname: true, email: true },
+			}) : [];
+			const userMap = new Map(users.map((u: any) => [u.id, u]));
+
+			let enriched = payments.map((p: any) => {
+				const user: any = userMap.get(p.user_id);
+				return {
+					id: p.id,
+					userId: p.user_id,
+					userNickname: user?.nickname || null,
+					userEmail: user?.email || null,
+					paypalOrderId: p.paypal_order_id,
+					plan: p.plan,
+					planName: AI_COACH_PLAN_DEFS[p.plan]?.name || p.plan,
+					amountUsd: p.amount_usd,
+					amountVnd: p.amount_vnd,
+					currency: p.currency,
+					status: p.status,
+					payerEmail: p.payer_email,
+					payerName: p.payer_name,
+					paypalCaptureId: p.paypal_capture_id,
+					errorMessage: p.error_message,
+					createdAt: p.created_at,
+					updatedAt: p.updated_at,
+				};
+			});
+
+			if (q) {
+				const lower = q.toLowerCase();
+				enriched = enriched.filter((item: any) =>
+					(item.userNickname || "").toLowerCase().includes(lower) ||
+					(item.userEmail || "").toLowerCase().includes(lower) ||
+					(item.payerEmail || "").toLowerCase().includes(lower) ||
+					item.userId.toLowerCase().includes(lower) ||
+					item.paypalOrderId.toLowerCase().includes(lower)
+				);
+			}
+
+			// Revenue stats
+			const completedPayments = payments.filter((p: any) => p.status === "completed");
+			const totalRevenue = completedPayments.reduce((sum: number, p: any) => sum + (p.amount_usd || 0), 0);
+
+			return res.status(200).json({
+				payments: enriched,
+				stats: {
+					total: payments.length,
+					completed: completedPayments.length,
+					pending: payments.filter((p: any) => p.status === "pending").length,
+					failed: payments.filter((p: any) => p.status === "failed").length,
+					totalRevenueUsd: Math.round(totalRevenue * 100) / 100,
+				},
+			});
+		}
+	);
+
+	// PATCH /subscriptions/:userId — admin manually change a user's plan
+	app.patch(
+		"/subscriptions/:userId",
+		rateLimit({ windowMs: RATE_LIMIT_WINDOW_MS, max: ADMIN_MUTATION_RATE_LIMIT, prefix: "admin-sub-update", keyBuilder: getAdminRateLimitActorKey }),
+		async (req, res) => {
+			const admin = await requireAdminPermission(req, res, database, ADMIN_PERMISSIONS.user_management);
+			if (!admin) return;
+
+			const { userId } = req.params;
+			const { plan } = req.body as { plan?: string };
+
+			if (!plan || !AI_COACH_PLAN_DEFS[plan]) {
+				return res.status(400).json({ message: "Invalid plan" });
+			}
+
+			const planDef = AI_COACH_PLAN_DEFS[plan];
+			const now = new Date();
+			const periodEnd = plan === "free" ? null : new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+
+			await (database.prisma as any).ai_coach_subscriptions.upsert({
+				where: { user_id: userId },
+				update: {
+					plan,
+					queries_used: 0,
+					queries_limit: planDef.queries,
+					positioning_used: 0,
+					positioning_limit: planDef.positioning,
+					build_used: 0,
+					build_limit: planDef.build,
+					battle_analysis_used: 0,
+					battle_analysis_limit: planDef.battleAnalysis,
+					period_start: now,
+					period_end: periodEnd,
+					activated_at: now,
+				},
+				create: {
+					user_id: userId,
+					plan,
+					queries_limit: planDef.queries,
+					positioning_limit: planDef.positioning,
+					build_limit: planDef.build,
+					battle_analysis_limit: planDef.battleAnalysis,
+					period_start: now,
+					period_end: periodEnd,
+					activated_at: now,
+				},
+			});
+
+			await createAuditLog(database, {
+				actorUserId: admin.id,
+				targetUserId: userId,
+				action: "admin.subscription.changed",
+				metadata: { plan },
+			});
+
+			await createUserNotification(database, {
+				userId,
+				type: "subscription_changed",
+				title: "AI Coach plan changed",
+				message: `An admin changed your AI Coach plan to ${planDef.name}.`,
+			});
+
+			return res.status(200).json({ success: true, plan, planName: planDef.name });
+		}
+	);
+
+	// POST /payments/:paymentId/refund — mark a payment as refunded
+	app.post(
+		"/payments/:paymentId/refund",
+		rateLimit({ windowMs: RATE_LIMIT_WINDOW_MS, max: ADMIN_MUTATION_RATE_LIMIT, prefix: "admin-pay-refund", keyBuilder: getAdminRateLimitActorKey }),
+		async (req, res) => {
+			const admin = await requireAdminPermission(req, res, database, ADMIN_PERMISSIONS.user_management);
+			if (!admin) return;
+
+			const { paymentId } = req.params;
+			const payment = await (database.prisma as any).ai_coach_payments.findUnique({ where: { id: paymentId } });
+			if (!payment) {
+				return res.status(404).json({ message: "Payment not found" });
+			}
+
+			await (database.prisma as any).ai_coach_payments.update({
+				where: { id: paymentId },
+				data: { status: "refunded" },
+			});
+
+			// Downgrade user to free
+			const freeDef = AI_COACH_PLAN_DEFS.free;
+			await (database.prisma as any).ai_coach_subscriptions.updateMany({
+				where: { user_id: payment.user_id },
+				data: {
+					plan: "free",
+					queries_limit: freeDef.queries,
+					positioning_limit: freeDef.positioning,
+					build_limit: freeDef.build,
+					battle_analysis_limit: freeDef.battleAnalysis,
+					period_end: null,
+				},
+			});
+
+			await createAuditLog(database, {
+				actorUserId: admin.id,
+				targetUserId: payment.user_id,
+				action: "admin.payment.refunded",
+				metadata: { paymentId, plan: payment.plan, amountUsd: payment.amount_usd },
+			});
+
+			await createUserNotification(database, {
+				userId: payment.user_id,
+				type: "payment_refunded",
+				title: "Payment Refunded",
+				message: `Your payment of $${payment.amount_usd} for ${AI_COACH_PLAN_DEFS[payment.plan]?.name || payment.plan} plan has been refunded.`,
+			});
+
+			return res.status(200).json({ success: true });
+		}
+	);
+
 	await processExpiredLocks();
+
+	// GET /revenue/report — aggregate revenue by day/month/year
+	app.get(
+		"/revenue/report",
+		rateLimit({ windowMs: RATE_LIMIT_WINDOW_MS, max: 120, prefix: "admin-rev-report", keyBuilder: getAdminRateLimitActorKey }),
+		async (req, res) => {
+			const admin = await requireAdminPermission(req, res, database, ADMIN_PERMISSIONS.user_management);
+			if (!admin) return;
+
+			const groupBy = typeof req.query.groupBy === "string" ? req.query.groupBy : "day";
+			const from = typeof req.query.from === "string" ? req.query.from : undefined;
+			const to = typeof req.query.to === "string" ? req.query.to : undefined;
+
+			const where: any = { status: "completed" };
+			if (from || to) {
+				where.created_at = {};
+				if (from) where.created_at.gte = new Date(from);
+				if (to) where.created_at.lte = new Date(to + "T23:59:59.999Z");
+			}
+
+			const payments = await (database.prisma as any).ai_coach_payments.findMany({
+				where,
+				orderBy: { created_at: "asc" },
+			});
+
+			const buckets = new Map<string, { period: string; count: number; totalUsd: number; totalVnd: number; plans: Record<string, number> }>();
+
+			for (const p of payments) {
+				const d = new Date(p.created_at);
+				let key: string;
+				if (groupBy === "month") {
+					key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+				} else if (groupBy === "year") {
+					key = `${d.getFullYear()}`;
+				} else {
+					key = d.toISOString().slice(0, 10);
+				}
+
+				let bucket = buckets.get(key);
+				if (!bucket) {
+					bucket = { period: key, count: 0, totalUsd: 0, totalVnd: 0, plans: {} };
+					buckets.set(key, bucket);
+				}
+				bucket.count += 1;
+				bucket.totalUsd += p.amount_usd || 0;
+				bucket.totalVnd += p.amount_vnd || 0;
+				bucket.plans[p.plan] = (bucket.plans[p.plan] || 0) + 1;
+			}
+
+			const rows = Array.from(buckets.values()).map(b => ({
+				...b,
+				totalUsd: Math.round(b.totalUsd * 100) / 100,
+				totalVnd: Math.round(b.totalVnd),
+			}));
+
+			const grandTotalUsd = Math.round(payments.reduce((s: number, p: any) => s + (p.amount_usd || 0), 0) * 100) / 100;
+			const grandTotalVnd = Math.round(payments.reduce((s: number, p: any) => s + (p.amount_vnd || 0), 0));
+
+			return res.status(200).json({
+				groupBy,
+				from: from || null,
+				to: to || null,
+				rows,
+				summary: {
+					totalPayments: payments.length,
+					totalUsd: grandTotalUsd,
+					totalVnd: grandTotalVnd,
+				},
+			});
+		}
+	);
+
+	// GET /revenue/export — export revenue report as CSV
+	app.get(
+		"/revenue/export",
+		rateLimit({ windowMs: RATE_LIMIT_WINDOW_MS, max: ADMIN_MUTATION_RATE_LIMIT, prefix: "admin-rev-export", keyBuilder: getAdminRateLimitActorKey }),
+		async (req, res) => {
+			const token = typeof req.query.token === "string" ? req.query.token : parseAuthorizationToken(req.headers.authorization as string | undefined);
+			if (!token) {
+				return res.status(401).json({ message: "Admin authentication required" });
+			}
+			const user = await authenticateAdminToken(database, token);
+			if (!user || !isAdminUser(user)) {
+				return res.status(403).json({ message: "Admin access required" });
+			}
+
+			const groupBy = typeof req.query.groupBy === "string" ? req.query.groupBy : "day";
+			const from = typeof req.query.from === "string" ? req.query.from : undefined;
+			const to = typeof req.query.to === "string" ? req.query.to : undefined;
+
+			const where: any = { status: "completed" };
+			if (from || to) {
+				where.created_at = {};
+				if (from) where.created_at.gte = new Date(from);
+				if (to) where.created_at.lte = new Date(to + "T23:59:59.999Z");
+			}
+
+			const payments = await (database.prisma as any).ai_coach_payments.findMany({
+				where,
+				orderBy: { created_at: "asc" },
+			});
+
+			const buckets = new Map<string, { period: string; count: number; totalUsd: number; totalVnd: number }>();
+			for (const p of payments) {
+				const d = new Date(p.created_at);
+				let key: string;
+				if (groupBy === "month") {
+					key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+				} else if (groupBy === "year") {
+					key = `${d.getFullYear()}`;
+				} else {
+					key = d.toISOString().slice(0, 10);
+				}
+				let bucket = buckets.get(key);
+				if (!bucket) {
+					bucket = { period: key, count: 0, totalUsd: 0, totalVnd: 0 };
+					buckets.set(key, bucket);
+				}
+				bucket.count += 1;
+				bucket.totalUsd += p.amount_usd || 0;
+				bucket.totalVnd += p.amount_vnd || 0;
+			}
+
+			const rows = Array.from(buckets.values());
+			const csv = [
+				toCsvRow(["Period", "Transactions", "Revenue (USD)", "Revenue (VND)"]),
+				...rows.map(r =>
+					toCsvRow([r.period, r.count, Math.round(r.totalUsd * 100) / 100, Math.round(r.totalVnd)])
+				),
+			].join("\n");
+
+			res.setHeader("Content-Type", "text/csv; charset=utf-8");
+			res.setHeader("Content-Disposition", `attachment; filename="revenue-report-${groupBy}.csv"`);
+			return res.status(200).send(csv);
+		}
+	);
+
 	await captureMonitoringSnapshot();
 	setInterval(() => {
 		processExpiredLocks().catch((error) =>
