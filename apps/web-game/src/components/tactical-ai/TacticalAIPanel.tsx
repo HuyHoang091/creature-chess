@@ -785,6 +785,14 @@ const TacticalAIPanel: React.FC = () => {
 								{status.preset
 									? ` | ${AUTO_PRESET_LABELS[status.preset]}`
 									: ""}
+								{status.effectivePreset &&
+								status.preset &&
+								status.effectivePreset !== status.preset
+									? ` → ${AUTO_PRESET_LABELS[status.effectivePreset]}`
+									: ""}
+								{status.lobbyTempo && status.lobbyTempo !== "neutral"
+									? ` | nhịp ${status.lobbyTempo === "fast" ? "nhanh" : "chậm"}`
+									: ""}
 							</span>
 							{status.enabled && (
 								<button onClick={handleStopAutoPlay}>Tắt auto</button>

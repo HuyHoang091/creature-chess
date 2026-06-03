@@ -18,6 +18,7 @@ import { PREFERRED_LOCATIONS } from "@cc-server/bot/src/preferredLocations";
 import { BotPersonality } from "@cc-server/data";
 
 import { BuildAdvicePlan } from "../build-advisor/types";
+import { chooseItemPlanAction, isRecoverableHolder } from "./item-plan-executor";
 
 export type BuildAutoPlayLevel = 1 | 2 | 3 | 4;
 export type BuildAutoPlayPreset = "balanced" | "stabilize" | "economy";
@@ -72,6 +73,7 @@ export type PlannedUnit = {
 export type PlannedItemAction = {
 	itemId: string;
 	targetPiece: string;
+	holderPiece?: string;
 	action: "craft_now" | "equip_now" | "hold" | "temporary_holder";
 	reason: string;
 	from: string[];
@@ -185,6 +187,7 @@ const normalizeItemPlan = (itemPlan: unknown): PlannedItemAction[] => {
 			return {
 				itemId,
 				targetPiece,
+				holderPiece: canonicalUnitName(source.holderPiece) || undefined,
 				action,
 				reason: typeof source.reason === "string" ? source.reason.trim() : "",
 				from: Array.isArray(source.from)
@@ -323,6 +326,9 @@ export const canSafelySellPiece = (
 	piece: PieceModel,
 	plan: NormalizedBuildPlan
 ) => {
+	if (isRecoverableHolder(state, piece, plan)) {
+		return true;
+	}
 	if (plan.coreUnitNames.has(piece.definition.name)) {
 		return false;
 	}
@@ -698,6 +704,7 @@ export const chooseBuildAutoPlayAction = (
 ) => {
 	const { personality } = getBuildAutoPlayPresetSettings(preset);
 	return (
+		(level >= 4 ? chooseItemPlanAction(state, plan) : null) ||
 		findProactiveCleanupAction(state, plan, settings, level) ||
 		findBotLikeAction(state, plan, settings, level, personality) ||
 		findRosterAction(state, plan, level, personality)

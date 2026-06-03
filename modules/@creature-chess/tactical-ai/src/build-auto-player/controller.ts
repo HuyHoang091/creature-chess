@@ -21,6 +21,10 @@ import { BuildAdvicePlan } from "../build-advisor/types";
 import { getPositioningAdvisor } from "../integration/advisor-instance";
 import { PieceMove } from "../positioning-advisor/types";
 import {
+	DEFAULT_TICK_DELAY_MS,
+	delayForKind,
+} from "./action-delays";
+import {
 	BuildAutoPlayLevel,
 	BuildAutoPlayPreset,
 	NormalizedBuildPlan,
@@ -28,6 +32,15 @@ import {
 	normalizeBuildAutoPlayPlan,
 	normalizeBuildAutoPlayPreset,
 } from "./policy";
+import {
+	LobbyPlayerSnapshot,
+	LobbyTempo,
+	TempoSnapshot,
+	appendTempoSnapshot,
+	createTempoSnapshot,
+	detectLobbyTempo,
+	resolveEffectivePreset,
+} from "./tempo-heuristic";
 
 export type BuildAutoPlayActivity =
 	| "analyzing"
@@ -41,6 +54,8 @@ export type BuildAutoPlayStatus = {
 	enabled: boolean;
 	level: BuildAutoPlayLevel | null;
 	preset: BuildAutoPlayPreset | null;
+	effectivePreset: BuildAutoPlayPreset | null;
+	lobbyTempo: LobbyTempo | null;
 	planName: string | null;
 	round: number | null;
 	activity: BuildAutoPlayActivity;
@@ -55,13 +70,12 @@ type ControllerDeps = {
 	getPotentialOpponentBoard?: (
 		playerId: string
 	) => BoardState<PieceModel> | null;
+	getLobbyPlayers?: () => LobbyPlayerSnapshot[];
 	wait?: (milliseconds: number) => Promise<void>;
 };
 
 type TacticalQueueResult = "queued" | "done" | "waiting";
 
-const AUTO_PLAY_INTERVAL_MS = 400;
-const AUTO_PLAY_THINKING_MS = 650;
 const MAX_RECENT_STEPS = 5;
 
 const getBoardSignature = (board: BoardState<PieceModel>) =>
@@ -95,6 +109,11 @@ export class BuildAutoPlayerController {
 	private readyRound: number | null = null;
 	private activeRound: number | null = null;
 	private activePhaseKey: string | null = null;
+	private nextTickDelayMs = DEFAULT_TICK_DELAY_MS;
+	private tempoHistory: TempoSnapshot[] = [];
+	private lobbyTempo: LobbyTempo = "neutral";
+	private effectivePreset: BuildAutoPlayPreset | null = null;
+	private tempoSnapshotRound: number | null = null;
 
 	public constructor(
 		private entity: PlayerEntity,
@@ -104,7 +123,7 @@ export class BuildAutoPlayerController {
 		const controller = this;
 		entity.runSaga(function* () {
 			while (true) {
-				yield sagaDelay(AUTO_PLAY_INTERVAL_MS);
+				yield sagaDelay(controller.nextTickDelayMs);
 				yield call(() => controller.tick());
 			}
 		});
@@ -141,6 +160,11 @@ export class BuildAutoPlayerController {
 		this.readyRound = null;
 		this.activeRound = null;
 		this.activePhaseKey = null;
+		this.nextTickDelayMs = DEFAULT_TICK_DELAY_MS;
+		this.tempoHistory = [];
+		this.lobbyTempo = "neutral";
+		this.effectivePreset = preset;
+		this.tempoSnapshotRound = null;
 		this.publish(
 			"analyzing",
 			`Coach đã nhận build ${plan.planName} và bắt đầu đọc ván đấu.`,
@@ -157,6 +181,11 @@ export class BuildAutoPlayerController {
 		this.tacticalMoves = [];
 		this.tacticalMovesRound = null;
 		this.tacticalBlockedRound = null;
+		this.tempoHistory = [];
+		this.lobbyTempo = "neutral";
+		this.effectivePreset = null;
+		this.tempoSnapshotRound = null;
+		this.nextTickDelayMs = DEFAULT_TICK_DELAY_MS;
 		this.publish("disabled", message, true);
 		return this.getStatus();
 	}
@@ -167,6 +196,8 @@ export class BuildAutoPlayerController {
 			enabled: this.enabled,
 			level: this.level,
 			preset: this.preset,
+			effectivePreset: this.enabled ? this.effectivePreset : null,
+			lobbyTempo: this.enabled ? this.lobbyTempo : null,
 			planName: this.plan?.planName || null,
 			round: state.roundInfo.round || null,
 			activity: this.activity,
@@ -229,6 +260,34 @@ export class BuildAutoPlayerController {
 		}
 	}
 
+	private updateTempoState(state: PlayerState) {
+		const round = state.roundInfo.round;
+		if (this.tempoSnapshotRound === round) {
+			return;
+		}
+
+		const lobbyPlayers = this.deps.getLobbyPlayers?.() || [
+			{
+				health: state.playerInfo.health,
+				status: state.playerInfo.status,
+			},
+		];
+		this.tempoHistory = appendTempoSnapshot(
+			this.tempoHistory,
+			createTempoSnapshot(round, lobbyPlayers)
+		);
+		this.tempoSnapshotRound = round;
+		this.lobbyTempo = detectLobbyTempo(this.tempoHistory);
+		this.effectivePreset = resolveEffectivePreset(
+			this.preset || "balanced",
+			this.lobbyTempo
+		);
+	}
+
+	private scheduleNextDelay(kind: "shop" | "tactical") {
+		this.nextTickDelayMs = delayForKind(kind);
+	}
+
 	private async tick() {
 		if (!this.enabled || !this.level || !this.plan) {
 			return;
@@ -237,6 +296,7 @@ export class BuildAutoPlayerController {
 		let state = this.getCurrentState();
 		let round = state.roundInfo.round;
 		this.resetLifecycleState(state);
+		this.updateTempoState(state);
 
 		if (state.playerInfo.health <= 0) {
 			this.stop("Coach đã dừng auto vì người chơi đã bị loại.");
@@ -279,7 +339,7 @@ export class BuildAutoPlayerController {
 			"choosing_action",
 			"Đang lượng giá cửa hàng, bench và bàn cờ..."
 		);
-		await (this.deps.wait || wait)(AUTO_PLAY_THINKING_MS);
+		await (this.deps.wait || wait)(delayForKind("thinking"));
 
 		state = this.getCurrentState();
 		round = state.roundInfo.round;
@@ -309,7 +369,7 @@ export class BuildAutoPlayerController {
 			this.plan,
 			this.settings,
 			this.level,
-			this.preset || "balanced"
+			this.effectivePreset || this.preset || "balanced"
 		);
 		if (action) {
 			const latestState = this.getCurrentState();
@@ -323,6 +383,7 @@ export class BuildAutoPlayerController {
 				);
 				return;
 			}
+			this.scheduleNextDelay("shop");
 			this.publish("acting", action.message, true);
 			this.entity.put(action.action);
 			return;
@@ -349,11 +410,13 @@ export class BuildAutoPlayerController {
 	private finalizeAfterTactical(round: number) {
 		if (this.level === 4 && this.readyRound !== round) {
 			this.readyRound = round;
+			this.scheduleNextDelay("shop");
 			this.publish("acting", "Đã hoàn tất chuỗi hành động, đang sẵn sàng...", true);
 			this.entity.put(PlayerActions.readyUpPlayerAction());
 			return;
 		}
 
+		this.scheduleNextDelay("shop");
 		this.publish("waiting", "Đã hoàn tất chuỗi hành động, chờ round tiếp theo...");
 	}
 
@@ -386,6 +449,7 @@ export class BuildAutoPlayerController {
 			return;
 		}
 
+		this.scheduleNextDelay("tactical");
 		this.publish(
 			"acting",
 			`Đang áp dụng phương án: chuyển quân đến (${move.targetX},${move.targetY})...`,

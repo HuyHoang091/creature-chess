@@ -239,6 +239,7 @@ export class Game {
 				getOpponentBoard: this.getOpponentBoard,
 				getPlayerBoard: this.getPlayerBoard,
 				getPotentialOpponentBoard: this.getPotentialOpponentBoard,
+				getLobbyPlayers: this.getLobbyPlayers,
 			});
 			this.buildAutoPlayers.set(entity.id, buildAutoPlayer);
 		}
@@ -302,4 +303,10 @@ export class Game {
 		const opponent = this.gamemode.getPlayerById(opponentId);
 		return opponent ? opponent.select((state) => state.board) : null;
 	};
+
+	private getLobbyPlayers = () =>
+		this.gamemode.getPlayerListPlayers().map((player) => ({
+			health: player.health,
+			status: player.status,
+		}));
 }

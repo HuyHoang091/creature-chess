@@ -36,6 +36,8 @@ export interface BuildAutoPlayStatus {
 	enabled: boolean;
 	level: BuildAutoPlayLevel | null;
 	preset: BuildAutoPlayPreset | null;
+	effectivePreset?: BuildAutoPlayPreset | null;
+	lobbyTempo?: "fast" | "slow" | "neutral" | null;
 	planName: string | null;
 	round: number | null;
 	activity:

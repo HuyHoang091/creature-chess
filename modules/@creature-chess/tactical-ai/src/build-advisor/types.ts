@@ -126,6 +126,7 @@ export interface BuildAdvicePlanUnit {
 export interface BuildAdvicePlanItemAction {
 	itemId: string;
 	targetPiece: string;
+	holderPiece?: string;
 	action: "craft_now" | "equip_now" | "hold" | "temporary_holder";
 	reason: string;
 	from?: string[];

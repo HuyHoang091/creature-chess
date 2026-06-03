@@ -225,4 +225,29 @@ describe("build auto-play policy", () => {
 				?.name
 		).toContain("equip");
 	});
+
+	test("level 4 prioritizes itemPlan hold before generic craft", () => {
+		const holder = makePiece(5, "nut-holder");
+		const state = makeState({
+			benchPieces: [holder],
+			inventory: ["BF_SWORD"],
+		});
+		const plan = makePlan({
+			itemPlan: [
+				{
+					itemId: "INFINITY_EDGE",
+					targetPiece: "Budaye",
+					holderPiece: "Nut",
+					action: "temporary_holder",
+					reason: "hold sword",
+					from: ["BF_SWORD", "BF_SWORD"],
+				},
+			],
+		});
+
+		expect(
+			chooseBuildAutoPlayAction(state, plan, GamemodeSettingsPresets.default, 4)
+				?.name
+		).toContain("hold:");
+	});
 });

@@ -192,10 +192,22 @@ Server normalize lại plan, validate preset và giữ controller theo player en
 Luồng mỗi round:
 
 1. Chỉ chạy trong `PREPARING` PvP; combat, ready phase và PvE không dispatch action.
-2. Chạy action bot thật từ `getActions(state, personality, settings)`, cộng bias build bằng `vision` nhưng không thêm gold reserve riêng.
-3. Triển khai roster theo sức mạnh tức thời: ưu tiên 3 sao, 2 sao, build/core, synergy và cost.
-4. Sau khi hết action thường, gọi `PositioningAdvisor` với đối thủ PvP chính, auto chọn mode `max` theo `preservationScore`.
-5. Áp dụng toàn bộ tactical move hợp lệ, rồi level 4 mới `ready`.
+2. Level 4 chạy `itemPlan` trước: recover holder → craft → equip → hold component lên `holderPiece`.
+3. Chạy action bot thật từ `getActions(state, personality, settings)`, cộng bias build bằng `vision` nhưng không thêm gold reserve riêng.
+4. Triển khai roster theo sức mạnh tức thời: ưu tiên 3 sao, 2 sao, build/core, synergy và cost.
+5. Sau khi hết action thường, gọi `PositioningAdvisor` với đối thủ PvP chính, auto chọn mode `max` theo `preservationScore`.
+6. Áp dụng toàn bộ tactical move hợp lệ (delay 100–200ms/move), rồi level 4 mới `ready`.
+
+Preset tĩnh (user chọn lúc bật auto) có thể bị override runtime bởi **Tempo Awareness**:
+- Lobby mất máu nhanh → `effectivePreset = stabilize`
+- Lobby đánh chậm → `effectivePreset = economy`
+- Trung bình → giữ preset user chọn
+
+`buildAutoPlayStatus` trả thêm `effectivePreset` và `lobbyTempo` để UI hiển thị badge nhịp độ.
+
+**Item Holder:** RAG có thể chỉ định `holderPiece` + `action: "temporary_holder"` trong `itemPlan`. Agent giữ component trên unit transition cho đến khi carry xuất hiện, rồi bán holder (item về inventory) → craft/equip lên carry.
+
+**Dynamic APM:** delay suy nghĩ/mua bài 400–800ms; xếp cờ tactical 100–200ms/tick.
 
 Preset:
 
@@ -208,7 +220,7 @@ Preset:
 Luật an toàn:
 
 - Không bán core unit.
-- Không bán unit 2 sao/3 sao hoặc unit đang cầm đồ.
+- Không bán unit 2 sao/3 sao hoặc unit đang cầm đồ, trừ **designated item holder** khi carry đã có và cần recover component.
 - Level 1 chỉ tactical positioning.
 - Level 2 thêm mua unit và bench/board roster.
 - Level 3 thêm XP/reroll theo bot thật.
@@ -246,7 +258,11 @@ flowchart TB
 | `positioning-advisor/strategy-picker.ts` | Chọn formation tốt nhất dựa trên win rate & variance |
 | `post-battle-analyzer/analyzer.ts` | Phân tích replay, tạo summary & recommendations |
 | `post-battle-analyzer/issue-detector.ts` | Phát hiện lỗi positioning / item / synergy |
-| `cache/cache.ts` | In-memory cache với TTL |
+| `build-auto-player/controller.ts` | Auto-play loop, tempo snapshot, dynamic delays |
+| `build-auto-player/policy.ts` | Action priority, preset personality, sell safety |
+| `build-auto-player/item-plan-executor.ts` | Item holder / craft / equip / recover chain |
+| `build-auto-player/tempo-heuristic.ts` | Lobby HP bleed → effective preset |
+| `build-auto-player/action-delays.ts` | Random delay ranges per action kind |
 
 ### 7.2. Client-side (`apps/web-game`)
 
@@ -323,12 +339,15 @@ trong phase `PREPARING`.
 | 3 | Thêm reroll và mua XP theo roll strategy |
 | 4 | Thêm bán rác an toàn, ghép/gắn item và tự ready |
 
-Server normalize lại plan từ client. Level 4 không bán core unit, unit 2/3 sao
-hoặc unit đang cầm item. Chỉ directive `craft_now` và `equip_now` mới được xử lý;
-item vừa ghép theo `craft_now` cũng được gắn vào target đã chỉ định.
+Server normalize lại plan từ client. Level 4 chạy đầy đủ `itemPlan`:
+`temporary_holder` / `hold` (giữ component trên `holderPiece`), `craft_now`, `equip_now`,
+và recover holder khi carry đã có. Không bán core unit, unit 2/3 sao hoặc unit cầm đồ
+ngoại trừ designated holder trong recovery flow.
+
+Tempo awareness tự điều preset runtime; dynamic APM phân biệt shop (400–800ms) và tactical (100–200ms).
 
 Socket events: `startBuildAutoPlay`, `stopBuildAutoPlay`,
-`requestBuildAutoPlayState`, `buildAutoPlayStatus`.
+`requestBuildAutoPlayState`, `buildAutoPlayStatus` (kèm `effectivePreset`, `lobbyTempo`).
 
 ## 11. Sơ đồ tổng quan đầy đủ
 

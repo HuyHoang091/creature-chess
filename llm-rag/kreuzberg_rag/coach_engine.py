@@ -109,6 +109,14 @@ After the explanation, include exactly one fenced JSON block:
   "itemPlan": [
     {
       "itemId": "INFINITY_EDGE",
+      "targetPiece": "ExactCarryName",
+      "holderPiece": "ExactTransitionUnitName",
+      "action": "temporary_holder",
+      "reason": "Hold BF_SWORD on transition unit until carry appears",
+      "from": ["BF_SWORD", "BF_SWORD"]
+    },
+    {
+      "itemId": "INFINITY_EDGE",
       "targetPiece": "ExactPieceName",
       "action": "craft_now",
       "reason": "short reason",
@@ -123,6 +131,7 @@ JSON rules:
 - Return valid JSON only inside the fenced block.
 - Use exact piece names and item IDs from the game state when possible.
 - Keep the plan conservative and executable from the current state.
+- For itemPlan: when the carry unit is not on board yet, set action to "temporary_holder" or "hold" and specify holderPiece as the exact transition/trash unit that should equip components until the carry appears. When the carry is already owned, prefer "craft_now" or "equip_now".
 """
 
 
