@@ -66,6 +66,8 @@ export interface SimulationConfig {
 	targetMaxWinRate: number;
 }
 
+export type StrategySelectionMode = "balanced" | "max";
+
 export const DEFAULT_SIMULATION_CONFIG: SimulationConfig = {
 	numFormations: 5,
 	numScenarios: 4,

@@ -175,6 +175,45 @@ sequenceDiagram
     end
 ```
 
+## 5.2. Build Auto-Play
+
+Auto-play bắt đầu từ câu trả lời `/build`. Client lưu `plan` đi kèm AI message và gửi socket event:
+
+```ts
+startBuildAutoPlay({
+  plan,
+  level: 1 | 2 | 3 | 4,
+  preset: "balanced" | "stabilize" | "economy"
+})
+```
+
+Server normalize lại plan, validate preset và giữ controller theo player entity để reconnect vẫn nhận được trạng thái qua `buildAutoPlayStatus`.
+
+Luồng mỗi round:
+
+1. Chỉ chạy trong `PREPARING` PvP; combat, ready phase và PvE không dispatch action.
+2. Chạy action bot thật từ `getActions(state, personality, settings)`, cộng bias build bằng `vision` nhưng không thêm gold reserve riêng.
+3. Triển khai roster theo sức mạnh tức thời: ưu tiên 3 sao, 2 sao, build/core, synergy và cost.
+4. Sau khi hết action thường, gọi `PositioningAdvisor` với đối thủ PvP chính, auto chọn mode `max` theo `preservationScore`.
+5. Áp dụng toàn bộ tactical move hợp lệ, rồi level 4 mới `ready`.
+
+Preset:
+
+| Preset | ambition | composure | vision | Ý nghĩa |
+|---|---:|---:|---:|---|
+| `balanced` | 100 | 100 | 100 | Bot tiêu chuẩn |
+| `stabilize` | 120 | 40 | 80 | Ưu tiên giữ máu, mua và triển khai tempo |
+| `economy` | 60 | 160 | 120 | Ít nóng vội, giữ nhịp economy |
+
+Luật an toàn:
+
+- Không bán core unit.
+- Không bán unit 2 sao/3 sao hoặc unit đang cầm đồ.
+- Level 1 chỉ tactical positioning.
+- Level 2 thêm mua unit và bench/board roster.
+- Level 3 thêm XP/reroll theo bot thật.
+- Level 4 thêm bán rác an toàn, generic craft/equip item và tự ready sau tactical.
+
 ## 6. Post-Battle Analysis Flow
 
 ```mermaid
@@ -270,6 +309,26 @@ flowchart LR
 | `OPENROUTER_API_KEY` | — | API key cho LLM |
 | `OPENROUTER_BASE_URL` | `http://localhost:5001/v1` | Base URL OpenRouter / proxy |
 | `COACH_MODEL` | `deepseek-v4-flash-nothinking` | Model LLM |
+
+## 10.1. Build Auto-Play
+
+Sau khi `/build` trả về plan, client hiện nút `Thực thi build`. Runtime nằm ở
+game server, gắn với player entity để tiếp tục sau reconnect, và chỉ hành động
+trong phase `PREPARING`.
+
+| Mức | Quyền |
+|-----|-------|
+| 1 | Chỉ xếp tactical bằng RL cho unit đang trên board |
+| 2 | Thêm mua unit và đưa unit từ bench lên board |
+| 3 | Thêm reroll và mua XP theo roll strategy |
+| 4 | Thêm bán rác an toàn, ghép/gắn item và tự ready |
+
+Server normalize lại plan từ client. Level 4 không bán core unit, unit 2/3 sao
+hoặc unit đang cầm item. Chỉ directive `craft_now` và `equip_now` mới được xử lý;
+item vừa ghép theo `craft_now` cũng được gắn vào target đã chỉ định.
+
+Socket events: `startBuildAutoPlay`, `stopBuildAutoPlay`,
+`requestBuildAutoPlayState`, `buildAutoPlayStatus`.
 
 ## 11. Sơ đồ tổng quan đầy đủ
 

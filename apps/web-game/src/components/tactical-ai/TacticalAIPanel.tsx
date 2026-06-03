@@ -7,6 +7,13 @@ import {
 	requestCoachAdviceStream,
 	requestBuildAdviceStream,
 	requestBattleAnalysis,
+	requestBuildAutoPlayState,
+	startBuildAutoPlay,
+	stopBuildAutoPlay,
+	subscribeBuildAutoPlayStatus,
+	BuildAutoPlayLevel,
+	BuildAutoPlayPreset,
+	BuildAutoPlayStatus,
 	PositioningAdvice,
 } from "~/services/tacticalAI";
 import { AppState } from "~/store/state";
@@ -21,6 +28,161 @@ import { PositioningTab } from "./PositioningTab";
 import { TacticalAIBrainIcon, TacticalAIRobotIcon } from "./TacticalAIIcons";
 import styles from "./tactical-ai.module.css";
 
+const COACH_THINKING_DELAY_MS = 700;
+const waitForCoachThinking = () =>
+	new Promise((resolve) => setTimeout(resolve, COACH_THINKING_DELAY_MS));
+
+type CoachMessage = {
+	role: "user" | "ai";
+	text: string;
+	plan?: any;
+	kind?: "welcome" | "permission" | "auto";
+	status?: BuildAutoPlayStatus;
+};
+
+const INITIAL_COACH_MESSAGES: CoachMessage[] = [
+	{
+		role: "ai",
+		kind: "welcome",
+		text: "Chào bạn, mình là Coach. Mình có thể giúp gì cho bạn trong ván này?",
+	},
+];
+
+const AUTO_PRESETS: Array<{
+	id: BuildAutoPlayPreset;
+	label: string;
+	description: string;
+}> = [
+	{
+		id: "balanced",
+		label: "Cân bằng",
+		description: "Bot tiêu chuẩn",
+	},
+	{
+		id: "stabilize",
+		label: "Giữ máu",
+		description: "Ưu tiên tempo",
+	},
+	{
+		id: "economy",
+		label: "Tích tiền",
+		description: "Giữ nhịp economy",
+	},
+];
+
+const AUTO_PRESET_LABELS: Record<BuildAutoPlayPreset, string> = {
+	balanced: "Cân bằng",
+	stabilize: "Giữ máu",
+	economy: "Tích tiền",
+};
+
+const AUTO_LEVEL_LABELS: Record<BuildAutoPlayLevel, string> = {
+	1: "Chỉ xếp quân",
+	2: "Mua tướng + xếp quân",
+	3: "Thêm reroll / lên cấp",
+	4: "Full auto",
+};
+
+const cleanAutoText = (text: string) =>
+	text
+		.replace(/Tactical AI/gi, "Coach")
+		.replace(/\btactical\b/gi, "xếp quân")
+		.replace(/\bready\b/gi, "sẵn sàng")
+		.replace(/\bbot\b/gi, "nhịp tự động")
+		.replace(/\.\.\.$/, "...")
+		.trim();
+
+const getAutoStatusHeadline = (status: BuildAutoPlayStatus) => {
+	if (!status.enabled) {
+		return "Coach đã dừng auto.";
+	}
+
+	switch (status.activity) {
+		case "analyzing":
+			return "Đang phân tích ván đấu...";
+		case "choosing_action":
+			return "Đang chọn hành động...";
+		case "acting":
+			return `Đang thực hiện: ${formatAutoStep(status.message)}`;
+		case "waiting":
+			return cleanAutoText(status.message);
+		case "error":
+			return `Chờ nhịp tiếp theo: ${cleanAutoText(status.message)}`;
+		case "disabled":
+		default:
+			return cleanAutoText(status.message);
+	}
+};
+
+const getAutoStepGroup = (step: string) => {
+	const normalized = cleanAutoText(step).toLowerCase();
+	if (
+		normalized.includes("bán") ||
+		normalized.includes("dọn") ||
+		normalized.includes("chỗ trống")
+	) {
+		return "Dọn bench an toàn";
+	}
+	if (
+		normalized.includes("mua ") ||
+		normalized.includes("xuống sân") ||
+		normalized.includes("thay ") ||
+		normalized.includes("bench")
+	) {
+		return "Triển khai đội hình";
+	}
+	if (
+		normalized.includes("ghép") ||
+		normalized.includes("gắn") ||
+		normalized.includes("đồ")
+	) {
+		return "Tối ưu trang bị";
+	}
+	if (
+		normalized.includes("xếp quân") ||
+		normalized.includes("đối thủ") ||
+		normalized.includes("phương án") ||
+		normalized.includes("ô ") ||
+		normalized.includes("tọa độ")
+	) {
+		return "Điều chỉnh vị trí";
+	}
+	if (
+		normalized.includes("reroll") ||
+		normalized.includes("kinh nghiệm") ||
+		normalized.includes("cửa hàng")
+	) {
+		return "Điều phối tài nguyên";
+	}
+	return "Nhịp trận";
+};
+
+const formatAutoStep = (step: string) => {
+	const text = cleanAutoText(step).replace(/\.\.\.$/, "");
+	if (text.startsWith("Đang mua ")) return text.replace(/^Đang /, "");
+	if (text.startsWith("Đang triển khai ")) return text.replace(/^Đang /, "");
+	if (text.startsWith("Đang thay ")) return text.replace(/^Đang /, "");
+	if (text.startsWith("Đang bán ")) return text.replace(/^Đang /, "");
+	if (text.startsWith("Đang ghép ")) return text.replace(/^Đang /, "");
+	if (text.startsWith("Đang gắn ")) return text.replace(/^Đang /, "");
+	if (text.startsWith("Đang áp dụng ")) return text.replace(/^Đang /, "");
+	if (text.startsWith("Đang ")) return text.replace(/^Đang /, "Đang xử lý ");
+	return text;
+};
+
+const groupAutoSteps = (steps: string[]) =>
+	steps.reduce<Array<{ title: string; steps: string[] }>>((groups, step) => {
+		const title = getAutoStepGroup(step);
+		const formatted = formatAutoStep(step);
+		const last = groups[groups.length - 1];
+		if (last?.title === title) {
+			last.steps.push(formatted);
+			return groups;
+		}
+		groups.push({ title, steps: [formatted] });
+		return groups;
+	}, []);
+
 const TacticalAIPanel: React.FC = () => {
 	const [open, setOpen] = React.useState(false);
 	const [activeTab, setActiveTab] = React.useState<"positioning" | "coach">(
@@ -29,11 +191,64 @@ const TacticalAIPanel: React.FC = () => {
 	const [loading, setLoading] = React.useState(false);
 	const [positioningResult, setPositioningResult] =
 		React.useState<PositioningAdvice | null>(null);
-	const [coachMessages, setCoachMessages] = React.useState<
-		Array<{ role: "user" | "ai"; text: string }>
-	>([]);
+	const [coachMessages, setCoachMessages] =
+		React.useState<CoachMessage[]>(INITIAL_COACH_MESSAGES);
 	const [coachInput, setCoachInput] = React.useState("");
+	const [pendingPlan, setPendingPlan] = React.useState<any | null>(null);
+	const [pendingPreset, setPendingPreset] =
+		React.useState<BuildAutoPlayPreset>("balanced");
+	const [autoStatus, setAutoStatus] =
+		React.useState<BuildAutoPlayStatus | null>(null);
 	const chatMessagesRef = React.useRef<HTMLDivElement>(null);
+	const agentStepsRef = React.useRef<HTMLDivElement>(null);
+	const lastAutoMessageKeyRef = React.useRef<string | null>(null);
+	const previousCoachMessageCountRef = React.useRef(INITIAL_COACH_MESSAGES.length);
+	const previousOpenRef = React.useRef(open);
+	const previousActiveTabRef = React.useRef(activeTab);
+	const wasAutoEnabledRef = React.useRef(false);
+
+	React.useEffect(() => {
+		const unsubscribe = subscribeBuildAutoPlayStatus(setAutoStatus);
+		requestBuildAutoPlayState()
+			.then(({ state }) => setAutoStatus(state))
+			.catch(() => undefined);
+		return unsubscribe;
+	}, []);
+
+	React.useEffect(() => {
+		if (!autoStatus) {
+			return;
+		}
+
+		const wasEnabled = wasAutoEnabledRef.current;
+		const shouldShow = autoStatus.enabled || wasEnabled;
+		wasAutoEnabledRef.current = autoStatus.enabled;
+		if (!shouldShow) {
+			return;
+		}
+
+		const key = [
+			autoStatus.enabled,
+			autoStatus.round,
+			autoStatus.activity,
+			autoStatus.message,
+			autoStatus.recentSteps.join("|"),
+		].join(":");
+		if (lastAutoMessageKeyRef.current === key) {
+			return;
+		}
+
+		lastAutoMessageKeyRef.current = key;
+		setCoachMessages((prev) => {
+			const autoMessage: CoachMessage = {
+				role: "ai",
+				kind: "auto",
+				text: autoStatus.message,
+				status: autoStatus,
+			};
+			return [...prev.filter((message) => message.kind !== "auto"), autoMessage];
+		});
+	}, [autoStatus]);
 
 	const localPlayerId = useLocalPlayerId();
 
@@ -78,6 +293,27 @@ const TacticalAIPanel: React.FC = () => {
 	const inventory = useSelector<AppState, string[]>(
 		(state) => state.game.playerInfo.inventory
 	);
+	const autoEnabled = !!autoStatus?.enabled;
+	const canSendCoachMessage = !loading && !autoEnabled;
+	const scrollCoachToBottom = React.useCallback(() => {
+		const chatMessages = chatMessagesRef.current;
+		if (!chatMessages) {
+			return;
+		}
+
+		chatMessages.scrollTop = chatMessages.scrollHeight;
+	}, []);
+	const scrollAgentStepsToTop = React.useCallback((smooth = true) => {
+		const agentSteps = agentStepsRef.current;
+		if (!agentSteps) {
+			return;
+		}
+
+		agentSteps.scrollTo({
+			top: 0,
+			behavior: smooth ? "smooth" : "auto",
+		});
+	}, []);
 
 	const myTraits = React.useMemo(() => {
 		const traitSet = new Set<string>();
@@ -90,10 +326,50 @@ const TacticalAIPanel: React.FC = () => {
 	}, [myPieces]);
 
 	React.useEffect(() => {
-		if (chatMessagesRef.current && activeTab === "coach") {
-			chatMessagesRef.current.scrollTop = chatMessagesRef.current.scrollHeight;
+		const wasOpen = previousOpenRef.current;
+		const wasActiveTab = previousActiveTabRef.current;
+		previousOpenRef.current = open;
+		previousActiveTabRef.current = activeTab;
+
+		if (!open || activeTab !== "coach") {
+			return;
 		}
-	}, [coachMessages, activeTab, loading]);
+
+		const openedCoach = !wasOpen || wasActiveTab !== "coach";
+		const messageCountChanged =
+			coachMessages.length !== previousCoachMessageCountRef.current;
+		previousCoachMessageCountRef.current = coachMessages.length;
+		const lastMessage = coachMessages[coachMessages.length - 1];
+		if (!openedCoach && !messageCountChanged && lastMessage?.kind === "auto") {
+			return;
+		}
+
+		const animationFrame = requestAnimationFrame(scrollCoachToBottom);
+		const timeout = window.setTimeout(scrollCoachToBottom, 40);
+		return () => {
+			cancelAnimationFrame(animationFrame);
+			window.clearTimeout(timeout);
+		};
+	}, [coachMessages, activeTab, loading, open, scrollCoachToBottom]);
+
+	React.useEffect(() => {
+		if (!open || activeTab !== "coach" || !autoStatus?.enabled) {
+			return;
+		}
+
+		const animationFrame = requestAnimationFrame(() =>
+			scrollAgentStepsToTop(true)
+		);
+		return () => cancelAnimationFrame(animationFrame);
+	}, [
+		activeTab,
+		autoStatus?.activity,
+		autoStatus?.enabled,
+		autoStatus?.message,
+		autoStatus?.recentSteps,
+		open,
+		scrollAgentStepsToTop,
+	]);
 
 	// Reset positioning result when round changes
 	const prevRoundRef = React.useRef(roundNumber);
@@ -131,9 +407,12 @@ const TacticalAIPanel: React.FC = () => {
 		}
 	};
 
-	const handleCoachSend = async () => {
-		if (!coachInput.trim()) return;
-		const raw = coachInput.trim();
+	const handleCoachSend = async (quickMessage?: string) => {
+		if (!canSendCoachMessage) {
+			return;
+		}
+		const raw = (quickMessage || coachInput).trim();
+		if (!raw) return;
 		setCoachInput("");
 		setCoachMessages((prev) => [...prev, { role: "user", text: raw }]);
 		setLoading(true);
@@ -177,6 +456,7 @@ const TacticalAIPanel: React.FC = () => {
 			) {
 				const buildNote = raw.replace(/^\/(build|team|doi)\s*/i, "").trim();
 				setCoachMessages((prev) => [...prev, { role: "ai", text: "" }]);
+				await waitForCoachThinking();
 				const buildResponse = await requestBuildAdviceStream(
 					buildNote || undefined,
 					(chunk) => {
@@ -194,16 +474,18 @@ const TacticalAIPanel: React.FC = () => {
 				);
 				setCoachMessages((prev) => {
 					const last = prev[prev.length - 1];
-					if (!last || last.role !== "ai" || last.text.trim()) {
+					if (!last || last.role !== "ai") {
 						return prev;
 					}
 
 					const updated = [...prev];
 					updated[updated.length - 1] = {
 						...last,
+						plan: buildResponse.plan || undefined,
 						text:
+							last.text.trim() ||
 							buildResponse.answer ||
-							"Không lấy được gợi ý build từ Tactical AI.",
+							"Coach chưa lấy được gợi ý build.",
 					};
 					return updated;
 				});
@@ -235,6 +517,7 @@ const TacticalAIPanel: React.FC = () => {
 				const currentItems =
 					(targetPiece as any).itemIds || (targetPiece as any).items || [];
 				setCoachMessages((prev) => [...prev, { role: "ai", text: "" }]);
+				await waitForCoachThinking();
 				await requestCoachAdviceStream(
 					`Gợi ý item cho ${targetPiece.definition?.name || "Quân"} (role: ${role}). Current items: ${currentItems.join(", ") || "none"}`,
 					{},
@@ -293,6 +576,7 @@ const TacticalAIPanel: React.FC = () => {
 				}
 				const archetype = enemyPieces[0]?.definition?.traits?.[0] || "mixed";
 				setCoachMessages((prev) => [...prev, { role: "ai", text: "" }]);
+				await waitForCoachThinking();
 				await requestCoachAdviceStream(
 					`Counter đội hình ${archetype}. Enemy: ${enemyPieces.map((p) => p.definition?.name || "").join(", ")}`,
 					{ enemyArchetype: archetype },
@@ -396,6 +680,7 @@ const TacticalAIPanel: React.FC = () => {
 
 			// Default: streaming coach chat
 			setCoachMessages((prev) => [...prev, { role: "ai", text: "" }]);
+			await waitForCoachThinking();
 			await requestCoachAdviceStream(
 				raw,
 				{
@@ -424,24 +709,239 @@ const TacticalAIPanel: React.FC = () => {
 		}
 	};
 
+	const handleStartAutoPlay = async (level: BuildAutoPlayLevel) => {
+		if (!pendingPlan) return;
+		try {
+			const { state } = await startBuildAutoPlay(
+				pendingPlan,
+				level,
+				pendingPreset
+			);
+			setAutoStatus(state);
+			setPendingPlan(null);
+		} catch (error: any) {
+			setCoachMessages((prev) => [
+				...prev,
+				{ role: "ai", text: `Không thể bật auto: ${error.message}` },
+			]);
+		}
+	};
+
+	const handleExecuteBuild = (plan: any) => {
+		if (autoEnabled) {
+			return;
+		}
+		setPendingPlan(plan);
+		setPendingPreset("balanced");
+		setCoachMessages((prev) => [
+			...prev,
+			{
+				role: "ai",
+				kind: "permission",
+				text: "Bạn muốn bật tự động ở mức nào?",
+			},
+		]);
+	};
+
+	const handleStopAutoPlay = async () => {
+		try {
+			const { state } = await stopBuildAutoPlay();
+			setAutoStatus(state);
+		} catch (error: any) {
+			setCoachMessages((prev) => [
+				...prev,
+				{ role: "ai", text: `Không thể tắt auto: ${error.message}` },
+			]);
+		}
+	};
+
+	const renderCoachMessage = (msg: CoachMessage, index: number) => {
+		if (msg.role === "user") {
+			return (
+				<div key={index} className={styles.userMessage}>
+					{msg.text}
+				</div>
+			);
+		}
+
+		const status = msg.status;
+		const autoStepGroups = status
+			? groupAutoSteps([...status.recentSteps].reverse())
+			: [];
+		return (
+			<div
+				key={index}
+				className={`${styles.agentCard} ${
+					msg.kind === "auto" ? styles.autoAgentCard : ""
+				}`}
+			>
+				{msg.kind === "auto" && status ? (
+					<>
+						<div className={styles.agentHeader}>
+							{status.enabled && <span className={styles.spinner} />}
+							<span>
+								Coach auto
+								{status.level ? ` | ${AUTO_LEVEL_LABELS[status.level]}` : ""}
+								{status.preset
+									? ` | ${AUTO_PRESET_LABELS[status.preset]}`
+									: ""}
+							</span>
+							{status.enabled && (
+								<button onClick={handleStopAutoPlay}>Tắt auto</button>
+							)}
+						</div>
+						{status.planName && (
+							<div className={styles.agentMeta}>Build: {status.planName}</div>
+						)}
+						<div className={styles.agentCurrent}>
+							{getAutoStatusHeadline(status)}
+						</div>
+						<div className={styles.agentSteps} ref={agentStepsRef}>
+							{autoStepGroups.map((group, groupIndex) => (
+								<div
+									className={styles.agentStepGroup}
+									key={`${group.title}-${groupIndex}`}
+								>
+									<div className={styles.agentStepTitle}>{group.title}</div>
+									{group.steps.map((step, stepIndex) => (
+										<div
+											className={styles.agentStep}
+											key={`${group.title}-${step}-${stepIndex}`}
+										>
+											| {step}
+										</div>
+									))}
+								</div>
+							))}
+						</div>
+					</>
+				) : msg.kind === "permission" && pendingPlan ? (
+					<div className={styles.permissionCard}>
+						<div className={styles.permissionTitle}>
+							Chọn cách Coach tự chơi build này
+						</div>
+						<div className={styles.permissionHint}>
+							Coach sẽ giữ luật an toàn: không bán core, không bán tướng đã
+							nâng sao hoặc đang cầm đồ.
+						</div>
+						<div className={styles.presetRow}>
+							{AUTO_PRESETS.map((preset) => (
+								<button
+									key={preset.id}
+									className={
+										pendingPreset === preset.id
+											? styles.presetActive
+											: undefined
+									}
+									onClick={() => setPendingPreset(preset.id)}
+									disabled={autoEnabled}
+									title={preset.description}
+								>
+									{preset.label}
+								</button>
+							))}
+						</div>
+						<button
+							onClick={() => handleStartAutoPlay(1)}
+							disabled={autoEnabled}
+						>
+							1. Chỉ xếp quân theo đối thủ
+						</button>
+						<button
+							onClick={() => handleStartAutoPlay(2)}
+							disabled={autoEnabled}
+						>
+							2. Mua tướng + xếp đội hình
+						</button>
+						<button
+							onClick={() => handleStartAutoPlay(3)}
+							disabled={autoEnabled}
+						>
+							3. Thêm reroll / lên cấp
+						</button>
+						<button
+							onClick={() => handleStartAutoPlay(4)}
+							disabled={autoEnabled}
+						>
+							4. Full auto: bán rác, ghép và gắn đồ
+						</button>
+						<button
+							className={styles.permissionCancel}
+							onClick={() => setPendingPlan(null)}
+							disabled={autoEnabled}
+						>
+							Hủy
+						</button>
+					</div>
+				) : (
+					<>
+						{!msg.text && loading ? (
+							<div className={styles.agentHeader}>
+								<span className={styles.spinner} />
+								<span>Coach đang đọc ván đấu...</span>
+							</div>
+						) : (
+							<CoachMessageRenderer text={msg.text} />
+						)}
+						{msg.kind === "welcome" && (
+							<div className={styles.quickActions}>
+								<button
+									onClick={() => handleCoachSend("/pos")}
+									disabled={!canSendCoachMessage}
+								>
+									Gợi ý xếp quân
+								</button>
+								<button
+									onClick={() => handleCoachSend("/build")}
+									disabled={!canSendCoachMessage}
+								>
+									Gợi ý build
+								</button>
+								<button
+									onClick={() => handleCoachSend("/item")}
+									disabled={!canSendCoachMessage}
+								>
+									Gợi ý đồ
+								</button>
+							</div>
+						)}
+						{msg.plan && (
+							<button
+								className={styles.executeBuildBtn}
+								onClick={() => handleExecuteBuild(msg.plan)}
+								disabled={autoEnabled}
+							>
+								Thực thi build
+							</button>
+						)}
+					</>
+				)}
+			</div>
+		);
+	};
+
 	return (
 		<>
+			{autoStatus?.enabled && <div className={styles.autoViewportGlow} />}
+
 			{/* Floating button */}
 			<button
-				className={styles.fab}
+				className={`${styles.fab} ${autoStatus?.enabled ? styles.autoFab : ""}`}
 				onClick={() => setOpen((prev) => !prev)}
-				title="Tactical AI"
+				title="Coach"
 			>
 				<TacticalAIRobotIcon className={styles.fabIcon} />
 			</button>
 
 			{/* Panel */}
 			{open && (
-				<div className={styles.panel}>
+				<div
+					className={`${styles.panel} ${autoStatus?.enabled ? styles.autoPanel : ""}`}
+				>
 					<div className={styles.panelHeader}>
 						<span className={styles.panelTitle}>
 							<TacticalAIBrainIcon className={styles.panelTitleIcon} />
-							<span>Tactical AI</span>
+							<span>Coach</span>
 						</span>
 						<button className={styles.closeBtn} onClick={() => setOpen(false)}>
 							✕
@@ -481,44 +981,29 @@ const TacticalAIPanel: React.FC = () => {
 						{activeTab === "coach" && (
 							<div className={styles.chatContainer}>
 								<div className={styles.chatMessages} ref={chatMessagesRef}>
-									{coachMessages.length === 0 && (
-										<div className={styles.emptyChat}>
-											Gõ /help để xem lệnh nhanh, hoặc hỏi tự do về đội hình,
-											item, chiến thuật...
-										</div>
-									)}
-									{coachMessages.map((msg, i) => (
-										<div
-											key={i}
-											className={
-												msg.role === "user"
-													? styles.userMessage
-													: styles.aiMessage
-											}
-										>
-											{msg.role === "ai" ? (
-												<CoachMessageRenderer text={msg.text} />
-											) : (
-												msg.text
-											)}
-										</div>
-									))}
-									{loading && (
-										<div className={styles.typing}>Coach đang trả lời...</div>
-									)}
+									{coachMessages.map(renderCoachMessage)}
 								</div>
 								<div className={styles.chatInputRow}>
 									<input
 										className={styles.chatInput}
 										value={coachInput}
 										onChange={(e) => setCoachInput(e.target.value)}
-										onKeyDown={(e) => e.key === "Enter" && handleCoachSend()}
-										placeholder="Nhập câu hỏi..."
+										onKeyDown={(e) =>
+											e.key === "Enter" &&
+											canSendCoachMessage &&
+											handleCoachSend()
+										}
+										placeholder={
+											autoEnabled
+												? "Auto đang chạy, hãy tắt auto để chat tiếp..."
+												: "Nhập câu hỏi..."
+										}
+										disabled={!canSendCoachMessage}
 									/>
 									<button
 										className={styles.sendBtn}
-										onClick={handleCoachSend}
-										disabled={loading}
+										onClick={() => handleCoachSend()}
+										disabled={!canSendCoachMessage}
 									>
 										Gửi
 									</button>

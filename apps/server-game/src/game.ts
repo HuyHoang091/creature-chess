@@ -13,6 +13,7 @@ import { PlayerStatus } from "@creature-chess/models/game/playerList";
 import { LobbyPlayer } from "@creature-chess/models/lobby";
 import { GamemodeSettings } from "@creature-chess/models/settings";
 import { createBuildAdviceContext } from "@creature-chess/tactical-ai/src/build-advisor/context";
+import { BuildAutoPlayerController } from "@creature-chess/tactical-ai/src/build-auto-player/controller";
 
 import { botLogicSaga } from "@cc-server/bot";
 import { BotPersonality } from "@cc-server/data";
@@ -61,6 +62,7 @@ export class Game {
 	private gamemode: Gamemode;
 	private settings: GamemodeSettings;
 	private startedAt: Date;
+	private buildAutoPlayers = new Map<string, BuildAutoPlayerController>();
 
 	public constructor(
 		_settings: GamemodeSettings,
@@ -230,30 +232,25 @@ export class Game {
 		entity: PlayerEntity,
 		socket: AuthenticatedSocket
 	) {
+		let buildAutoPlayer = this.buildAutoPlayers.get(entity.id);
+		if (!buildAutoPlayer) {
+			buildAutoPlayer = new BuildAutoPlayerController(entity, this.settings, {
+				getRoundInfo: this.gamemode.getRoundInfo,
+				getOpponentBoard: this.getOpponentBoard,
+				getPlayerBoard: this.getPlayerBoard,
+				getPotentialOpponentBoard: this.getPotentialOpponentBoard,
+			});
+			this.buildAutoPlayers.set(entity.id, buildAutoPlayer);
+		}
+
 		return entity.runSaga(
 			playerNetworking,
 			socket,
 			{
 				getRoundInfo: this.gamemode.getRoundInfo,
 				getPlayers: this.gamemode.getPlayerListPlayers,
-				getOpponentBoard: (playerId: string) => {
-					const player = this.gamemode.getPlayerById(playerId);
-					if (!player) return null;
-					const opponentId = player.select((state) => state.playerInfo.opponentId);
-					if (!opponentId) return null;
-					const opponent = this.gamemode.getPlayerById(opponentId);
-					if (!opponent) return null;
-					return opponent.select((state) => state.board);
-				},
-				getPotentialOpponentBoard: (playerId: string) => {
-					const player = this.gamemode.getPlayerById(playerId);
-					if (!player) return null;
-					const potentialOpponentId = player.select((state) => state.playerInfo.potentialOpponentId);
-					if (!potentialOpponentId) return null;
-					const potentialOpponent = this.gamemode.getPlayerById(potentialOpponentId);
-					if (!potentialOpponent) return null;
-					return potentialOpponent.select((state) => state.board);
-				},
+				getOpponentBoard: this.getOpponentBoard,
+				getPotentialOpponentBoard: this.getPotentialOpponentBoard,
 				getBuildAdviceContext: (playerId: string) => {
 					const player = this.gamemode.getPlayerById(playerId);
 
@@ -275,8 +272,34 @@ export class Game {
 						phase: roundInfo.phase,
 					});
 				},
+				buildAutoPlayer,
 			},
 			this.settings
 		);
 	}
+
+	private getOpponentBoard = (playerId: string) => {
+		const player = this.gamemode.getPlayerById(playerId);
+		if (!player) return null;
+		const opponentId = player.select((state) => state.playerInfo.opponentId);
+		if (!opponentId) return null;
+		const opponent = this.gamemode.getPlayerById(opponentId);
+		return opponent ? opponent.select((state) => state.board) : null;
+	};
+
+	private getPlayerBoard = (playerId: string) => {
+		const player = this.gamemode.getPlayerById(playerId);
+		return player ? player.select((state) => state.board) : null;
+	};
+
+	private getPotentialOpponentBoard = (playerId: string) => {
+		const player = this.gamemode.getPlayerById(playerId);
+		if (!player) return null;
+		const opponentId = player.select(
+			(state) => state.playerInfo.potentialOpponentId
+		);
+		if (!opponentId) return null;
+		const opponent = this.gamemode.getPlayerById(opponentId);
+		return opponent ? opponent.select((state) => state.board) : null;
+	};
 }

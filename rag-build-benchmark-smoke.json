@@ -1,3496 +1,1924 @@
 {
   "totalGames": 50,
   "completedGames": 50,
-  "top4Rate": 0.36,
+  "top4Rate": 0.46,
   "winRate": 0.1,
-  "averageRank": 5.36,
+  "averageRank": 4.68,
   "benchmarkBotMode": "hybrid",
-  "expectedRagCalls": 100,
-  "totalRagCalls": 100,
-  "successfulRagCalls": 100,
+  "expectedRagCalls": 50,
+  "totalRagCalls": 50,
+  "successfulRagCalls": 50,
   "totalRateLimitRetries": 0,
   "outputPath": "rag-build-benchmark-smoke.json",
   "results": [
     {
       "gameIndex": 1,
-      "durationMs": 733380,
-      "rank": 8,
-      "finishRound": 19,
-      "top4": false,
-      "win": false,
+      "durationMs": 92816,
+      "rank": 1,
+      "finishRound": 31,
+      "top4": true,
+      "win": true,
       "ragCalls": [
         {
-          "round": 4,
+          "round": 2,
           "attempts": 1,
           "rateLimitRetries": 0,
-          "durationMs": 15392,
+          "durationMs": 10095,
           "success": true,
-          "planName": "Water Arcane Early",
-          "error": null
-        },
-        {
-          "round": 15,
-          "attempts": 1,
-          "rateLimitRetries": 0,
-          "durationMs": 29348,
-          "success": true,
-          "planName": "6 Arcane Pháp Sư",
+          "planName": "Valiant Early Game",
           "error": null
         }
       ],
       "plans": [
         {
-          "round": 4,
-          "planName": "Water Arcane Early",
+          "round": 2,
+          "planName": "Valiant Early Game",
           "coreUnits": [
-            "Tweesher",
-            "Elowind",
-            "Weavifly"
+            "Puparmor",
+            "Rockitten"
           ],
           "transitionUnits": [],
           "shortTermSteps": [
-            "Mua Elowind và Weavifly từ shop, bỏ Rockitten và Budaye",
-            "Ghép INFINITY_EDGE từ 2 BF_SWORD, lên Tweesher",
-            "Round 5: lên level 4 (tốn 4 vàng), đặt Elowind và Weavifly lên board",
-            "Tích lũy đến 10 vàng, sau đó slow-roll ở level 4-5 để kiếm ★★"
-          ]
-        },
-        {
-          "round": 15,
-          "planName": "6 Arcane Pháp Sư",
-          "coreUnits": [
-            "Narcileaf",
-            "Ruption",
-            "Elowind",
-            "Ignibus",
-            "Weavifly",
-            "Lightmare"
-          ],
-          "transitionUnits": [
-            "Noctalo"
-          ],
-          "shortTermSteps": [
-            "Mua Ignibus từ shop, bỏ Fluttaflap ra bench",
-            "Mua Sumchon và Noctalo từ shop để giữ (có thể bán sau)",
-            "Mua XP mỗi round để lên level 7 (cần 7 XP nữa)",
-            "Khi lên level 7, bắt đầu slow roll: giữ vàng trên 30, roll nhẹ tìm Lightmare và lên sao Ruption, Ignibus",
-            "Bán Rockat và Fluttaflap khi cần chỗ hoặc vàng",
-            "Ghép item ưu tiên: Rapid Firecannon > Infinity Edge > Warmog"
-          ]
-        }
-      ]
-    },
-    {
-      "gameIndex": 5,
-      "durationMs": 776188,
-      "rank": 8,
-      "finishRound": 19,
-      "top4": false,
-      "win": false,
-      "ragCalls": [
-        {
-          "round": 4,
-          "attempts": 1,
-          "rateLimitRetries": 0,
-          "durationMs": 18274,
-          "success": true,
-          "planName": "Water Arcane Early",
-          "error": null
-        },
-        {
-          "round": 15,
-          "attempts": 1,
-          "rateLimitRetries": 0,
-          "durationMs": 19851,
-          "success": true,
-          "planName": "Water Arcane Carry",
-          "error": null
-        }
-      ],
-      "plans": [
-        {
-          "round": 4,
-          "planName": "Water Arcane Early",
-          "coreUnits": [
-            "Tweesher",
-            "Anoleaf"
-          ],
-          "transitionUnits": [
-            "Noctalo",
-            "Lightmare",
-            "Dollfin"
-          ],
-          "shortTermSteps": [
-            "Mua 2 Tweesher từ shop, lên ★★ ngay",
-            "Mua Bamboon và Rockitten để fill board",
-            "Bán Puparmor nếu cần chỗ, giữ đồ trên nó tạm",
-            "Lên level 4 ở round 5, giữ 10+ vàng để lãi",
-            "Từ level 6 trở đi, roll tìm Noctalo và Lightmare"
-          ]
-        },
-        {
-          "round": 15,
-          "planName": "Water Arcane Carry",
-          "coreUnits": [
-            "Tweesher",
-            "Elowind",
-            "Lightmare",
-            "Noctalo",
-            "Fluttaflap",
-            "Nudimind"
-          ],
-          "transitionUnits": [
-            "Ignibus",
-            "Sumchon",
-            "Propellorcat"
-          ],
-          "shortTermSteps": [
-            "Mua Elowind và Sumchon từ shop",
-            "Bán Anoleaf và Rockat để dọn board",
-            "Đặt Tweesher ở hàng sau cùng, Lightmare và Ignibus ở hàng trước",
-            "Giữ 50+ vàng, slow roll ở level 6",
-            "Kiếm Noctalo, Fluttaflap, Nudimind để thay thế dần"
-          ]
-        }
-      ]
-    },
-    {
-      "gameIndex": 2,
-      "durationMs": 845466,
-      "rank": 7,
-      "finishRound": 26,
-      "top4": false,
-      "win": false,
-      "ragCalls": [
-        {
-          "round": 4,
-          "attempts": 1,
-          "rateLimitRetries": 0,
-          "durationMs": 20648,
-          "success": true,
-          "planName": "Metal Valiant Early",
-          "error": null
-        },
-        {
-          "round": 15,
-          "attempts": 1,
-          "rateLimitRetries": 0,
-          "durationMs": 21456,
-          "success": true,
-          "planName": "Valiant Metal Midgame",
-          "error": null
-        }
-      ],
-      "plans": [
-        {
-          "round": 4,
-          "planName": "Metal Valiant Early",
-          "coreUnits": [
-            "Bolt",
-            "Weavifly",
-            "Rockitten",
-            "Fluttaflap"
-          ],
-          "transitionUnits": [],
-          "shortTermSteps": [
-            "Mua 2 Weavifly, 1 Bolt, 1 Fluttaflap từ shop",
-            "Bán Aardorn nếu đầy bench",
-            "Ghép Rabadon từ 2 Rod, gắn vào Bolt",
-            "Lên level 4 ở round 5",
-            "Slow roll ở level 4 để tìm Bolt ★★ và Weavifly ★★"
-          ]
-        },
-        {
-          "round": 15,
-          "planName": "Valiant Metal Midgame",
-          "coreUnits": [
-            "Bolt",
-            "Arbelder",
-            "Bamboon",
-            "Cairfrey"
-          ],
-          "transitionUnits": [
-            "Tikorch"
-          ],
-          "shortTermSteps": [
-            "Mua Bamboon và Bolt từ shop (tốn 4 vàng)",
-            "Bán Fluttaflap để giải phóng item",
-            "Ghép Bolt ★★ ngay lập tức",
-            "Đặt Bolt ở hàng sau, Arbelder ở hàng trước",
-            "Giữ vàng, không roll, chờ level 7"
+            "Mua 2 bản Puparmor và Rockitten từ shop (tốn 3 vàng)",
+            "Đặt Puparmor và Rockitten lên bàn ở hàng trước",
+            "Lên cấp 2 ở vòng 2-2 để mở thêm slot",
+            "Tiếp tục mua valiant cost 1 để lên ★★"
           ]
         }
       ]
     },
     {
       "gameIndex": 3,
-      "durationMs": 853703,
-      "rank": 8,
-      "finishRound": 23,
-      "top4": false,
-      "win": false,
-      "ragCalls": [
-        {
-          "round": 4,
-          "attempts": 1,
-          "rateLimitRetries": 0,
-          "durationMs": 21800,
-          "success": true,
-          "planName": "Valiant Metal Wood Early",
-          "error": null
-        },
-        {
-          "round": 15,
-          "attempts": 1,
-          "rateLimitRetries": 0,
-          "durationMs": 34988,
-          "success": true,
-          "planName": "Valiant Fire Carry",
-          "error": null
-        }
-      ],
-      "plans": [
-        {
-          "round": 4,
-          "planName": "Valiant Metal Wood Early",
-          "coreUnits": [
-            "Budaye",
-            "Puparmor",
-            "Bolt",
-            "Bamboon"
-          ],
-          "transitionUnits": [],
-          "shortTermSteps": [
-            "mua Budaye và Puparmor từ shop",
-            "lên ★★ Budaye ngay",
-            "đặt Puparmor lên board, giữ Elowind và Bolt",
-            "round 5 lên level 4",
-            "tích lũy vàng, mua Bamboon và Bolt thêm"
-          ]
-        },
-        {
-          "round": 15,
-          "planName": "Valiant Fire Carry",
-          "coreUnits": [
-            "Bolt",
-            "Cardinale",
-            "Ignibus",
-            "Lightmare",
-            "Sumchon",
-            "Cairfrey"
-          ],
-          "transitionUnits": [],
-          "shortTermSteps": [
-            "Mua Ignibus từ shop, bán Bamboon",
-            "Ghép RAPID_FIRE từ Recurve Bow + Rod, gắn cho Cardinale",
-            "Bắt đầu slow-roll ở level 6, giữ 20 vàng, ưu tiên Bolt và Cardinale",
-            "Khi có Bolt ★★★ và Cardinale ★★, lên level 7 để thêm tướng"
-          ]
-        }
-      ]
-    },
-    {
-      "gameIndex": 4,
-      "durationMs": 859570,
-      "rank": 7,
-      "finishRound": 24,
-      "top4": false,
-      "win": false,
-      "ragCalls": [
-        {
-          "round": 4,
-          "attempts": 1,
-          "rateLimitRetries": 0,
-          "durationMs": 24010,
-          "success": true,
-          "planName": "Arcane Fire Valiant",
-          "error": null
-        },
-        {
-          "round": 15,
-          "attempts": 1,
-          "rateLimitRetries": 0,
-          "durationMs": 63553,
-          "success": true,
-          "planName": "Valiant Water Carry",
-          "error": null
-        }
-      ],
-      "plans": [
-        {
-          "round": 4,
-          "planName": "Arcane Fire Valiant",
-          "coreUnits": [
-            "Embra",
-            "Agnite",
-            "Tweesher",
-            "Weavifly"
-          ],
-          "transitionUnits": [
-            "Bolt",
-            "Budaye"
-          ],
-          "shortTermSteps": [
-            "Buy Agnite, Bolt, Budaye from shop",
-            "Sell Rockitten and Anoleaf from bench",
-            "Craft INFINITY_EDGE and equip on Embra",
-            "Field: front row Tweesher + Agnite, back row Embra + Weavifly",
-            "Save gold to 10, level to 4 next round"
-          ]
-        },
-        {
-          "round": 15,
-          "planName": "Valiant Water Carry",
-          "coreUnits": [
-            "Bolt",
-            "Agnite",
-            "Dollfin",
-            "Nudimind",
-            "Lightmare"
-          ],
-          "transitionUnits": [
-            "Fluttaflap"
-          ],
-          "shortTermSteps": [
-            "Mua Lightmare từ shop, bỏ Rockat lên bench",
-            "Reroll 1-2 lần tìm Bolt thứ 3 để lên 2★",
-            "Bỏ Bamboon nếu có Lightmare hoặc Fluttaflap thay thế",
-            "Tiết kiệm vàng, lên level 8 khi có 40+ vàng",
-            "Ở level 8, tìm Dollfin 2★ và Nudimind 2★"
-          ]
-        }
-      ]
-    },
-    {
-      "gameIndex": 8,
-      "durationMs": 717725,
-      "rank": 4,
-      "finishRound": 29,
-      "top4": true,
-      "win": false,
-      "ragCalls": [
-        {
-          "round": 4,
-          "attempts": 1,
-          "rateLimitRetries": 0,
-          "durationMs": 16242,
-          "success": true,
-          "planName": "WoodCunning Early",
-          "error": null
-        },
-        {
-          "round": 15,
-          "attempts": 1,
-          "rateLimitRetries": 0,
-          "durationMs": 23002,
-          "success": true,
-          "planName": "Valiant Arcane Transition",
-          "error": null
-        }
-      ],
-      "plans": [
-        {
-          "round": 4,
-          "planName": "WoodCunning Early",
-          "coreUnits": [
-            "Anoleaf",
-            "Bamboon",
-            "Fluttaflap"
-          ],
-          "transitionUnits": [],
-          "shortTermSteps": [
-            "Mua Bamboon và Fluttaflap từ shop",
-            "Lên level 4 ở round 5 (tốn 4 vàng)",
-            "Ghép RAPID_FIRE lên Anoleaf",
-            "Bán Rockitten và Embra nếu cần slot",
-            "Giữ Elowind trên board để kích Water"
-          ]
-        },
-        {
-          "round": 15,
-          "planName": "Valiant Arcane Transition",
-          "coreUnits": [
-            "Sumchon",
-            "Prophetoise",
-            "Hubursa",
-            "Bamboon",
-            "Dollfin",
-            "Anoleaf"
-          ],
-          "transitionUnits": [],
-          "shortTermSteps": [
-            "Mua 2 Sumchon từ shop, ghép Sumchon ★★",
-            "Mua Dollfin từ shop",
-            "Bán Fluttaflap, lấy lại Tear + các item",
-            "Ghép Rapid Fire từ Recurve Bow + Gloves, đặt lên Sumchon ★★",
-            "Đặt đội hình: Bamboon (GA) hàng trước, Sumchon ★★ hàng giữa, Prophetoise/Hubursa hàng sau",
-            "Tiết kiệm vàng, lên level 8 trong 2-3 round"
-          ]
-        }
-      ]
-    },
-    {
-      "gameIndex": 10,
-      "durationMs": 813889,
-      "rank": 8,
-      "finishRound": 22,
-      "top4": false,
-      "win": false,
-      "ragCalls": [
-        {
-          "round": 4,
-          "attempts": 1,
-          "rateLimitRetries": 0,
-          "durationMs": 20492,
-          "success": true,
-          "planName": "Valiant Early Core",
-          "error": null
-        },
-        {
-          "round": 15,
-          "attempts": 1,
-          "rateLimitRetries": 0,
-          "durationMs": 23254,
-          "success": true,
-          "planName": "6 Valiant 2 Fire",
-          "error": null
-        }
-      ],
-      "plans": [
-        {
-          "round": 4,
-          "planName": "Valiant Early Core",
-          "coreUnits": [
-            "Fluttaflap",
-            "Bolt",
-            "Bamboon",
-            "Anoleaf"
-          ],
-          "transitionUnits": [
-            "Agnite",
-            "Cardiling",
-            "Ignibus"
-          ],
-          "shortTermSteps": [
-            "Mua 2 Anoleaf và Bolt thứ 2 từ shop (tốn 4 vàng)",
-            "Đặt Fluttaflap ở hàng trước, Bamboon và Bolt ở hàng giữa",
-            "Round 5: lên level 4, mở ô thứ 4",
-            "Tích lũy lên 10 vàng, chỉ mua tướng Valiant/Fire",
-            "Ghép RAPID_FIRE gắn cho Fluttaflap ngay"
-          ]
-        },
-        {
-          "round": 15,
-          "planName": "6 Valiant 2 Fire",
-          "coreUnits": [
-            "Ignibus",
-            "Bamboon",
-            "Bolt",
-            "Cardiling",
-            "Grintot",
-            "Propellorcat"
-          ],
-          "transitionUnits": [
-            "Elowind",
-            "Rockat"
-          ],
-          "shortTermSteps": [
-            "Mua Cardiling và Elowind thứ 2 từ shop (4 vàng)",
-            "Bán Jemuar (5 vàng)",
-            "Level lên 7 (16 xp, còn 5 vàng)",
-            "Đặt Cardiling vào board, bỏ Bolt ra bench",
-            "Round 16-18: slow roll ở level 7, giữ 10+ vàng, tìm Ignibus thứ 3 và Valiant còn thiếu"
-          ]
-        }
-      ]
-    },
-    {
-      "gameIndex": 6,
-      "durationMs": 947636,
-      "rank": 6,
-      "finishRound": 27,
-      "top4": false,
-      "win": false,
-      "ragCalls": [
-        {
-          "round": 4,
-          "attempts": 1,
-          "rateLimitRetries": 0,
-          "durationMs": 21622,
-          "success": true,
-          "planName": "Valiant Wood Early",
-          "error": null
-        },
-        {
-          "round": 15,
-          "attempts": 1,
-          "rateLimitRetries": 0,
-          "durationMs": 17323,
-          "success": true,
-          "planName": "Fire Valiant",
-          "error": null
-        }
-      ],
-      "plans": [
-        {
-          "round": 4,
-          "planName": "Valiant Wood Early",
-          "coreUnits": [
-            "Budaye",
-            "Bolt",
-            "Anoleaf"
-          ],
-          "transitionUnits": [],
-          "shortTermSteps": [
-            "mua 2 Budaye và Anoleaf từ shop",
-            "đặt Budaye lên board, thay Embra xuống bench",
-            "board: Budaye, Bolt, Anoleaf",
-            "tiết kiệm vàng, lên level 4 sau round này",
-            "giữ Embra trên bench để có thể chuyển hướng fire sau"
-          ]
-        },
-        {
-          "round": 15,
-          "planName": "Fire Valiant",
-          "coreUnits": [
-            "Ignibus",
-            "Bolt",
-            "Narcileaf",
-            "Agnite",
-            "Lightmare",
-            "Grintot"
-          ],
-          "transitionUnits": [
-            "Cardiling",
-            "Bamboon"
-          ],
-          "shortTermSteps": [
-            "Mua Narcileaf từ shop để lên ★★",
-            "Mua Agnite và Bamboon từ shop",
-            "Tiết kiệm lên 30 vàng, không roll",
-            "Slow-roll ở level 6 tìm Ignibus thứ 4-6 và Agnite thứ 2-3",
-            "Lên level 7 khi có 30+ vàng và đủ tướng mạnh"
-          ]
-        }
-      ]
-    },
-    {
-      "gameIndex": 7,
-      "durationMs": 934887,
-      "rank": 6,
-      "finishRound": 29,
-      "top4": false,
-      "win": false,
-      "ragCalls": [
-        {
-          "round": 4,
-          "attempts": 1,
-          "rateLimitRetries": 0,
-          "durationMs": 18163,
-          "success": true,
-          "planName": "Metal Valiant Early",
-          "error": null
-        },
-        {
-          "round": 15,
-          "attempts": 1,
-          "rateLimitRetries": 0,
-          "durationMs": 21854,
-          "success": true,
-          "planName": "Valiant Metal Carry Bolt",
-          "error": null
-        }
-      ],
-      "plans": [
-        {
-          "round": 4,
-          "planName": "Metal Valiant Early",
-          "coreUnits": [
-            "Puparmor",
-            "Bolt",
-            "Agnite"
-          ],
-          "transitionUnits": [],
-          "shortTermSteps": [
-            "Mua Bolt, Agnite, Fluttaflap, Sumchon từ shop",
-            "Tích vàng lên 10, mua XP lên level 4",
-            "Giữ streak, eco lên level 5, slow roll tìm Bolt ★★ và Puparmor ★★",
-            "Ghép RAPID_FIRE cho Bolt khi có đủ Recurve Bow"
-          ]
-        },
-        {
-          "round": 15,
-          "planName": "Valiant Metal Carry Bolt",
-          "coreUnits": [
-            "Grintrock",
-            "Bolt",
-            "Lightmare",
-            "Agnite",
-            "Propellorcat",
-            "Fluttaflap",
-            "Cairfrey"
-          ],
-          "transitionUnits": [],
-          "shortTermSteps": [
-            "Mua Propellorcat và Fluttaflap từ shop ngay",
-            "Bán Velocitile để lấy chỗ",
-            "Lên level 7 trong 2 round (tốn 16 XP)",
-            "Slow roll ở level 7, ưu tiên tìm ★2 cho Bolt, Agnite, Lightmare, Propellorcat",
-            "Ghép INFINITY_EDGE và RAPID_FIRE lên Bolt khi có đủ nguyên liệu"
-          ]
-        }
-      ]
-    },
-    {
-      "gameIndex": 9,
-      "durationMs": 955076,
-      "rank": 3,
-      "finishRound": 42,
-      "top4": true,
-      "win": false,
-      "ragCalls": [
-        {
-          "round": 4,
-          "attempts": 1,
-          "rateLimitRetries": 0,
-          "durationMs": 15536,
-          "success": true,
-          "planName": "Wood Valiant Early",
-          "error": null
-        },
-        {
-          "round": 15,
-          "attempts": 1,
-          "rateLimitRetries": 0,
-          "durationMs": 24613,
-          "success": true,
-          "planName": "WoodCunning_Carry_Viviphyta",
-          "error": null
-        }
-      ],
-      "plans": [
-        {
-          "round": 4,
-          "planName": "Wood Valiant Early",
-          "coreUnits": [
-            "Bamboon",
-            "Elowind"
-          ],
-          "transitionUnits": [],
-          "shortTermSteps": [
-            "mua Bamboon thứ 2 từ shop, ghép Bamboon ★★",
-            "mua Embra từ shop, đặt lên board",
-            "bán Chenipode trên bench nếu cần chỗ",
-            "round 5: lên level 4, giữ 10 vàng để lấy lãi"
-          ]
-        },
-        {
-          "round": 15,
-          "planName": "WoodCunning_Carry_Viviphyta",
-          "coreUnits": [
-            "Viviphyta",
-            "Grintrock",
-            "Elowind",
-            "Velocitile"
-          ],
-          "transitionUnits": [],
-          "shortTermSteps": [
-            "Mua Velocitile từ shop",
-            "Bán Anoleaf và Bolt để lấy chỗ",
-            "Đặt Velocitile lên board, giữ Ignibus và Elowind",
-            "Tiết kiệm vàng, mua XP mỗi turn để lên level 8",
-            "Khi lên 8, slow roll tìm Sapsnap, Rockat, Elowind thứ 3"
-          ]
-        }
-      ]
-    },
-    {
-      "gameIndex": 11,
-      "durationMs": 706928,
-      "rank": 3,
-      "finishRound": 29,
-      "top4": true,
-      "win": false,
-      "ragCalls": [
-        {
-          "round": 4,
-          "attempts": 1,
-          "rateLimitRetries": 0,
-          "durationMs": 15338,
-          "success": true,
-          "planName": "Arcane Cunning Tempo",
-          "error": null
-        },
-        {
-          "round": 15,
-          "attempts": 1,
-          "rateLimitRetries": 0,
-          "durationMs": 20565,
-          "success": true,
-          "planName": "Metal/Arcane Kirkanon",
-          "error": null
-        }
-      ],
-      "plans": [
-        {
-          "round": 4,
-          "planName": "Arcane Cunning Tempo",
-          "coreUnits": [
-            "Chenipode",
-            "Weavifly",
-            "Embra",
-            "Bamboon"
-          ],
-          "transitionUnits": [],
-          "shortTermSteps": [
-            "Mua Chenipode thứ 2 từ shop (2 vàng) để lên ★★ ngay",
-            "Mua Cardiling và Puparmor nếu còn vàng",
-            "Level lên 4 ở round 5 (tốn 4 vàng)",
-            "Ghép Guardian Angel và Frozen Heart từ đồ tồn kho",
-            "Đặt Chenipode ★★ ở góc sau, Bamboon ở front, Weavifly/Embra ở mid"
-          ]
-        },
-        {
-          "round": 15,
-          "planName": "Metal/Arcane Kirkanon",
-          "coreUnits": [
-            "Kirkanon",
-            "Weavifly",
-            "Bamboon",
-            "Hubursa",
-            "Chenipode"
-          ],
-          "transitionUnits": [
-            "Noctalo"
-          ],
-          "shortTermSteps": [
-            "Mua Kirkanon và Hubursa từ shop ngay",
-            "Bán Noctalo nếu cần chỗ trên board",
-            "Đặt Kirkanon ở hàng sau cùng, Bamboon và Chenipode ở hàng trước",
-            "Tiết kiệm vàng, mua XP mỗi lượt để lên level 7 trong 3-4 lượt",
-            "Sau level 7, slow roll giữ 30+ vàng để tìm Kirkanon ★★ và AV8R"
-          ]
-        }
-      ]
-    },
-    {
-      "gameIndex": 13,
-      "durationMs": 754350,
-      "rank": 8,
-      "finishRound": 23,
-      "top4": false,
-      "win": false,
-      "ragCalls": [
-        {
-          "round": 4,
-          "attempts": 1,
-          "rateLimitRetries": 0,
-          "durationMs": 15977,
-          "success": true,
-          "planName": "Metal Valiant Early",
-          "error": null
-        },
-        {
-          "round": 15,
-          "attempts": 1,
-          "rateLimitRetries": 0,
-          "durationMs": 13661,
-          "success": true,
-          "planName": "Valiant Metal Tikorch",
-          "error": null
-        }
-      ],
-      "plans": [
-        {
-          "round": 4,
-          "planName": "Metal Valiant Early",
-          "coreUnits": [
-            "Nut",
-            "Elowind",
-            "Bamboon",
-            "Weavifly"
-          ],
-          "transitionUnits": [],
-          "shortTermSteps": [
-            "Mua Bamboon, Weavifly, Elowind từ shop",
-            "Đặt Elowind lên board, bench Embra và Nut thứ 2",
-            "Ghép WARMOG cho Nut",
-            "Level lên 4 sau round này",
-            "Tích vàng đến 10+, không roll"
-          ]
-        },
-        {
-          "round": 15,
-          "planName": "Valiant Metal Tikorch",
-          "coreUnits": [
-            "Tikorch",
-            "Grintrock",
-            "Nut",
-            "Hubursa",
-            "Sumchon"
-          ],
-          "transitionUnits": [],
-          "shortTermSteps": [
-            "Sell Elowind immediately",
-            "Buy both Hubursa and Sumchon from shop",
-            "Craft INFINITY_EDGE on Tikorch using BF_SWORD + GLOVES",
-            "Field: Grintrock, Tikorch, 2x Nut, Hubursa, Sumchon, Weavifly (7 units)",
-            "Save gold to 50, then level to 8"
-          ]
-        }
-      ]
-    },
-    {
-      "gameIndex": 14,
-      "durationMs": 766547,
-      "rank": 4,
-      "finishRound": 28,
-      "top4": true,
-      "win": false,
-      "ragCalls": [
-        {
-          "round": 4,
-          "attempts": 1,
-          "rateLimitRetries": 0,
-          "durationMs": 15863,
-          "success": true,
-          "planName": "Early Fire Aggro",
-          "error": null
-        },
-        {
-          "round": 15,
-          "attempts": 1,
-          "rateLimitRetries": 0,
-          "durationMs": 14558,
-          "success": true,
-          "planName": "Earth Valiant Hubursa",
-          "error": null
-        }
-      ],
-      "plans": [
-        {
-          "round": 4,
-          "planName": "Early Fire Aggro",
-          "coreUnits": [
-            "Agnite",
-            "Cardiling",
-            "Embra"
-          ],
-          "transitionUnits": [
-            "Rockitten"
-          ],
-          "shortTermSteps": [
-            "Mua Embra và Rockitten từ shop",
-            "Ghép Warmog từ 2 Giant's Belt → gắn lên Agnite",
-            "Đặt Agnite front row, Cardiling và Embra back row",
-            "Lên level 4 ở round 5, không roll",
-            "Tiết kiệm vàng đến round 6-7 để lên level 5"
-          ]
-        },
-        {
-          "round": 15,
-          "planName": "Earth Valiant Hubursa",
-          "coreUnits": [
-            "Hubursa",
-            "Grintot",
-            "Narcileaf",
-            "Arbelder"
-          ],
-          "transitionUnits": [
-            "Cardiling",
-            "Agnite"
-          ],
-          "shortTermSteps": [
-            "Mua 2 Narcileaf và 1 Grintot từ shop ngay",
-            "Bán Lightmare và 1 Cardiling để lấy chỗ",
-            "Level lên 7 ở round 16 (tốn 12 vàng)",
-            "Slow roll ở level 7 tìm Hubursa ★★, Grintot ★★, Narcileaf ★★",
-            "Ghép RAPID_FIRE nếu có đủ 2 RECURVE_BOW"
-          ]
-        }
-      ]
-    },
-    {
-      "gameIndex": 12,
-      "durationMs": 915679,
-      "rank": 5,
-      "finishRound": 26,
-      "top4": false,
-      "win": false,
-      "ragCalls": [
-        {
-          "round": 4,
-          "attempts": 1,
-          "rateLimitRetries": 0,
-          "durationMs": 17850,
-          "success": true,
-          "planName": "Valiant Wood Early",
-          "error": null
-        },
-        {
-          "round": 15,
-          "attempts": 1,
-          "rateLimitRetries": 0,
-          "durationMs": 20667,
-          "success": true,
-          "planName": "Valiant 6 - Prophetoise Carry",
-          "error": null
-        }
-      ],
-      "plans": [
-        {
-          "round": 4,
-          "planName": "Valiant Wood Early",
-          "coreUnits": [
-            "Budaye",
-            "Anoleaf",
-            "Puparmor",
-            "Fluttaflap"
-          ],
-          "transitionUnits": [],
-          "shortTermSteps": [
-            "Mua Budaye, Anoleaf, Puparmor từ shop",
-            "Bán Weavifly trên bench",
-            "Ghép Warmog từ 2 GIANTS_BELT, trang bị cho Fluttaflap",
-            "Đặt Fluttaflap ở hàng sau, Budaye và Puparmor ở hàng trước",
-            "Tiết kiệm vàng, lên level 4 ở round 5"
-          ]
-        },
-        {
-          "round": 15,
-          "planName": "Valiant 6 - Prophetoise Carry",
-          "coreUnits": [
-            "Prophetoise",
-            "Sumchon",
-            "Arbelder",
-            "Fluttaflap",
-            "Puparmor"
-          ],
-          "transitionUnits": [
-            "Budaye",
-            "Bolt"
-          ],
-          "shortTermSteps": [
-            "Mua Sumchon từ shop, ghép Sumchon ★★, bỏ Puparmor ra bench",
-            "Ghép INFINITY_EDGE từ 2 BF_SWORD, đặt lên Prophetoise",
-            "Ghép RAPID_FIRE từ 2 GLOVES, đặt lên Prophetoise",
-            "Tiết kiệm lên 30 vàng, không roll",
-            "Level lên 8 khi đủ XP (khoảng round 18-19)",
-            "Sau level 8, roll tìm Grintrock, thêm Valiant, và nâng cấp các core unit lên ★★"
-          ]
-        }
-      ]
-    },
-    {
-      "gameIndex": 15,
-      "durationMs": 870642,
-      "rank": 7,
-      "finishRound": 24,
-      "top4": false,
-      "win": false,
-      "ragCalls": [
-        {
-          "round": 4,
-          "attempts": 1,
-          "rateLimitRetries": 0,
-          "durationMs": 17361,
-          "success": true,
-          "planName": "Wood Cunning Early",
-          "error": null
-        },
-        {
-          "round": 15,
-          "attempts": 1,
-          "rateLimitRetries": 0,
-          "durationMs": 14777,
-          "success": true,
-          "planName": "Cunning 4 Rockat Carry",
-          "error": null
-        }
-      ],
-      "plans": [
-        {
-          "round": 4,
-          "planName": "Wood Cunning Early",
-          "coreUnits": [
-            "Anoleaf",
-            "Budaye",
-            "Bamboon"
-          ],
-          "transitionUnits": [],
-          "shortTermSteps": [
-            "Mua Budaye và Bamboon từ shop",
-            "Bán Nut để lấy slot",
-            "Đặt Budaye + Bamboon lên board, bỏ Elowind xuống bench",
-            "Level lên 4 ở round 5",
-            "Tìm Anoleaf thứ 3 để lên ★★"
-          ]
-        },
-        {
-          "round": 15,
-          "planName": "Cunning 4 Rockat Carry",
-          "coreUnits": [
-            "Rockat",
-            "AV8R",
-            "Viviphyta",
-            "Bamboon",
-            "Propellorcat",
-            "Lightmare"
-          ],
-          "transitionUnits": [
-            "Sapsnap"
-          ],
-          "shortTermSteps": [
-            "Mua Sumchon từ shop (Valiant + Metal) để giữ bench",
-            "Roll 10 vàng tìm Propellorcat và Rockat thứ 2",
-            "Ghép Rapid Fire từ 2 Recurve Bow cho Rockat",
-            "Bán Embra và Tweesher nếu cần slot",
-            "Sau khi có Cunning 4, lên level 7"
-          ]
-        }
-      ]
-    },
-    {
-      "gameIndex": 17,
-      "durationMs": 858961,
-      "rank": 4,
-      "finishRound": 34,
-      "top4": true,
-      "win": false,
-      "ragCalls": [
-        {
-          "round": 4,
-          "attempts": 1,
-          "rateLimitRetries": 0,
-          "durationMs": 16116,
-          "success": true,
-          "planName": "Fire Valiant Early",
-          "error": null
-        },
-        {
-          "round": 15,
-          "attempts": 1,
-          "rateLimitRetries": 0,
-          "durationMs": 17998,
-          "success": true,
-          "planName": "Metal Valiant",
-          "error": null
-        }
-      ],
-      "plans": [
-        {
-          "round": 4,
-          "planName": "Fire Valiant Early",
-          "coreUnits": [
-            "Agnite",
-            "Cardiling",
-            "Embra"
-          ],
-          "transitionUnits": [
-            "Fluttaflap",
-            "Elowind"
-          ],
-          "shortTermSteps": [
-            "Mua Embra từ shop, đưa lên bàn thay Tweesher",
-            "Ghép INFINITY_EDGE từ 2 B.F. Sword, đặt lên Cardiling",
-            "Bán Tweesher nếu cần chỗ bench",
-            "Tiết kiệm vàng, không roll, lên level 4 ở round 5"
-          ]
-        },
-        {
-          "round": 15,
-          "planName": "Metal Valiant",
-          "coreUnits": [
-            "AV8R",
-            "Bolt",
-            "Sampsack",
-            "Agnite",
-            "Grintot",
-            "Fluttaflap",
-            "Budaye"
-          ],
-          "transitionUnits": [
-            "Hubursa",
-            "Grintrock"
-          ],
-          "shortTermSteps": [
-            "Bán Elowind ngay lập tức",
-            "Mua cả 3 Bolt và Sampsack từ shop",
-            "Đặt Bolt lên board, bỏ Budaye xuống bench nếu cần chỗ",
-            "Level lên 8 (cần 20 XP, tiết kiệm vàng để level)",
-            "Khi lên 8, roll tìm AV8R thứ 2, Hubursa, Grintrock"
-          ]
-        }
-      ]
-    },
-    {
-      "gameIndex": 16,
-      "durationMs": 1039572,
-      "rank": 3,
-      "finishRound": 42,
-      "top4": true,
-      "win": false,
-      "ragCalls": [
-        {
-          "round": 4,
-          "attempts": 1,
-          "rateLimitRetries": 0,
-          "durationMs": 12494,
-          "success": true,
-          "planName": "Cunning Early Rush",
-          "error": null
-        },
-        {
-          "round": 15,
-          "attempts": 1,
-          "rateLimitRetries": 0,
-          "durationMs": 17325,
-          "success": true,
-          "planName": "Cunning Earth Slow-Roll",
-          "error": null
-        }
-      ],
-      "plans": [
-        {
-          "round": 4,
-          "planName": "Cunning Early Rush",
-          "coreUnits": [
-            "Aardorn",
-            "Anoleaf",
-            "Chenipode"
-          ],
-          "transitionUnits": [],
-          "shortTermSteps": [
-            "Mua Aardorn thứ 2 từ shop, đặt lên bàn để có 2★",
-            "Mua Anoleaf thứ 2 từ shop, đặt lên bench",
-            "Mua Chenipode từ shop, bỏ Puparmor khỏi bench",
-            "Ghép RAPID_FIRE từ Recurve Bow + Cloak, gắn cho Anoleaf",
-            "Bán Puparmor nếu cần chỗ, giữ Tweesher trên bàn",
-            "Tiết kiệm vàng, lên level 4 ở round 5"
-          ]
-        },
-        {
-          "round": 15,
-          "planName": "Cunning Earth Slow-Roll",
-          "coreUnits": [
-            "Chenipode",
-            "Rockat",
-            "Noctalo"
-          ],
-          "transitionUnits": [],
-          "shortTermSteps": [
-            "Mua Rockat từ shop, bán Budaye để có chỗ",
-            "Giữ vàng trên 30, slow-roll ở level 6",
-            "Tìm thêm Chenipode để lên ★★★",
-            "Kiếm thêm Earth pieces: Grintot, Sapsnap",
-            "Ghép INFINITY_EDGE và RAPID_FIRE cho Chenipode"
-          ]
-        }
-      ]
-    },
-    {
-      "gameIndex": 18,
-      "durationMs": 844229,
-      "rank": 1,
-      "finishRound": 38,
-      "top4": true,
-      "win": true,
-      "ragCalls": [
-        {
-          "round": 4,
-          "attempts": 1,
-          "rateLimitRetries": 0,
-          "durationMs": 16744,
-          "success": true,
-          "planName": "Wood Cunning Early",
-          "error": null
-        },
-        {
-          "round": 15,
-          "attempts": 1,
-          "rateLimitRetries": 0,
-          "durationMs": 14215,
-          "success": true,
-          "planName": "Fire Arcane Carry",
-          "error": null
-        }
-      ],
-      "plans": [
-        {
-          "round": 4,
-          "planName": "Wood Cunning Early",
-          "coreUnits": [
-            "Budaye",
-            "Anoleaf",
-            "Aardorn",
-            "Embra",
-            "Cardiling"
-          ],
-          "transitionUnits": [],
-          "shortTermSteps": [
-            "Mua Anoleaf, Cardiling, Embra từ shop",
-            "Đặt Aardorn lên board, bỏ Budaye ra bench tạm nếu cần chỗ",
-            "Ghép Infinity Edge gắn cho Budaye",
-            "Lên level 4 ở vòng 5, level 5 ở vòng 7",
-            "Slow roll ở level 5 tìm bản sao nâng sao"
-          ]
-        },
-        {
-          "round": 15,
-          "planName": "Fire Arcane Carry",
-          "coreUnits": [
-            "Embra",
-            "Cardiling",
-            "Agnite",
-            "Ignibus",
-            "Ruption",
-            "Prophetoise",
-            "Dollfin"
-          ],
-          "transitionUnits": [],
-          "shortTermSteps": [
-            "Bán Propellorcat, Aardorn, Anoleaf thừa để lấy vàng",
-            "Mua Cardiling, Noctalo từ shop - Cardiling giữ lại, Noctalo có thể bán nếu cần vàng",
-            "Roll 2-3 lần ở level 7 tìm Agnite, Ignibus, Ruption",
-            "Giữ 50 vàng, lên level 8",
-            "Slow roll ở level 8 tìm Embra ★★★ và các Fire piece ★★"
-          ]
-        }
-      ]
-    },
-    {
-      "gameIndex": 19,
-      "durationMs": 826578,
-      "rank": 7,
-      "finishRound": 24,
-      "top4": false,
-      "win": false,
-      "ragCalls": [
-        {
-          "round": 4,
-          "attempts": 1,
-          "rateLimitRetries": 0,
-          "durationMs": 13270,
-          "success": true,
-          "planName": "Metal Arcane Weavifly",
-          "error": null
-        },
-        {
-          "round": 15,
-          "attempts": 1,
-          "rateLimitRetries": 0,
-          "durationMs": 15760,
-          "success": true,
-          "planName": "6 Arcane Prophetoise",
-          "error": null
-        }
-      ],
-      "plans": [
-        {
-          "round": 4,
-          "planName": "Metal Arcane Weavifly",
-          "coreUnits": [
-            "Weavifly",
-            "Budaye",
-            "Puparmor"
-          ],
-          "transitionUnits": [],
-          "shortTermSteps": [
-            "Mua Puparmor, Nut, Rockitten từ shop",
-            "Level lên 4 ở round 5 (tốn 4 vàng)",
-            "Đưa Weavifly thứ 2 lên board, bỏ tướng yếu nhất xuống bench",
-            "Tìm Weavifly thứ 3 để lên 2★",
-            "Giữ streak thắng, tiết kiệm vàng"
-          ]
-        },
-        {
-          "round": 15,
-          "planName": "6 Arcane Prophetoise",
-          "coreUnits": [
-            "Prophetoise",
-            "Weavifly",
-            "Hubursa",
-            "Noctalo",
-            "Lightmare",
-            "Nut"
-          ],
-          "transitionUnits": [
-            "Tweesher",
-            "Budaye"
-          ],
-          "shortTermSteps": [
-            "Mua Tweesher và Puparmor từ shop, bán ngay lấy vàng",
-            "Level lên 7 (tốn 16 vàng), còn 10 vàng",
-            "Bán Budaye nếu cần chỗ, giữ Nut làm tank",
-            "Slow roll ở level 7: ưu tiên Noctalo, Lightmare, Prophetoise",
-            "Khi có 4-5 Arcane, bỏ dần Metal để lên 6 Arcane"
-          ]
-        }
-      ]
-    },
-    {
-      "gameIndex": 20,
-      "durationMs": 851097,
-      "rank": 5,
-      "finishRound": 32,
-      "top4": false,
-      "win": false,
-      "ragCalls": [
-        {
-          "round": 4,
-          "attempts": 1,
-          "rateLimitRetries": 0,
-          "durationMs": 17211,
-          "success": true,
-          "planName": "Fire Cunning Early",
-          "error": null
-        },
-        {
-          "round": 15,
-          "attempts": 1,
-          "rateLimitRetries": 0,
-          "durationMs": 13739,
-          "success": true,
-          "planName": "Fire Cunning 4-4",
-          "error": null
-        }
-      ],
-      "plans": [
-        {
-          "round": 4,
-          "planName": "Fire Cunning Early",
-          "coreUnits": [
-            "Cardiling",
-            "Bamboon",
-            "Ruption",
-            "Ignibus",
-            "Puparmor"
-          ],
-          "transitionUnits": [
-            "Nut"
-          ],
-          "shortTermSteps": [
-            "Bán Nut để có 5 vàng",
-            "Mua cả 3 Cardiling từ shop (tốn 6 vàng, cần bán thêm Puparmor nếu thiếu)",
-            "Ghép Frozen Heart từ Tear + Chain Vest, gắn lên Bamboon",
-            "Đặt Bamboon hàng trước, Cardiling hàng sau, Puparmor hàng trước",
-            "Tiết kiệm vàng, lên level 4 ở round 5-6"
-          ]
-        },
-        {
-          "round": 15,
-          "planName": "Fire Cunning 4-4",
-          "coreUnits": [
-            "Ignibus",
-            "Noctalo",
-            "Prophetoise",
-            "Ruption",
-            "Cardiling",
-            "Velocitile"
-          ],
-          "transitionUnits": [],
-          "shortTermSteps": [
-            "Mua Prophetoise từ shop, bỏ Chenipode ra bench",
-            "Roll 10-15 vàng tìm Ignibus thứ 3 và Noctalo thứ 3",
-            "Nếu roll không ra, tiết kiệm lên level 7 ở round 17-18",
-            "Giữ streak thua để nhận lãi suất"
-          ]
-        }
-      ]
-    },
-    {
-      "gameIndex": 23,
-      "durationMs": 775579,
-      "rank": 5,
-      "finishRound": 26,
-      "top4": false,
-      "win": false,
-      "ragCalls": [
-        {
-          "round": 4,
-          "attempts": 1,
-          "rateLimitRetries": 0,
-          "durationMs": 14618,
-          "success": true,
-          "planName": "Valiant Early Rush",
-          "error": null
-        },
-        {
-          "round": 15,
-          "attempts": 1,
-          "rateLimitRetries": 0,
-          "durationMs": 16849,
-          "success": true,
-          "planName": "Valiant Wood",
-          "error": null
-        }
-      ],
-      "plans": [
-        {
-          "round": 4,
-          "planName": "Valiant Early Rush",
-          "coreUnits": [
-            "Budaye",
-            "Puparmor",
-            "Rockitten"
-          ],
-          "transitionUnits": [],
-          "shortTermSteps": [
-            "Mua Budaye từ shop, ghép ★★ ngay, đặt lên board",
-            "Thả Rockitten lên board để có 3 valiant",
-            "Mua Agnite nếu còn vàng để mở hướng fire",
-            "Tiết kiệm vàng, không roll, lên level 4 khi có 4 vàng"
-          ]
-        },
-        {
-          "round": 15,
-          "planName": "Valiant Wood",
-          "coreUnits": [
-            "Rockitten",
-            "Dollfin",
-            "Narcileaf",
-            "Coleorus",
-            "Budaye",
-            "Puparmor"
-          ],
-          "transitionUnits": [
-            "Bolt"
-          ],
-          "shortTermSteps": [
-            "Mua Bolt và Chenipode từ shop để có thêm Valiant và Earth tạm",
-            "Tiết kiệm vàng, lên level 8 ngay khi đủ 32 vàng",
-            "Sau khi lên 8, roll tìm Narcileaf/Coleorus/Dollfin thứ 2 để nâng sao",
-            "Ghép Guardian Angel lên Rockitten, Rapid Fire + Warmog lên Dollfin"
-          ]
-        }
-      ]
-    },
-    {
-      "gameIndex": 22,
-      "durationMs": 802629,
-      "rank": 8,
-      "finishRound": 19,
-      "top4": false,
-      "win": false,
-      "ragCalls": [
-        {
-          "round": 4,
-          "attempts": 1,
-          "rateLimitRetries": 0,
-          "durationMs": 14862,
-          "success": true,
-          "planName": "Cunning Earth Early",
-          "error": null
-        },
-        {
-          "round": 15,
-          "attempts": 1,
-          "rateLimitRetries": 0,
-          "durationMs": 11812,
-          "success": true,
-          "planName": "Earth Cunning Midgame",
-          "error": null
-        }
-      ],
-      "plans": [
-        {
-          "round": 4,
-          "planName": "Cunning Earth Early",
-          "coreUnits": [
-            "Chenipode",
-            "Anoleaf",
-            "Fluttaflap",
-            "Rockitten"
-          ],
-          "transitionUnits": [],
-          "shortTermSteps": [
-            "Mua Fluttaflap và Rockitten từ shop",
-            "Ghép Guardian Angel từ BF Sword + Chain Vest, đeo cho Chenipode",
-            "Lên level 4 ở round 5, đưa Fluttaflap và Rockitten vào board",
-            "Tích vàng lên 50, không roll",
-            "Slow roll ở cấp 5 để nâng Chenipode ★★ và Anoleaf ★★"
-          ]
-        },
-        {
-          "round": 15,
-          "planName": "Earth Cunning Midgame",
-          "coreUnits": [
-            "Chenipode",
-            "Rockat",
-            "Propellorcat",
-            "Aardart"
-          ],
-          "transitionUnits": [],
-          "shortTermSteps": [
-            "buy Aardart from shop, replace Rockitten",
-            "sell Fluttaflap if needed for bench space",
-            "roll down to 10 gold to find more Chenipode copies",
-            "aim for 3-star Chenipode, then 2-star Rockat and Propellorcat"
-          ]
-        }
-      ]
-    },
-    {
-      "gameIndex": 21,
-      "durationMs": 891885,
-      "rank": 1,
-      "finishRound": 41,
-      "top4": true,
-      "win": true,
-      "ragCalls": [
-        {
-          "round": 4,
-          "attempts": 1,
-          "rateLimitRetries": 0,
-          "durationMs": 16983,
-          "success": true,
-          "planName": "Cunning Fire Early",
-          "error": null
-        },
-        {
-          "round": 15,
-          "attempts": 1,
-          "rateLimitRetries": 0,
-          "durationMs": 14994,
-          "success": true,
-          "planName": "Cunning 6 Carry Aardart",
-          "error": null
-        }
-      ],
-      "plans": [
-        {
-          "round": 4,
-          "planName": "Cunning Fire Early",
-          "coreUnits": [
-            "Cardiling",
-            "Chenipode"
-          ],
-          "transitionUnits": [
-            "Embra",
-            "Agnite",
-            "Weavifly"
-          ],
-          "shortTermSteps": [
-            "Mua Cardiling thứ 3 từ bench để ghép ★★",
-            "Mua Rockitten hoặc Nut để tăng độ dày board",
-            "Bỏ qua Cairfrey và các tướng cost 3 khác",
-            "Round 5: lên level 4 (tốn 4 vàng)",
-            "Round 7-8: lên level 5, bắt đầu slow-roll tìm ★★ cho tướng cost 1-2"
-          ]
-        },
-        {
-          "round": 15,
-          "planName": "Cunning 6 Carry Aardart",
-          "coreUnits": [
-            "Aardart",
-            "Jemuar",
-            "Anoleaf",
-            "Noctalo",
-            "Rockat",
-            "Velocitile"
-          ],
-          "transitionUnits": [
-            "Ruption"
-          ],
-          "shortTermSteps": [
-            "Mua Ruption và Velocitile từ shop, bỏ lên bench",
-            "Bán Embra và Weavifly để lấy chỗ",
-            "Roll 10-15 vàng tìm Rockat và thêm Velocitile",
-            "Khi có 6 Cunning, dừng roll, tích vàng lên level 8"
-          ]
-        }
-      ]
-    },
-    {
-      "gameIndex": 24,
-      "durationMs": 961229,
-      "rank": 5,
-      "finishRound": 32,
-      "top4": false,
-      "win": false,
-      "ragCalls": [
-        {
-          "round": 4,
-          "attempts": 1,
-          "rateLimitRetries": 0,
-          "durationMs": 15138,
-          "success": true,
-          "planName": "Fire Cunning Early Snowball",
-          "error": null
-        },
-        {
-          "round": 15,
-          "attempts": 1,
-          "rateLimitRetries": 0,
-          "durationMs": 14113,
-          "success": true,
-          "planName": "Fire Cunning",
-          "error": null
-        }
-      ],
-      "plans": [
-        {
-          "round": 4,
-          "planName": "Fire Cunning Early Snowball",
-          "coreUnits": [
-            "Cardiling",
-            "Embra",
-            "Agnite"
-          ],
-          "transitionUnits": [
-            "Budaye",
-            "Nut"
-          ],
-          "shortTermSteps": [
-            "Mua Cardiling thứ 3 từ shop → lên ★★",
-            "Mua Budaye và Nut để có thêm tank",
-            "Ghép Infinity Edge từ 2 BF_SWORD → gắn lên Cardiling",
-            "Bán Elowind nếu cần chỗ, giữ lại nếu có thể mở Water 2",
-            "Lên level 4 ở round 5 (mua XP 4 vàng)",
-            "Từ level 4-5, mở thêm Embra, Agnite, Anoleaf"
-          ]
-        },
-        {
-          "round": 15,
-          "planName": "Fire Cunning",
-          "coreUnits": [
-            "Cardiling",
-            "Cardinale",
-            "Prophetoise"
-          ],
-          "transitionUnits": [
-            "Agnite",
-            "Pyraminx",
-            "Arbelder"
-          ],
-          "shortTermSteps": [
-            "Mua Cardinale và Prophetoise từ shop",
-            "Bán Budaye và Aardorn để lấy chỗ bench",
-            "Level lên 7 (tốn 12 vàng)",
-            "Đặt board: Cardiling ★★, Cardiling ★, Cardinale, Prophetoise, Agnite, Pyraminx, Arbelder",
-            "Bắt đầu slow roll ở level 7, ưu tiên Cardiling ★★★"
-          ]
-        }
-      ]
-    },
-    {
-      "gameIndex": 25,
-      "durationMs": 1044508,
-      "rank": 2,
-      "finishRound": 47,
-      "top4": true,
-      "win": false,
-      "ragCalls": [
-        {
-          "round": 4,
-          "attempts": 1,
-          "rateLimitRetries": 0,
-          "durationMs": 15754,
-          "success": true,
-          "planName": "Arcane Water Early",
-          "error": null
-        },
-        {
-          "round": 15,
-          "attempts": 1,
-          "rateLimitRetries": 0,
-          "durationMs": 16870,
-          "success": true,
-          "planName": "6 Arcane 4 Water",
-          "error": null
-        }
-      ],
-      "plans": [
-        {
-          "round": 4,
-          "planName": "Arcane Water Early",
-          "coreUnits": [
-            "Elowind",
-            "Tweesher",
-            "Weavifly",
-            "Cairfrey",
-            "Cardiling"
-          ],
-          "transitionUnits": [],
-          "shortTermSteps": [
-            "Mua Tweesher (1 vàng) và Cairfrey (3 vàng) từ shop ngay",
-            "Đặt Tweesher lên board, bỏ Weavifly ra bench nếu cần chỗ",
-            "Kết thúc round, tiết kiệm vàng",
-            "Round 5: lên level 4 (tốn 4 vàng)",
-            "Round 6-7: tích lũy lên level 5, bắt đầu slow roll"
-          ]
-        },
-        {
-          "round": 15,
-          "planName": "6 Arcane 4 Water",
-          "coreUnits": [
-            "Elowind",
-            "Narcileaf",
-            "Cairfrey",
-            "Fluttaflap",
-            "Weavifly"
-          ],
-          "transitionUnits": [
-            "Cardiling"
-          ],
-          "shortTermSteps": [
-            "Mua Weavifly từ shop để kích 6 Arcane",
-            "Tháo hết item trên Cairfrey và Cardiling",
-            "Craft INFINITY_EDGE và RAPID_FIRE gắn cho Elowind",
-            "Roll 10-20 vàng tìm Elowind và Narcileaf",
-            "Bán Cardiling nếu cần vàng",
-            "Lên level 8 khi đủ 28 XP"
-          ]
-        }
-      ]
-    },
-    {
-      "gameIndex": 27,
-      "durationMs": 882706,
-      "rank": 1,
-      "finishRound": 39,
-      "top4": true,
-      "win": true,
-      "ragCalls": [
-        {
-          "round": 4,
-          "attempts": 1,
-          "rateLimitRetries": 0,
-          "durationMs": 12408,
-          "success": true,
-          "planName": "Wood Valiant Early",
-          "error": null
-        },
-        {
-          "round": 15,
-          "attempts": 1,
-          "rateLimitRetries": 0,
-          "durationMs": 17354,
-          "success": true,
-          "planName": "Valiant Wood Slow-Roll",
-          "error": null
-        }
-      ],
-      "plans": [
-        {
-          "round": 4,
-          "planName": "Wood Valiant Early",
-          "coreUnits": [
-            "Bamboon",
-            "Anoleaf",
-            "Nut"
-          ],
-          "transitionUnits": [],
-          "shortTermSteps": [
-            "Mua Anoleaf và Nut từ shop (tốn 2 vàng)",
-            "Ghép Bloodthirster từ BF_SWORD + CLOAK, gắn cho Bamboon",
-            "Round 5: lên level 4, đặt Anoleaf và Nut lên board",
-            "Round 6-7: tiết kiệm vàng, mua thêm Wood/Valiant, slow roll ở level 4-5"
-          ]
-        },
-        {
-          "round": 15,
-          "planName": "Valiant Wood Slow-Roll",
-          "coreUnits": [
-            "Bamboon",
-            "Sapsnap",
-            "Ignibus",
-            "Prophetoise",
-            "Dollfin",
-            "Bolt"
-          ],
-          "transitionUnits": [],
-          "shortTermSteps": [
-            "Mua Bamboon thứ 6 từ shop, mua Sapsnap và Ignibus",
-            "Đặt Sapsnap và Ignibus lên board, bỏ Aardorn và Rockitten",
-            "Tích lũy vàng lên 50, không roll",
-            "Slow-roll ở level 7 để kiếm Bamboon ★★★ và nâng cấp Sapsnap/Ignibus lên ★★",
-            "Chỉ lên level 8 khi đã có Bamboon ★★★ và các cost-3 ★★"
-          ]
-        }
-      ]
-    },
-    {
-      "gameIndex": 26,
-      "durationMs": 956973,
-      "rank": 8,
-      "finishRound": 23,
-      "top4": false,
-      "win": false,
-      "ragCalls": [
-        {
-          "round": 4,
-          "attempts": 1,
-          "rateLimitRetries": 0,
-          "durationMs": 13480,
-          "success": true,
-          "planName": "Arcane Early Rush",
-          "error": null
-        },
-        {
-          "round": 15,
-          "attempts": 1,
-          "rateLimitRetries": 0,
-          "durationMs": 14993,
-          "success": true,
-          "planName": "Fire Valiant Transition",
-          "error": null
-        }
-      ],
-      "plans": [
-        {
-          "round": 4,
-          "planName": "Arcane Early Rush",
-          "coreUnits": [
-            "Weavifly",
-            "Anoleaf",
-            "Embra",
-            "Tweesher"
-          ],
-          "transitionUnits": [],
-          "shortTermSteps": [
-            "Mua Anoleaf thứ 2 từ shop, lên ★★ ngay",
-            "Mua Nut từ shop, giữ bench",
-            "Bỏ qua Sumchon, Ruption, Agnite",
-            "Level lên 4 ở round 5 (tốn 4 vàng)",
-            "Đưa Embra và Tweesher lên board để kích Arcane 3"
-          ]
-        },
-        {
-          "round": 15,
-          "planName": "Fire Valiant Transition",
-          "coreUnits": [
-            "Agnigon",
-            "Embra",
-            "Cardiling",
-            "Ignibus",
-            "Ruption",
-            "Anoleaf"
-          ],
-          "transitionUnits": [],
-          "shortTermSteps": [
-            "Mua Agnigon từ shop, đặt lên board ngay",
-            "Bán 1 Weavifly và Tweesher để lấy chỗ",
-            "Bắt đầu slow roll: mỗi turn roll 1-2 lần, giữ 10 vàng",
-            "Tìm Cardiling, Ignibus, Ruption để kích 4 Fire",
-            "Khi đủ 4 Fire, bỏ dần Arcane yếu, thêm Valiant"
-          ]
-        }
-      ]
-    },
-    {
-      "gameIndex": 28,
-      "durationMs": 894145,
-      "rank": 1,
-      "finishRound": 39,
-      "top4": true,
-      "win": true,
-      "ragCalls": [
-        {
-          "round": 4,
-          "attempts": 1,
-          "rateLimitRetries": 0,
-          "durationMs": 13649,
-          "success": true,
-          "planName": "Valiant Early Rush",
-          "error": null
-        },
-        {
-          "round": 15,
-          "attempts": 1,
-          "rateLimitRetries": 0,
-          "durationMs": 18378,
-          "success": true,
-          "planName": "Valiant Metal Transition",
-          "error": null
-        }
-      ],
-      "plans": [
-        {
-          "round": 4,
-          "planName": "Valiant Early Rush",
-          "coreUnits": [
-            "Bolt",
-            "Rockitten",
-            "Embra",
-            "Nut"
-          ],
-          "transitionUnits": [],
-          "shortTermSteps": [
-            "Mua Embra từ shop để có ★★ Embra ngay",
-            "Mua Bolt thứ 2 từ shop",
-            "Ghép Bloodthirster từ BF Sword + Cloak, gắn lên Bolt",
-            "Round 5: level lên 4",
-            "Round 6-7: level lên 5, bắt đầu slow roll tìm ★★"
-          ]
-        },
-        {
-          "round": 15,
-          "planName": "Valiant Metal Transition",
-          "coreUnits": [
-            "Embra",
-            "Nut",
-            "Bolt",
-            "Sampsack",
-            "Jemuar",
-            "Ignibus",
-            "Prophetoise",
-            "Grintrock"
-          ],
-          "transitionUnits": [
-            "Rockitten",
-            "Budaye"
-          ],
-          "shortTermSteps": [
-            "Bán Budaye và Rockitten để giải phóng chỗ board",
-            "Mua Ignibus từ shop, đặt lên board",
-            "Mua Jemuar thứ 2 từ shop, giữ trên bench",
-            "Tiết kiệm vàng, không roll, lên level 8",
-            "Tại level 8, slow roll tìm Prophetoise và Grintrock"
-          ]
-        }
-      ]
-    },
-    {
-      "gameIndex": 29,
-      "durationMs": 845236,
-      "rank": 1,
-      "finishRound": 39,
-      "top4": true,
-      "win": true,
-      "ragCalls": [
-        {
-          "round": 4,
-          "attempts": 1,
-          "rateLimitRetries": 0,
-          "durationMs": 14467,
-          "success": true,
-          "planName": "Cunning Wood Early",
-          "error": null
-        },
-        {
-          "round": 15,
-          "attempts": 1,
-          "rateLimitRetries": 0,
-          "durationMs": 13387,
-          "success": true,
-          "planName": "Cunning Wood Transition",
-          "error": null
-        }
-      ],
-      "plans": [
-        {
-          "round": 4,
-          "planName": "Cunning Wood Early",
-          "coreUnits": [
-            "Budaye",
-            "Anoleaf",
-            "Cardiling",
-            "Chenipode",
-            "Puparmor"
-          ],
-          "transitionUnits": [],
-          "shortTermSteps": [
-            "Mua 2 Anoleaf, 1 Budaye, 1 Embra, 1 Weavifly từ shop",
-            "Ghép Budaye ★★ (3 bản: bench + shop)",
-            "Bán Weavifly nếu cần chỗ bench",
-            "Ghép Bloodthirster từ BF_SWORD + CLOAK, trang bị cho Budaye ★★",
-            "Lên level 4 sau round này",
-            "Giữ Cardiling và Chenipode trên board"
-          ]
-        },
-        {
-          "round": 15,
-          "planName": "Cunning Wood Transition",
-          "coreUnits": [
-            "Eaglace",
-            "Narcileaf",
-            "Anoleaf",
-            "Chenipode",
-            "Cardiling"
-          ],
-          "transitionUnits": [
-            "Bolt",
-            "Agnite"
-          ],
-          "shortTermSteps": [
-            "Mua Bolt và Agnite từ shop, giữ 12 vàng",
-            "Round 16: lên level 8 (tốn 20 vàng), bán Puparmor nếu thiếu chỗ",
-            "Ghép Phantom Dancer cho Eaglace từ đồ trên Chenipode",
-            "Slow roll ở level 8: ưu tiên Eaglace ★2, Narcileaf ★2, Anoleaf ★2",
-            "Thêm tank valiant (Bolt, Grintot) vào team để có frontline"
-          ]
-        }
-      ]
-    },
-    {
-      "gameIndex": 30,
-      "durationMs": 870255,
-      "rank": 5,
-      "finishRound": 24,
-      "top4": false,
-      "win": false,
-      "ragCalls": [
-        {
-          "round": 4,
-          "attempts": 1,
-          "rateLimitRetries": 0,
-          "durationMs": 12940,
-          "success": true,
-          "planName": "Water Arcane Early",
-          "error": null
-        },
-        {
-          "round": 15,
-          "attempts": 1,
-          "rateLimitRetries": 0,
-          "durationMs": 13575,
-          "success": true,
-          "planName": "Valiant Fire Core",
-          "error": null
-        }
-      ],
-      "plans": [
-        {
-          "round": 4,
-          "planName": "Water Arcane Early",
-          "coreUnits": [
-            "Tweesher",
-            "Elowind",
-            "Embra",
-            "Bolt"
-          ],
-          "transitionUnits": [
-            "Fluttaflap",
-            "Noctalo",
-            "Lightmare"
-          ],
-          "shortTermSteps": [
-            "Buy both Tweesher and Embra from shop",
-            "Field Tweesher + Embra + Bolt for Water(2) + Arcane(2)",
-            "Save gold, level to 4 next round",
-            "Do not roll until level 6"
-          ]
-        },
-        {
-          "round": 15,
-          "planName": "Valiant Fire Core",
-          "coreUnits": [
-            "Bolt",
-            "Fluttaflap",
-            "Sapsnap",
-            "Agnite",
-            "Lightmare",
-            "Embra"
-          ],
-          "transitionUnits": [],
-          "shortTermSteps": [
-            "Mua Agnite, Lightmare, Hubursa từ shop",
-            "Bán 1 Embra để lấy chỗ bench",
-            "Level lên 7 (tốn 12 vàng)",
-            "Đặt Hubursa lên board thay Embra còn lại để kích Arcane 2",
-            "Roll nhẹ tìm Agnite ★★ và Lightmare ★★"
-          ]
-        }
-      ]
-    },
-    {
-      "gameIndex": 33,
-      "durationMs": 734078,
-      "rank": 8,
-      "finishRound": 24,
-      "top4": false,
-      "win": false,
-      "ragCalls": [
-        {
-          "round": 4,
-          "attempts": 1,
-          "rateLimitRetries": 0,
-          "durationMs": 12600,
-          "success": true,
-          "planName": "Fire Valiant Early",
-          "error": null
-        },
-        {
-          "round": 15,
-          "attempts": 1,
-          "rateLimitRetries": 0,
-          "durationMs": 12162,
-          "success": true,
-          "planName": "Fire Valiant Transition",
-          "error": null
-        }
-      ],
-      "plans": [
-        {
-          "round": 4,
-          "planName": "Fire Valiant Early",
-          "coreUnits": [
-            "Agnite",
-            "Anoleaf",
-            "Cardiling"
-          ],
-          "transitionUnits": [],
-          "shortTermSteps": [
-            "mua 2 Agnite, Cardiling, Weavifly từ shop (tốn 6 vàng)",
-            "ghép INFINITY_EDGE từ 2 BF_SWORD, đặt lên Anoleaf",
-            "level lên 4 ở round 5 (tốn 4 xp)",
-            "slow-roll ở level 5, giữ 50 vàng, kiếm Agnite ★★ và Cardiling ★★"
-          ]
-        },
-        {
-          "round": 15,
-          "planName": "Fire Valiant Transition",
-          "coreUnits": [
-            "Agnite",
-            "Sumchon",
-            "Tikorch",
-            "Cardinale",
-            "Grintot",
-            "Agnigon"
-          ],
-          "transitionUnits": [],
-          "shortTermSteps": [
-            "Bán Cardiling và Sapsnap",
-            "Mua Tikorch và Cardinale từ shop",
-            "Đặt Tikorch hàng trước, Cardinale hàng sau",
-            "Lên level 8 (tốn 20 vàng)",
-            "Roll tìm Agnigon và nâng Sumchon lên ★★",
-            "Giữ 10+ vàng để nhận lãi"
-          ]
-        }
-      ]
-    },
-    {
-      "gameIndex": 31,
-      "durationMs": 842345,
-      "rank": 8,
-      "finishRound": 22,
-      "top4": false,
-      "win": false,
-      "ragCalls": [
-        {
-          "round": 4,
-          "attempts": 1,
-          "rateLimitRetries": 0,
-          "durationMs": 12844,
-          "success": true,
-          "planName": "Fire Valiant Early",
-          "error": null
-        },
-        {
-          "round": 15,
-          "attempts": 1,
-          "rateLimitRetries": 0,
-          "durationMs": 14664,
-          "success": true,
-          "planName": "Arcane Valiant Transition",
-          "error": null
-        }
-      ],
-      "plans": [
-        {
-          "round": 4,
-          "planName": "Fire Valiant Early",
-          "coreUnits": [
-            "Agnite",
-            "Weavifly",
-            "Fluttaflap",
-            "Budaye"
-          ],
-          "transitionUnits": [],
-          "shortTermSteps": [
-            "Mua Fluttaflap và Budaye từ shop",
-            "Lên level 4 ở round 5",
-            "Đặt Fluttaflap và Budaye lên board, bỏ Anoleaf xuống bench",
-            "Tích lũy lên 10 vàng, sau đó slow-roll ở level 5"
-          ]
-        },
-        {
-          "round": 15,
-          "planName": "Arcane Valiant Transition",
-          "coreUnits": [
-            "Pyraminx",
-            "Nudimind",
-            "Grintot",
-            "Agnite",
-            "Lightmare",
-            "Cairfrey"
-          ],
-          "transitionUnits": [],
-          "shortTermSteps": [
-            "Buy Pyraminx and Lightmare from shop",
-            "Sell Budaye to free board slot",
-            "Place Pyraminx frontline, Nudimind backline",
-            "Save gold to 50, then level to 7",
-            "At level 7, slow roll for Nudimind ★★ and Cairfrey"
-          ]
-        }
-      ]
-    },
-    {
-      "gameIndex": 32,
-      "durationMs": 806776,
-      "rank": 6,
-      "finishRound": 27,
-      "top4": false,
-      "win": false,
-      "ragCalls": [
-        {
-          "round": 4,
-          "attempts": 1,
-          "rateLimitRetries": 0,
-          "durationMs": 11897,
-          "success": true,
-          "planName": "Valiant Metal Early",
-          "error": null
-        },
-        {
-          "round": 15,
-          "attempts": 1,
-          "rateLimitRetries": 0,
-          "durationMs": 14612,
-          "success": true,
-          "planName": "Fire Valiant Carry",
-          "error": null
-        }
-      ],
-      "plans": [
-        {
-          "round": 4,
-          "planName": "Valiant Metal Early",
-          "coreUnits": [
-            "Puparmor",
-            "Bolt",
-            "Cardiling"
-          ],
-          "transitionUnits": [],
-          "shortTermSteps": [
-            "Mua Bolt, Puparmor, 1x Aardorn từ shop",
-            "Đặt Bolt và Puparmor lên board, bỏ Bamboon xuống bench",
-            "Ghép Frozen Heart từ Tear + Chain Vest, đặt lên Puparmor",
-            "Round 5: level lên 4, mua thêm Puparmor nếu có"
-          ]
-        },
-        {
-          "round": 15,
-          "planName": "Fire Valiant Carry",
-          "coreUnits": [
-            "Agnigon",
-            "Cardiling",
-            "Ignibus",
-            "Ruption",
-            "Lightmare",
-            "Cairfrey",
-            "Sapsnap"
-          ],
-          "transitionUnits": [],
-          "shortTermSteps": [
-            "Mua Agnigon từ shop, đặt lên bench",
-            "Bán Chenipode và Aardorn (nếu mua) để lấy chỗ",
-            "Tháo BF_SWORD và GLOVES từ Cardiling/Bolt, ghép INFINITY_EDGE và RAPID_FIRE",
-            "Gắn INFINITY_EDGE và RAPID_FIRE lên Agnigon",
-            "Slow roll ở level 6: giữ 20 vàng, roll phần dư tìm Ignibus/Ruption/Sapsnap",
-            "Khi có Fire 4 (Cardiling + Ignibus/Ruption + Agnigon), lên level 7-8"
-          ]
-        }
-      ]
-    },
-    {
-      "gameIndex": 34,
-      "durationMs": 844903,
-      "rank": 3,
-      "finishRound": 38,
-      "top4": true,
-      "win": false,
-      "ragCalls": [
-        {
-          "round": 4,
-          "attempts": 1,
-          "rateLimitRetries": 0,
-          "durationMs": 11822,
-          "success": true,
-          "planName": "Cunning Earth Early",
-          "error": null
-        },
-        {
-          "round": 15,
-          "attempts": 1,
-          "rateLimitRetries": 0,
-          "durationMs": 14648,
-          "success": true,
-          "planName": "Cunning Roll",
-          "error": null
-        }
-      ],
-      "plans": [
-        {
-          "round": 4,
-          "planName": "Cunning Earth Early",
-          "coreUnits": [
-            "Aardorn",
-            "Puparmor",
-            "Chenipode",
-            "Anoleaf"
-          ],
-          "transitionUnits": [],
-          "shortTermSteps": [
-            "mua 2 Tweesher và Chenipode từ shop",
-            "ghép WARMOG từ Giant's Belt + Chain Vest lên Puparmor",
-            "đặt board: Puparmor frontline, Aardorn + Chenipode + Anoleaf hàng sau",
-            "lên level 4 ở round 5 (tốn 4 vàng)",
-            "bán Tweesher nếu cần vàng để roll tìm Aardorn thứ 3"
-          ]
-        },
-        {
-          "round": 15,
-          "planName": "Cunning Roll",
-          "coreUnits": [
-            "Anoleaf",
-            "Aardorn",
-            "Chenipode",
-            "Eaglace",
-            "Velocitile"
-          ],
-          "transitionUnits": [
-            "Prophetoise"
-          ],
-          "shortTermSteps": [
-            "Mua Aardorn từ shop để có 5 bản, tiến gần ★★★",
-            "Mua Embra từ shop để giữ tạm Fire synergy",
-            "Bán Puparmor để lấy chỗ bench",
-            "Roll nhẹ (10-15 vàng) tìm Velocitile và Chenipode thứ 3",
-            "Ghép Chenipode ★★ từ 2 bản ★ trên bench",
-            "Giữ Eaglace dù cost 5 khó nâng, đây là carry late game"
-          ]
-        }
-      ]
-    },
-    {
-      "gameIndex": 35,
-      "durationMs": 959619,
+      "durationMs": 105086,
       "rank": 8,
       "finishRound": 21,
       "top4": false,
       "win": false,
       "ragCalls": [
         {
-          "round": 4,
+          "round": 2,
           "attempts": 1,
           "rateLimitRetries": 0,
-          "durationMs": 13310,
+          "durationMs": 11306,
           "success": true,
-          "planName": "Arcane Valiant Early",
-          "error": null
-        },
-        {
-          "round": 15,
-          "attempts": 1,
-          "rateLimitRetries": 0,
-          "durationMs": 15256,
-          "success": true,
-          "planName": "6 Arcane Ruption Carry",
+          "planName": "Arcane Metal Early",
           "error": null
         }
       ],
       "plans": [
         {
-          "round": 4,
-          "planName": "Arcane Valiant Early",
-          "coreUnits": [
-            "Rockitten",
-            "Weavifly",
-            "Elowind"
-          ],
-          "transitionUnits": [
-            "Puparmor",
-            "Tweesher",
-            "Bamboon"
-          ],
-          "shortTermSteps": [
-            "Mua 2 Weavifly từ shop, ghép ★★ ngay",
-            "Mua Puparmor và Tweesher từ shop",
-            "Level lên 4 (tốn 4 vàng)",
-            "Đặt Rockitten ★★ hàng trước, Weavifly ★★ hàng sau, Elowind hàng giữa",
-            "Giữ vàng, level lên 5-6 tự nhiên, bổ sung thêm tướng arcane/valiant"
-          ]
-        },
-        {
-          "round": 15,
-          "planName": "6 Arcane Ruption Carry",
-          "coreUnits": [
-            "Ruption",
-            "Weavifly",
-            "Elowind",
-            "Bamboon",
-            "Lightmare",
-            "Propellorcat"
-          ],
-          "transitionUnits": [],
-          "shortTermSteps": [
-            "Bán Aardart (lấy 4 vàng)",
-            "Mua Lightmare và Propellorcat từ shop",
-            "Ghép INFINITY_EDGE và RAPID_FIRE lên Ruption",
-            "Roll 10-15 vàng tìm Weavifly thứ 3 và Elowind thứ 2",
-            "Giữ Bamboon x2 để lên 2 sao",
-            "Tiết kiệm lên level 8"
-          ]
-        }
-      ]
-    },
-    {
-      "gameIndex": 38,
-      "durationMs": 792160,
-      "rank": 6,
-      "finishRound": 24,
-      "top4": false,
-      "win": false,
-      "ragCalls": [
-        {
-          "round": 4,
-          "attempts": 1,
-          "rateLimitRetries": 0,
-          "durationMs": 11022,
-          "success": true,
-          "planName": "Arcane Water Early",
-          "error": null
-        },
-        {
-          "round": 15,
-          "attempts": 1,
-          "rateLimitRetries": 0,
-          "durationMs": 16494,
-          "success": true,
-          "planName": "Fire Arcane Transition",
-          "error": null
-        }
-      ],
-      "plans": [
-        {
-          "round": 4,
-          "planName": "Arcane Water Early",
-          "coreUnits": [
-            "Elowind",
-            "Weavifly",
-            "Embra"
-          ],
-          "transitionUnits": [
-            "Budaye"
-          ],
-          "shortTermSteps": [
-            "Mua Embra và 1 Budaye từ shop",
-            "Ghép Rapid Firecannon, gắn lên Elowind",
-            "Level lên 4 (tốn 4 vàng)",
-            "Đặt Elowind hàng sau, Chenipode + Budaye hàng trước",
-            "Roll nhẹ tìm Elowind ★★ và Weavifly ★★"
-          ]
-        },
-        {
-          "round": 15,
-          "planName": "Fire Arcane Transition",
+          "round": 2,
+          "planName": "Arcane Metal Early",
           "coreUnits": [
             "Embra",
-            "Elowind",
-            "Cardiling",
             "Weavifly",
-            "Noctalo"
+            "Nut"
           ],
           "transitionUnits": [
-            "Ignibus",
-            "Prophetoise",
-            "Tikorch"
+            "Aardorn",
+            "Anoleaf"
           ],
           "shortTermSteps": [
-            "Mua Embra x2, Cardiling, Noctalo từ shop. Bán Nut.",
-            "Level lên 7 ở round 16 (tiêu 12 vàng).",
-            "Slow roll ở level 7: tìm Embra ★★, Cardiling ★★, Ignibus, Prophetoise/Tikorch.",
-            "Bán Budaye ★★ khi có tank Fire 2★, chuyển Bloodthirster sang Embra.",
-            "Ghép Infinity Edge nếu có 2 BF_Sword, đặt lên Embra."
+            "Mua Embra, Weavifly, Nut từ shop hiện tại",
+            "Đặt lên board: Nut frontline, Embra và Weavifly backline",
+            "Giữ tiền, không roll, lên level 4 ở round 2-3",
+            "Slow roll nhẹ ở level 4-5 để kiếm ★★ cho Embra và Weavifly"
           ]
         }
       ]
     },
     {
-      "gameIndex": 37,
-      "durationMs": 822551,
-      "rank": 3,
-      "finishRound": 34,
+      "gameIndex": 4,
+      "durationMs": 105832,
+      "rank": 4,
+      "finishRound": 29,
       "top4": true,
       "win": false,
       "ragCalls": [
         {
-          "round": 4,
+          "round": 2,
           "attempts": 1,
           "rateLimitRetries": 0,
-          "durationMs": 15669,
+          "durationMs": 12267,
           "success": true,
-          "planName": "Metal Valiant Early",
-          "error": null
-        },
-        {
-          "round": 15,
-          "attempts": 1,
-          "rateLimitRetries": 0,
-          "durationMs": 14148,
-          "success": true,
-          "planName": "Valiant 5 + Arcane 3",
+          "planName": "Valiant Fire Early",
           "error": null
         }
       ],
       "plans": [
         {
-          "round": 4,
-          "planName": "Metal Valiant Early",
+          "round": 2,
+          "planName": "Valiant Fire Early",
           "coreUnits": [
-            "Bolt",
+            "Budaye",
             "Puparmor",
-            "Agnite",
-            "Weavifly"
-          ],
-          "transitionUnits": [
             "Embra"
           ],
-          "shortTermSteps": [
-            "Mua Bolt, Puparmor, Embra từ shop",
-            "Bán Tweesher và Anoleaf khỏi bench để lấy chỗ",
-            "Đặt Bolt và Puparmor lên board, giữ Weavifly và Agnite",
-            "Ghép Guardian Angel từ CHAIN_VEST + GLOVES, trang bị cho Bolt",
-            "Lên level 4 ở round 5 (tốn 4 vàng)",
-            "Tích lũy vàng, lên level 5-6, slow-roll tìm Bolt ★★ và Puparmor ★★"
-          ]
-        },
-        {
-          "round": 15,
-          "planName": "Valiant 5 + Arcane 3",
-          "coreUnits": [
-            "Puparmor",
-            "Sapsnap",
-            "Hubursa",
-            "Cairfrey",
-            "Lightmare"
-          ],
           "transitionUnits": [],
           "shortTermSteps": [
-            "Mua Hubursa và Cairfrey từ shop ngay",
-            "Bỏ Rockat và Embra khỏi board",
-            "Đặt Hubursa và Cairfrey lên board, giữ Lightmare",
-            "Dồn vàng lên 50, sau đó lên level 8",
-            "Slow-roll ở level 8 tìm bản sao cho core units"
+            "Bán Anoleaf và Weavifly để có 5 vàng",
+            "Mua Budaye, Puparmor, Embra từ shop",
+            "Đặt Budaye và Puparmor hàng trước, Embra hàng sau",
+            "Tích lũy vàng, lên level 2 ở round 3"
           ]
         }
       ]
     },
     {
-      "gameIndex": 36,
-      "durationMs": 954425,
-      "rank": 6,
-      "finishRound": 24,
-      "top4": false,
-      "win": false,
-      "ragCalls": [
-        {
-          "round": 4,
-          "attempts": 1,
-          "rateLimitRetries": 0,
-          "durationMs": 10184,
-          "success": true,
-          "planName": "Metal_Valiant_Early",
-          "error": null
-        },
-        {
-          "round": 15,
-          "attempts": 1,
-          "rateLimitRetries": 0,
-          "durationMs": 15446,
-          "success": true,
-          "planName": "Valiant Earth Midgame",
-          "error": null
-        }
-      ],
-      "plans": [
-        {
-          "round": 4,
-          "planName": "Metal_Valiant_Early",
-          "coreUnits": [
-            "Puparmor",
-            "Bolt",
-            "Nut"
-          ],
-          "transitionUnits": [],
-          "shortTermSteps": [
-            "Mua 2 Puparmor và Nut từ shop (tốn 3 vàng)",
-            "Bán Aardorn và Anoleaf trên bench",
-            "Đặt Puparmor 2★ hàng trước, Bolt hàng giữa, Embra hàng sau",
-            "Tiết kiệm vàng, lên level 4 ở round 5"
-          ]
-        },
-        {
-          "round": 15,
-          "planName": "Valiant Earth Midgame",
-          "coreUnits": [
-            "Jemuar",
-            "Puparmor",
-            "Grintrock",
-            "Aardart",
-            "Sumchon",
-            "Sapsnap"
-          ],
-          "transitionUnits": [
-            "Grintot"
-          ],
-          "shortTermSteps": [
-            "Mua Sumchon và Sapsnap từ shop",
-            "Bỏ Ruption và Fluttaflap ra bench",
-            "Bán Nut để lấy lại 3 Tear",
-            "Level lên 8 (tốn 20 vàng)",
-            "Gỡ Recurve Bow và Giant's Belt khỏi Puparmor, ghép Rapid Fire cho Jemuar",
-            "Slow roll ở level 8 tìm Grintrock và Aardart"
-          ]
-        }
-      ]
-    },
-    {
-      "gameIndex": 39,
-      "durationMs": 909319,
-      "rank": 8,
-      "finishRound": 19,
-      "top4": false,
-      "win": false,
-      "ragCalls": [
-        {
-          "round": 4,
-          "attempts": 1,
-          "rateLimitRetries": 0,
-          "durationMs": 16582,
-          "success": true,
-          "planName": "Arcane Water Metal Early",
-          "error": null
-        },
-        {
-          "round": 15,
-          "attempts": 1,
-          "rateLimitRetries": 0,
-          "durationMs": 15461,
-          "success": true,
-          "planName": "Arcane Water",
-          "error": null
-        }
-      ],
-      "plans": [
-        {
-          "round": 4,
-          "planName": "Arcane Water Metal Early",
-          "coreUnits": [
-            "Nut",
-            "Embra",
-            "Tweesher",
-            "Weavifly",
-            "Chenipode"
-          ],
-          "transitionUnits": [],
-          "shortTermSteps": [
-            "Mua 2 Nut từ shop, lên Nut ★★",
-            "Mua Weavifly, bán Elowind",
-            "Ghép Infinity Edge lên Chenipode",
-            "Lên level 4 ở round 5",
-            "Slow roll ở level 5 để tìm Embra/Tweesher/Weavifly thứ 2-3"
-          ]
-        },
-        {
-          "round": 15,
-          "planName": "Arcane Water",
-          "coreUnits": [
-            "Tweesher",
-            "Embra",
-            "Arbelder",
-            "Elowind",
-            "Fluttaflap"
-          ],
-          "transitionUnits": [],
-          "shortTermSteps": [
-            "Mua Tweesher thứ 3 từ shop, đặt lên board để có 2★",
-            "Bỏ Nut và Chenipode ra bench, giữ 6 tướng: 2 Tweesher, Embra, Arbelder, và 2 slot trống",
-            "Slow-roll ở level 6: chỉ roll khi trên 20 vàng, giữ 20-30 vàng",
-            "Ưu tiên mua Tweesher để lên 3★, tìm Elowind hoặc Fluttaflap",
-            "Khi có Water 4 và Arcane 4, lên level 7-8 để thêm Noctalo hoặc Nudimind"
-          ]
-        }
-      ]
-    },
-    {
-      "gameIndex": 40,
-      "durationMs": 771260,
-      "rank": 2,
+      "gameIndex": 2,
+      "durationMs": 107876,
+      "rank": 3,
       "finishRound": 36,
       "top4": true,
       "win": false,
       "ragCalls": [
         {
-          "round": 4,
+          "round": 2,
           "attempts": 1,
           "rateLimitRetries": 0,
-          "durationMs": 16907,
+          "durationMs": 10826,
           "success": true,
-          "planName": "Wood Cunning Early",
-          "error": null
-        },
-        {
-          "round": 15,
-          "attempts": 1,
-          "rateLimitRetries": 0,
-          "durationMs": 17460,
-          "success": true,
-          "planName": "Fire Cunning Midgame",
+          "planName": "Valiant Multi-Element Early",
           "error": null
         }
       ],
       "plans": [
         {
-          "round": 4,
-          "planName": "Wood Cunning Early",
+          "round": 2,
+          "planName": "Valiant Multi-Element Early",
           "coreUnits": [
+            "Budaye",
+            "Rockitten",
             "Anoleaf",
-            "Sapsnap",
-            "Rockat",
-            "Chenipode",
-            "Cardiling"
-          ],
-          "transitionUnits": [
-            "Elowind",
+            "Puparmor",
             "Embra"
           ],
+          "transitionUnits": [],
           "shortTermSteps": [
-            "Mua Anoleaf từ shop, ghép thành ★★ ngay",
-            "Đặt Anoleaf ★★ lên board, giữ Elowind",
-            "Bán Embra nếu cần slot bench",
-            "Round 5: lên level 4 (tốn 4 vàng)",
-            "Mua Chenipode và Cardiling từ shop nếu còn vàng",
-            "Tích lũy vàng đến 10+ để hưởng interest"
-          ]
-        },
-        {
-          "round": 15,
-          "planName": "Fire Cunning Midgame",
-          "coreUnits": [
-            "Cardiling",
-            "Chenipode",
-            "Ignibus",
-            "Cairfrey"
-          ],
-          "transitionUnits": [
-            "Sapsnap",
-            "Sampsack"
-          ],
-          "shortTermSteps": [
-            "Mua 2 Cairfrey và 1 Ignibus từ shop",
-            "Bán Elowind và Embra để lấy chỗ",
-            "Đặt đội hình: front Sapsnap, Sampsack, Ignibus; back Cardiling, Chenipode, Cairfrey",
-            "Level lên 7 ngay khi đủ XP",
-            "Slow roll ở level 7, giữ 30+ vàng, ưu tiên Cardiling > Chenipode > Ignibus > Cairfrey"
+            "Mua toàn bộ 5 quân trong shop (tốn 5 vàng)",
+            "Đặt 1 quân lên bàn, giữ 4 quân trên bench",
+            "Vòng 3 lên level 2, tiếp tục mua quân cost 1",
+            "Ưu tiên ghép 2 sao cho Budaye và Rockitten trước"
           ]
         }
       ]
     },
     {
-      "gameIndex": 42,
-      "durationMs": 802016,
-      "rank": 8,
-      "finishRound": 19,
-      "top4": false,
+      "gameIndex": 5,
+      "durationMs": 115139,
+      "rank": 4,
+      "finishRound": 31,
+      "top4": true,
       "win": false,
       "ragCalls": [
         {
-          "round": 4,
+          "round": 2,
           "attempts": 1,
           "rateLimitRetries": 0,
-          "durationMs": 13307,
+          "durationMs": 11286,
           "success": true,
-          "planName": "Wood Cunning Early",
-          "error": null
-        },
-        {
-          "round": 15,
-          "attempts": 1,
-          "rateLimitRetries": 0,
-          "durationMs": 12479,
-          "success": true,
-          "planName": "Valiant Earth Slow Roll",
+          "planName": "Metal Valiant Early",
           "error": null
         }
       ],
       "plans": [
         {
-          "round": 4,
-          "planName": "Wood Cunning Early",
+          "round": 2,
+          "planName": "Metal Valiant Early",
           "coreUnits": [
-            "Anoleaf",
-            "Weavifly",
-            "Tweesher"
-          ],
-          "transitionUnits": [
+            "Puparmor",
+            "Nut",
             "Rockitten",
-            "Puparmor"
+            "Embra"
           ],
+          "transitionUnits": [],
           "shortTermSteps": [
-            "Mua Anoleaf từ shop, lên ★★ và đặt lên board",
-            "Mua Tweesher từ shop để có 2 bản",
-            "Mua Puparmor từ shop để có thêm frontline",
-            "Ghép Frozen Heart từ Tear + Chain Vest, lên Weavifly",
-            "Sau round này, lên level 4 (tốn 4 vàng)",
-            "Bắt đầu slow roll ở level 5 để kiếm Anoleaf ★★★"
+            "Mua tất cả 5 quân từ shop (Puparmor x2, Nut, Rockitten, Embra)",
+            "Đặt 1 Puparmor lên bàn, các quân còn lại lên ghế dự bị",
+            "Round 3: lên level 2, đặt thêm quân lên bàn",
+            "Ưu tiên ghép 3 Puparmor thành ★★ trước"
           ]
-        },
+        }
+      ]
+    },
+    {
+      "gameIndex": 6,
+      "durationMs": 83504,
+      "rank": 2,
+      "finishRound": 44,
+      "top4": true,
+      "win": false,
+      "ragCalls": [
         {
-          "round": 15,
-          "planName": "Valiant Earth Slow Roll",
+          "round": 2,
+          "attempts": 1,
+          "rateLimitRetries": 0,
+          "durationMs": 13328,
+          "success": true,
+          "planName": "Linh hoạt đầu game - Fire/Arcane",
+          "error": null
+        }
+      ],
+      "plans": [
+        {
+          "round": 2,
+          "planName": "Linh hoạt đầu game - Fire/Arcane",
           "coreUnits": [
-            "Grintrock",
-            "Prophetoise",
+            "Embra",
+            "Nut",
+            "Tweesher",
+            "Anoleaf",
+            "Aardorn"
+          ],
+          "transitionUnits": [],
+          "shortTermSteps": [
+            "Mua cả 5 quân từ shop (tốn 5 vàng)",
+            "Đặt Embra lên bàn, các quân còn lại để bench",
+            "Vòng 2-1: mua thêm quân cost 1 nếu có, giữ vàng",
+            "Vòng 2-3: tích lũy 10 vàng để nhận lãi",
+            "Vòng 2-5: lên level 4 nếu có đủ vàng"
+          ]
+        }
+      ]
+    },
+    {
+      "gameIndex": 8,
+      "durationMs": 80291,
+      "rank": 2,
+      "finishRound": 29,
+      "top4": true,
+      "win": false,
+      "ragCalls": [
+        {
+          "round": 2,
+          "attempts": 1,
+          "rateLimitRetries": 0,
+          "durationMs": 12502,
+          "success": true,
+          "planName": "Metal Valiant Early",
+          "error": null
+        }
+      ],
+      "plans": [
+        {
+          "round": 2,
+          "planName": "Metal Valiant Early",
+          "coreUnits": [
             "Puparmor",
             "Rockitten"
           ],
           "transitionUnits": [],
           "shortTermSteps": [
-            "Mua Grintrock từ shop, bán 1 Rockitten và 1 Puparmor để có chỗ board",
-            "Đặt Grintrock lên board, giữ Prophetoise ở backline",
-            "Roll nhẹ (10-15 vàng) để tìm Puparmor/Rockitten 2★ và thêm Grintrock/Prophetoise",
-            "Giữ 10 vàng nếu có thể, ưu tiên slow roll ở level 7"
+            "Mua 2x Puparmor (2 vàng) + Rockitten (1 vàng), đặt Puparmor hàng trước",
+            "Round 2-2: mua thêm Puparmor nếu có, giữ vàng",
+            "Round 2-4: lên level 4 (mua XP 4 vàng)",
+            "Tiếp tục mua Puparmor và Rockitten để lên ★★"
           ]
         }
       ]
     },
     {
-      "gameIndex": 41,
-      "durationMs": 818818,
+      "gameIndex": 7,
+      "durationMs": 94893,
+      "rank": 2,
+      "finishRound": 39,
+      "top4": true,
+      "win": false,
+      "ragCalls": [
+        {
+          "round": 2,
+          "attempts": 1,
+          "rateLimitRetries": 0,
+          "durationMs": 10823,
+          "success": true,
+          "planName": "Water Arcane Early",
+          "error": null
+        }
+      ],
+      "plans": [
+        {
+          "round": 2,
+          "planName": "Water Arcane Early",
+          "coreUnits": [
+            "Tweesher"
+          ],
+          "transitionUnits": [],
+          "shortTermSteps": [
+            "Mua 5 quân trong shop, sau đó bán 2 quân ít quan trọng nhất",
+            "Dùng vàng mua XP lên level 2 ở vòng 2-1",
+            "Tích lũy vàng đến 50, không roll sớm",
+            "Slow-roll ở level 5 để kiếm Tweesher ★★ và các quân cost 2"
+          ]
+        }
+      ]
+    },
+    {
+      "gameIndex": 9,
+      "durationMs": 99144,
+      "rank": 7,
+      "finishRound": 28,
+      "top4": false,
+      "win": false,
+      "ragCalls": [
+        {
+          "round": 2,
+          "attempts": 1,
+          "rateLimitRetries": 0,
+          "durationMs": 13345,
+          "success": true,
+          "planName": "Early Game Flex - Fire/Earth",
+          "error": null
+        }
+      ],
+      "plans": [
+        {
+          "round": 2,
+          "planName": "Early Game Flex - Fire/Earth",
+          "coreUnits": [
+            "Embra",
+            "Puparmor"
+          ],
+          "transitionUnits": [
+            "Aardorn",
+            "Rockitten"
+          ],
+          "shortTermSteps": [
+            "Mua Embra và Puparmor từ shop (tốn 2 vàng), giữ 1 vàng",
+            "Đặt Embra hàng sau, Puparmor hàng trước",
+            "Sau round 2, lên level 2 (tốn 2 XP)",
+            "Tiếp tục mua quân cost-1 và cost-2, ưu tiên ghép đôi"
+          ]
+        }
+      ]
+    },
+    {
+      "gameIndex": 10,
+      "durationMs": 107959,
+      "rank": 5,
+      "finishRound": 32,
+      "top4": false,
+      "win": false,
+      "ragCalls": [
+        {
+          "round": 2,
+          "attempts": 1,
+          "rateLimitRetries": 0,
+          "durationMs": 15683,
+          "success": true,
+          "planName": "Đầu game linh hoạt - Fire/Wood",
+          "error": null
+        }
+      ],
+      "plans": [
+        {
+          "round": 2,
+          "planName": "Đầu game linh hoạt - Fire/Wood",
+          "coreUnits": [
+            "Embra",
+            "Anoleaf",
+            "Rockitten",
+            "Nut",
+            "Tweesher"
+          ],
+          "transitionUnits": [
+            "Agnite",
+            "Cardiling",
+            "Sapsnap"
+          ],
+          "shortTermSteps": [
+            "Mua hết 5 quân trong shop (cần thêm 2 vàng - bán 1 quân nếu cần)",
+            "Đặt Embra và Anoleaf ra bàn, các quân còn lại lên bench",
+            "Tích lũy lên 10 vàng, không roll ở round 2",
+            "Lên cấp 4 ở round 2-4, lên cấp 5 ở round 3-1",
+            "Ghép 2 sao cho Embra và Anoleaf trước tiên"
+          ]
+        }
+      ]
+    },
+    {
+      "gameIndex": 12,
+      "durationMs": 86004,
       "rank": 3,
+      "finishRound": 32,
+      "top4": true,
+      "win": false,
+      "ragCalls": [
+        {
+          "round": 2,
+          "attempts": 1,
+          "rateLimitRetries": 0,
+          "durationMs": 13052,
+          "success": true,
+          "planName": "Metal-Arcane Early",
+          "error": null
+        }
+      ],
+      "plans": [
+        {
+          "round": 2,
+          "planName": "Metal-Arcane Early",
+          "coreUnits": [
+            "Puparmor",
+            "Embra",
+            "Weavifly"
+          ],
+          "transitionUnits": [],
+          "shortTermSteps": [
+            "Bán Aardorn, mua 2 Puparmor + Embra + Weavifly",
+            "Đặt Puparmor hàng trước, Embra và Weavifly hàng sau",
+            "Lên level 2 ở vòng 2, ghép Puparmor 2★ nếu có bản thứ 3",
+            "Tiết kiệm vàng, không roll, chỉ mua quân cost 1-2 liên quan"
+          ]
+        }
+      ]
+    },
+    {
+      "gameIndex": 11,
+      "durationMs": 99909,
+      "rank": 5,
+      "finishRound": 31,
+      "top4": false,
+      "win": false,
+      "ragCalls": [
+        {
+          "round": 2,
+          "attempts": 1,
+          "rateLimitRetries": 0,
+          "durationMs": 12701,
+          "success": true,
+          "planName": "Fire Arcane Early",
+          "error": null
+        }
+      ],
+      "plans": [
+        {
+          "round": 2,
+          "planName": "Fire Arcane Early",
+          "coreUnits": [
+            "Embra",
+            "Weavifly"
+          ],
+          "transitionUnits": [
+            "Rockitten",
+            "Anoleaf"
+          ],
+          "shortTermSteps": [
+            "Buy both Embra and Weavifly from shop",
+            "Place Embra and Weavifly on board, fill with Rockitten or Anoleaf if needed",
+            "Save gold, level naturally to 4 by round 4-5",
+            "Look for Cardiling, Agnite, Ignibus for fire synergy"
+          ]
+        }
+      ]
+    },
+    {
+      "gameIndex": 13,
+      "durationMs": 95623,
+      "rank": 7,
+      "finishRound": 23,
+      "top4": false,
+      "win": false,
+      "ragCalls": [
+        {
+          "round": 2,
+          "attempts": 1,
+          "rateLimitRetries": 0,
+          "durationMs": 12504,
+          "success": true,
+          "planName": "Early Earth Valiant",
+          "error": null
+        }
+      ],
+      "plans": [
+        {
+          "round": 2,
+          "planName": "Early Earth Valiant",
+          "coreUnits": [
+            "Aardorn",
+            "Rockitten",
+            "Budaye",
+            "Puparmor"
+          ],
+          "transitionUnits": [],
+          "shortTermSteps": [
+            "Mua 3 quân: 1 Aardorn, 1 Rockitten, 1 Budaye - đặt lên bàn",
+            "Vòng 2-3: tích lũy vàng, mua thêm Aardorn nếu thấy",
+            "Vòng 4-5: lên level 2, tiếp tục mua quân cost 1",
+            "Level 5: slow roll để kiếm 3 sao Aardorn"
+          ]
+        }
+      ]
+    },
+    {
+      "gameIndex": 14,
+      "durationMs": 102108,
+      "rank": 8,
+      "finishRound": 21,
+      "top4": false,
+      "win": false,
+      "ragCalls": [
+        {
+          "round": 2,
+          "attempts": 1,
+          "rateLimitRetries": 0,
+          "durationMs": 11153,
+          "success": true,
+          "planName": "WoodMetal Early Rush",
+          "error": null
+        }
+      ],
+      "plans": [
+        {
+          "round": 2,
+          "planName": "WoodMetal Early Rush",
+          "coreUnits": [
+            "Anoleaf",
+            "Weavifly",
+            "Puparmor"
+          ],
+          "transitionUnits": [],
+          "shortTermSteps": [
+            "Buy all 5 shop cards (2 Anoleaf, 1 Puparmor, 2 Weavifly)",
+            "Place all on board to fill slots",
+            "Save gold, don't roll, let natural XP level up",
+            "Look for more Anoleaf and Weavifly copies in next shops"
+          ]
+        }
+      ]
+    },
+    {
+      "gameIndex": 15,
+      "durationMs": 96266,
+      "rank": 2,
       "finishRound": 37,
       "top4": true,
       "win": false,
       "ragCalls": [
         {
-          "round": 4,
+          "round": 2,
           "attempts": 1,
           "rateLimitRetries": 0,
-          "durationMs": 12332,
+          "durationMs": 11530,
           "success": true,
-          "planName": "Metal/Valiant Early",
-          "error": null
-        },
-        {
-          "round": 15,
-          "attempts": 1,
-          "rateLimitRetries": 0,
-          "durationMs": 14594,
-          "success": true,
-          "planName": "Valiant Carry Transition",
+          "planName": "Wood-Metal Early Start",
           "error": null
         }
       ],
       "plans": [
         {
-          "round": 4,
-          "planName": "Metal/Valiant Early",
+          "round": 2,
+          "planName": "Wood-Metal Early Start",
           "coreUnits": [
-            "Puparmor",
-            "Bolt",
-            "Bamboon"
+            "Anoleaf",
+            "Weavifly",
+            "Embra"
           ],
-          "transitionUnits": [
-            "Cardiling"
-          ],
+          "transitionUnits": [],
           "shortTermSteps": [
-            "Mua Bolt, Bamboon, Cardiling từ shop",
-            "Ghép Guardian Angel từ Chain Vest + B.F. Sword, đặt lên Puparmor",
-            "Lên level 4 ở round 5, giữ vàng",
-            "Slow roll ở level 5 để kiếm thêm Bolt và Bamboon ★★"
-          ]
-        },
-        {
-          "round": 15,
-          "planName": "Valiant Carry Transition",
-          "coreUnits": [
-            "Bamboon",
-            "Cardiling",
-            "Rockat",
-            "Puparmor",
-            "Sapsnap",
-            "Fluttaflap",
-            "Cairfrey"
-          ],
-          "transitionUnits": [
-            "Prophetoise",
-            "Hubursa"
-          ],
-          "shortTermSteps": [
-            "Mua Cardiling và Rockat từ shop để lên ★★",
-            "Ghép Infinity Edge từ 2 B.F. Sword lên Cardiling",
-            "Tiết kiệm vàng, lên level 8 khi đủ 24 vàng",
-            "Sau level 8, roll nhẹ tìm Prophetoise hoặc Hubursa",
-            "Giữ Valiant 4 + Cunning 2, thay Cairfrey bằng tướng cost 4"
+            "Mua 2 Anoleaf + 1 Embra (tốn 3 vàng), đặt 1 Anoleaf lên bàn",
+            "Giữ 2 Weavifly + 1 Embra trên ghế",
+            "Lên level 2 ở vòng 3 (tốn 2 xp)",
+            "Ưu tiên mua thêm Anoleaf, Weavifly, Embra để lên ★★"
           ]
         }
       ]
     },
     {
-      "gameIndex": 43,
-      "durationMs": 721816,
-      "rank": 7,
-      "finishRound": 22,
-      "top4": false,
+      "gameIndex": 16,
+      "durationMs": 80219,
+      "rank": 2,
+      "finishRound": 34,
+      "top4": true,
       "win": false,
       "ragCalls": [
         {
-          "round": 4,
+          "round": 2,
           "attempts": 1,
           "rateLimitRetries": 0,
-          "durationMs": 13496,
+          "durationMs": 9244,
           "success": true,
-          "planName": "Wood Valiant Early",
-          "error": null
-        },
-        {
-          "round": 15,
-          "attempts": 1,
-          "rateLimitRetries": 0,
-          "durationMs": 15229,
-          "success": true,
-          "planName": "Valiant Fire Transition",
+          "planName": "Earth Valiant Early",
           "error": null
         }
       ],
       "plans": [
         {
-          "round": 4,
-          "planName": "Wood Valiant Early",
+          "round": 2,
+          "planName": "Earth Valiant Early",
           "coreUnits": [
-            "Budaye",
             "Rockitten",
-            "Anoleaf"
+            "Aardorn",
+            "Anoleaf",
+            "Tweesher"
           ],
           "transitionUnits": [],
           "shortTermSteps": [
-            "Mua 1 Rockitten từ shop, bỏ Puparmor/Aardorn nếu cần chỗ",
-            "Lên level 4 ở round 5 (tốn 4 vàng)",
-            "Giữ 10+ vàng để lấy lãi, không roll sớm",
-            "Đặt Frozen Heart lên Budaye, giữ nguyên đồ trên Tweesher"
-          ]
-        },
-        {
-          "round": 15,
-          "planName": "Valiant Fire Transition",
-          "coreUnits": [
-            "Ignibus",
-            "Kirkanon",
-            "Dollfin",
-            "Grintot",
-            "Bolt"
-          ],
-          "transitionUnits": [],
-          "shortTermSteps": [
-            "Sell Budaye ★★ and Aardart immediately for 7 gold",
-            "Buy Ignibus, Kirkanon, Grintot from shop (11 gold)",
-            "Level to 7 (16 XP, keep 9 gold)",
-            "Craft RAPID_FIRE from 2 Recurve Bows on Bolt → equip to Ignibus",
-            "Roll excess gold at level 7, keep 10+ gold for interest",
-            "Prioritize Ignibus ★★ and Dollfin ★★, then look for Ruption or Prophetoise"
+            "Mua cả 5 quân trong shop (tốn 5 vàng)",
+            "Đặt Rockitten và Aardorn lên bàn, giữ Anoleaf và Tweesher trên bench",
+            "Kết thúc vòng 2, lên level 2 tự động",
+            "Vòng 3-4: tích lũy lên 10 vàng, ưu tiên ghép Rockitten 2★"
           ]
         }
       ]
     },
     {
-      "gameIndex": 44,
-      "durationMs": 843080,
+      "gameIndex": 17,
+      "durationMs": 86633,
       "rank": 8,
       "finishRound": 23,
       "top4": false,
       "win": false,
       "ragCalls": [
         {
-          "round": 4,
+          "round": 2,
           "attempts": 1,
           "rateLimitRetries": 0,
-          "durationMs": 14696,
+          "durationMs": 12764,
           "success": true,
-          "planName": "Water Arcane Early",
-          "error": null
-        },
-        {
-          "round": 15,
-          "attempts": 1,
-          "rateLimitRetries": 0,
-          "durationMs": 14224,
-          "success": true,
-          "planName": "Fire Valiant",
+          "planName": "Valiant Arcane Early",
           "error": null
         }
       ],
       "plans": [
         {
-          "round": 4,
-          "planName": "Water Arcane Early",
+          "round": 2,
+          "planName": "Valiant Arcane Early",
           "coreUnits": [
-            "Elowind",
-            "Tweesher",
-            "Fluttaflap",
-            "Bolt"
-          ],
-          "transitionUnits": [
-            "Noctalo",
-            "Lightmare"
-          ],
-          "shortTermSteps": [
-            "Mua Elowind thứ 2 và Bolt thứ 2 từ shop",
-            "Mua Puparmor nếu còn gold để kích metal 2",
-            "Ghép INFINITY_EDGE từ 2 BF_SWORD, gắn cho Elowind",
-            "Tích gold lên 10-20, sau đó lên level 4",
-            "Đặt Elowind hàng sau, Bolt/Fluttaflap hàng trước"
-          ]
-        },
-        {
-          "round": 15,
-          "planName": "Fire Valiant",
-          "coreUnits": [
-            "Lightmare",
-            "Prophetoise",
-            "Cardiling",
-            "Sumchon",
-            "Bolt"
+            "Embra",
+            "Weavifly",
+            "Puparmor",
+            "Rockitten",
+            "Anoleaf"
           ],
           "transitionUnits": [],
           "shortTermSteps": [
-            "Mua Cardiling và Sumchon từ shop",
-            "Bỏ Anoleaf và Rockitten khỏi board, đặt Cardiling và Sumchon vào",
-            "Giữ vàng trên 20, roll nhẹ mỗi round để kiếm Lightmare thứ 3 và Prophetoise thứ 2",
-            "Khi có Lightmare ★★ và Prophetoise ★★, cân nhắc lên level 8 để thêm quân fire hoặc valiant"
+            "Mua toàn bộ 5 tướng shop, bán 2 tướng yếu nhất (ưu tiên giữ Embra, Weavifly, Puparmor)",
+            "Đặt Embra và Weavifly hàng sau, Puparmor và Rockitten hàng trước",
+            "Tích vàng đến 10+, lên level 2 ở vòng 3",
+            "Slow roll ở level 5 để nâng các tướng cost 1 lên ★★",
+            "Sau khi có đủ ★★, lên level 6-7 và bắt đầu ghép hệ fire với Cardiling, Agnite"
           ]
         }
       ]
     },
     {
-      "gameIndex": 45,
-      "durationMs": 818522,
-      "rank": 2,
-      "finishRound": 38,
+      "gameIndex": 18,
+      "durationMs": 94895,
+      "rank": 3,
+      "finishRound": 33,
       "top4": true,
       "win": false,
       "ragCalls": [
         {
-          "round": 4,
+          "round": 2,
           "attempts": 1,
           "rateLimitRetries": 0,
-          "durationMs": 12525,
+          "durationMs": 13094,
           "success": true,
-          "planName": "Metal Valiant Early",
-          "error": null
-        },
-        {
-          "round": 15,
-          "attempts": 1,
-          "rateLimitRetries": 0,
-          "durationMs": 16623,
-          "success": true,
-          "planName": "Metal-Arcane Kirkanon Carry",
+          "planName": "Cost-1 Rush",
           "error": null
         }
       ],
       "plans": [
         {
-          "round": 4,
-          "planName": "Metal Valiant Early",
+          "round": 2,
+          "planName": "Cost-1 Rush",
           "coreUnits": [
-            "Bolt",
-            "Puparmor"
-          ],
-          "transitionUnits": [
-            "Tweesher",
-            "Chenipode"
-          ],
-          "shortTermSteps": [
-            "Mua 2 Puparmor từ shop, ghép ★★ Puparmor",
-            "Mua Tweesher từ shop nếu còn slot",
-            "Bỏ Tweesher lên board, giữ Embra trên ghế",
-            "Tiết kiệm vàng, lên level 4 ở round 5",
-            "Không roll, để slow-roll tự nhiên tìm Agnite/ Cardiling"
-          ]
-        },
-        {
-          "round": 15,
-          "planName": "Metal-Arcane Kirkanon Carry",
-          "coreUnits": [
-            "Kirkanon",
-            "Bolt",
-            "Tikorch",
-            "Ruption",
-            "Lightmare"
-          ],
-          "transitionUnits": [
-            "Chenipode",
+            "Budaye",
+            "Anoleaf",
+            "Embra",
+            "Rockitten",
             "Tweesher"
           ],
+          "transitionUnits": [],
           "shortTermSteps": [
-            "Mua Tikorch thứ 2 từ shop, đặt lên board thay Tweesher",
-            "Mua Ruption và Lightmare từ shop, đặt lên bench",
-            "Bán Tweesher cũ để giải phóng slot board",
-            "Đặt Ruption lên board thay Tweesher, kích hoạt Arcane 3",
-            "Đặt Lightmare lên board thay Chenipode, tăng valiant",
-            "Chuyển Rapid Fire từ Bolt sang Kirkanon",
-            "Chuyển Bloodthirster từ Chenipode sang Tikorch",
-            "Ghép Infinity Edge từ 2 BF_SWORD (1 trên Tikorch + 1 từ inventory) lên Kirkanon",
-            "Bán Chenipode sau khi chuyển item",
-            "Tiết kiệm vàng, lên level 7 (cần 16 XP), sau đó slow roll giữ 50 vàng"
+            "Mua cả 5 quân shop (Budaye, Anoleaf, Embra, Rockitten, Tweesher) - đặt lên bàn",
+            "Vòng 2-2 đến 2-6: tiết kiệm vàng, mua thêm bản sao cost-1 nếu có",
+            "Sau vòng 2-6: lên level 4 (tốn 4 vàng)",
+            "Slow roll ở level 4-5 để nâng core lên 2 sao"
           ]
         }
       ]
     },
     {
-      "gameIndex": 47,
-      "durationMs": 832598,
+      "gameIndex": 19,
+      "durationMs": 106812,
+      "rank": 5,
+      "finishRound": 28,
+      "top4": false,
+      "win": false,
+      "ragCalls": [
+        {
+          "round": 2,
+          "attempts": 1,
+          "rateLimitRetries": 0,
+          "durationMs": 13479,
+          "success": true,
+          "planName": "WoodFireWater Early",
+          "error": null
+        }
+      ],
+      "plans": [
+        {
+          "round": 2,
+          "planName": "WoodFireWater Early",
+          "coreUnits": [
+            "Budaye",
+            "Tweesher",
+            "Embra"
+          ],
+          "transitionUnits": [],
+          "shortTermSteps": [
+            "Mua 1 Budaye + 1 Tweesher + 1 Embra từ shop (3 vàng)",
+            "Đặt Budaye và Tweesher lên bàn, giữ Embra trên bench",
+            "Round 3: lên level 2, đặt Embra lên bàn",
+            "Tiết kiệm lên 10 vàng, giữ lãi 2 vàng/vòng",
+            "Mua thêm Budaye, Tweesher, Embra khi thấy để lên ★★"
+          ]
+        }
+      ]
+    },
+    {
+      "gameIndex": 20,
+      "durationMs": 101956,
       "rank": 8,
       "finishRound": 18,
       "top4": false,
       "win": false,
       "ragCalls": [
         {
-          "round": 4,
+          "round": 2,
           "attempts": 1,
           "rateLimitRetries": 0,
-          "durationMs": 11196,
+          "durationMs": 12184,
           "success": true,
-          "planName": "Valiant Arcane Early",
-          "error": null
-        },
-        {
-          "round": 15,
-          "attempts": 1,
-          "rateLimitRetries": 0,
-          "durationMs": 15927,
-          "success": true,
-          "planName": "Valiant 6 Slow Roll",
+          "planName": "Valiant Wood Early",
           "error": null
         }
       ],
       "plans": [
         {
-          "round": 4,
-          "planName": "Valiant Arcane Early",
+          "round": 2,
+          "planName": "Valiant Wood Early",
           "coreUnits": [
-            "Budaye",
-            "Anoleaf",
-            "Fluttaflap"
+            "Nut",
+            "Rockitten",
+            "Anoleaf"
           ],
           "transitionUnits": [
-            "Bolt",
-            "Rockitten"
-          ],
-          "shortTermSteps": [
-            "Mua 2 Budaye từ shop, bán Nut và Weavifly dư",
-            "Đặt Budaye ★★ lên board, bỏ Rockitten xuống bench",
-            "Ghép Warmog từ 2 Giant's Belt lên Anoleaf",
-            "Round 5: lên level 4, giữ 10+ vàng để kiếm lãi"
-          ]
-        },
-        {
-          "round": 15,
-          "planName": "Valiant 6 Slow Roll",
-          "coreUnits": [
-            "Fluttaflap",
-            "Bolt",
-            "Sapsnap",
-            "Sumchon",
             "Puparmor",
-            "Nut"
-          ],
-          "transitionUnits": [
-            "Ruption"
+            "Budaye"
           ],
           "shortTermSteps": [
-            "Mua Sumchon từ shop, bán Rockat",
-            "Ghép RAPID_FIRE từ 2 Recurve Bow lên Fluttaflap",
-            "Giữ vàng, slow roll ở level 6 tìm Fluttaflap thứ 3 và Valiant pieces",
-            "Khi có Fluttaflap ★★, lên level 7",
-            "Mua BF Sword từ shop nếu xuất hiện để ghép Guardian Angel"
+            "Mua 2 Nut, Rockitten, Anoleaf từ shop",
+            "Đặt Nut và Rockitten hàng trước, Anoleaf hàng sau",
+            "Lên level 2 ở vòng 3 (tốn 2 vàng)",
+            "Tiếp tục mua valiant và wood từ shop tự nhiên"
           ]
         }
       ]
     },
     {
-      "gameIndex": 46,
-      "durationMs": 860033,
+      "gameIndex": 21,
+      "durationMs": 116602,
+      "rank": 3,
+      "finishRound": 39,
+      "top4": true,
+      "win": false,
+      "ragCalls": [
+        {
+          "round": 2,
+          "attempts": 1,
+          "rateLimitRetries": 0,
+          "durationMs": 11556,
+          "success": true,
+          "planName": "WoodMetal Early",
+          "error": null
+        }
+      ],
+      "plans": [
+        {
+          "round": 2,
+          "planName": "WoodMetal Early",
+          "coreUnits": [
+            "Nut",
+            "Budaye",
+            "Weavifly"
+          ],
+          "transitionUnits": [
+            "Anoleaf"
+          ],
+          "shortTermSteps": [
+            "Mua 2 Nut + 1 Budaye từ shop, đặt lên bàn",
+            "Đặt Nut và Budaye hàng trước, Weavifly hàng sau",
+            "Lên level 4 ở vòng 2-3, tiếp tục mua quân Wood/Metal",
+            "Nếu có Nut thứ 3, mua ngay để lên 2 sao"
+          ]
+        }
+      ]
+    },
+    {
+      "gameIndex": 22,
+      "durationMs": 118738,
+      "rank": 8,
+      "finishRound": 22,
+      "top4": false,
+      "win": false,
+      "ragCalls": [
+        {
+          "round": 2,
+          "attempts": 1,
+          "rateLimitRetries": 0,
+          "durationMs": 14343,
+          "success": true,
+          "planName": "Earth-Valiant Early",
+          "error": null
+        }
+      ],
+      "plans": [
+        {
+          "round": 2,
+          "planName": "Earth-Valiant Early",
+          "coreUnits": [
+            "Rockitten",
+            "Aardorn"
+          ],
+          "transitionUnits": [
+            "Anoleaf",
+            "Embra",
+            "Tweesher"
+          ],
+          "shortTermSteps": [
+            "Mua Rockitten, Aardorn, Anoleaf, Embra, Tweesher từ shop",
+            "Đặt Rockitten và Aardorn lên bàn, các tướng còn lại để ghế",
+            "Lên level 4 khi đủ 4 vàng (vòng 2-3 hoặc 2-4)",
+            "Ghép Rockitten và Aardorn lên 2 sao càng sớm càng tốt"
+          ]
+        }
+      ]
+    },
+    {
+      "gameIndex": 23,
+      "durationMs": 99202,
+      "rank": 1,
+      "finishRound": 34,
+      "top4": true,
+      "win": true,
+      "ragCalls": [
+        {
+          "round": 2,
+          "attempts": 1,
+          "rateLimitRetries": 0,
+          "durationMs": 13480,
+          "success": true,
+          "planName": "Valiant Wood Metal Early",
+          "error": null
+        }
+      ],
+      "plans": [
+        {
+          "round": 2,
+          "planName": "Valiant Wood Metal Early",
+          "coreUnits": [
+            "Budaye",
+            "Nut",
+            "Embra",
+            "Weavifly"
+          ],
+          "transitionUnits": [],
+          "shortTermSteps": [
+            "Mua 2 Budaye và 1 Nut/Embra từ shop hiện tại",
+            "Lên level 2 ở vòng 2",
+            "Tích lũy lên level 4, không roll sớm",
+            "Slow-roll ở level 4 để kiếm 2★ cho Budaye, Nut, Embra"
+          ]
+        }
+      ]
+    },
+    {
+      "gameIndex": 24,
+      "durationMs": 83142,
+      "rank": 2,
+      "finishRound": 31,
+      "top4": true,
+      "win": false,
+      "ragCalls": [
+        {
+          "round": 2,
+          "attempts": 1,
+          "rateLimitRetries": 0,
+          "durationMs": 8414,
+          "success": true,
+          "planName": "Fire Wood Early",
+          "error": null
+        }
+      ],
+      "plans": [
+        {
+          "round": 2,
+          "planName": "Fire Wood Early",
+          "coreUnits": [
+            "Embra",
+            "Anoleaf",
+            "Puparmor"
+          ],
+          "transitionUnits": [],
+          "shortTermSteps": [
+            "Mua toàn bộ 5 quân trong shop",
+            "Đặt Embra và Anoleaf lên bàn, giữ Puparmor trên bench",
+            "Tích lũy vàng, không roll ở level 1-3",
+            "Lên level 4, bắt đầu slow roll tìm 2 sao cho Embra và Anoleaf"
+          ]
+        }
+      ]
+    },
+    {
+      "gameIndex": 25,
+      "durationMs": 102874,
+      "rank": 1,
+      "finishRound": 39,
+      "top4": true,
+      "win": true,
+      "ragCalls": [
+        {
+          "round": 2,
+          "attempts": 1,
+          "rateLimitRetries": 0,
+          "durationMs": 13391,
+          "success": true,
+          "planName": "Early Weavifly Rush",
+          "error": null
+        }
+      ],
+      "plans": [
+        {
+          "round": 2,
+          "planName": "Early Weavifly Rush",
+          "coreUnits": [
+            "Weavifly",
+            "Anoleaf",
+            "Nut",
+            "Aardorn"
+          ],
+          "transitionUnits": [],
+          "shortTermSteps": [
+            "Mua cả 5 quân cờ trong shop (tốn 5 vàng, nợ 2 vàng)",
+            "Ghép Weavifly ★★ ngay từ 2 bản sao có sẵn",
+            "Đặt Weavifly ★★ lên bàn, các quân còn lại lên bench",
+            "Round 3: lên level 2, mở thêm slot bàn",
+            "Tiếp tục mua cost 1 tự nhiên, không roll, tiết kiệm vàng"
+          ]
+        }
+      ]
+    },
+    {
+      "gameIndex": 26,
+      "durationMs": 88646,
+      "rank": 3,
+      "finishRound": 34,
+      "top4": true,
+      "win": false,
+      "ragCalls": [
+        {
+          "round": 2,
+          "attempts": 1,
+          "rateLimitRetries": 0,
+          "durationMs": 10061,
+          "success": true,
+          "planName": "Metal Valiant Early",
+          "error": null
+        }
+      ],
+      "plans": [
+        {
+          "round": 2,
+          "planName": "Metal Valiant Early",
+          "coreUnits": [
+            "Nut",
+            "Puparmor",
+            "Weavifly",
+            "Budaye",
+            "Aardorn"
+          ],
+          "transitionUnits": [],
+          "shortTermSteps": [
+            "Mua cả 5 quân trong shop và đặt lên bàn",
+            "Sau round 2, lên level 2 bằng XP tự nhiên",
+            "Tiếp tục mua tướng Metal/Valiant từ shop, ưu tiên nâng ★★",
+            "Tích lũy vàng đến round 5-7 rồi lên level 4-5"
+          ]
+        }
+      ]
+    },
+    {
+      "gameIndex": 27,
+      "durationMs": 86746,
+      "rank": 1,
+      "finishRound": 33,
+      "top4": true,
+      "win": true,
+      "ragCalls": [
+        {
+          "round": 2,
+          "attempts": 1,
+          "rateLimitRetries": 0,
+          "durationMs": 10424,
+          "success": true,
+          "planName": "Valiant Early Rush",
+          "error": null
+        }
+      ],
+      "plans": [
+        {
+          "round": 2,
+          "planName": "Valiant Early Rush",
+          "coreUnits": [
+            "Budaye",
+            "Nut",
+            "Rockitten",
+            "Puparmor"
+          ],
+          "transitionUnits": [],
+          "shortTermSteps": [
+            "Mua 2 Budaye, Nut, Rockitten từ shop (4 vàng)",
+            "Đặt Budaye ra board, giữ Nut và Rockitten trên bench",
+            "Round 3 lên level 2, đặt thêm quân ra board",
+            "Tích lũy vàng đến 10+, chỉ mua valiant cost 1"
+          ]
+        }
+      ]
+    },
+    {
+      "gameIndex": 28,
+      "durationMs": 108530,
+      "rank": 4,
+      "finishRound": 36,
+      "top4": true,
+      "win": false,
+      "ragCalls": [
+        {
+          "round": 2,
+          "attempts": 1,
+          "rateLimitRetries": 0,
+          "durationMs": 12371,
+          "success": true,
+          "planName": "Fire Early Rush",
+          "error": null
+        }
+      ],
+      "plans": [
+        {
+          "round": 2,
+          "planName": "Fire Early Rush",
+          "coreUnits": [
+            "Embra",
+            "Puparmor"
+          ],
+          "transitionUnits": [],
+          "shortTermSteps": [
+            "Mua cả 2 Embra và 1 Puparmor từ shop",
+            "Đặt Embra ★★ ở hàng sau, Puparmor ở hàng trước",
+            "Tích vàng, lên cấp lên 4 trước round 2-4",
+            "Bán Aardorn/Anoleaf nếu cần chỗ hoặc vàng"
+          ]
+        }
+      ]
+    },
+    {
+      "gameIndex": 30,
+      "durationMs": 89404,
+      "rank": 8,
+      "finishRound": 21,
+      "top4": false,
+      "win": false,
+      "ragCalls": [
+        {
+          "round": 2,
+          "attempts": 1,
+          "rateLimitRetries": 0,
+          "durationMs": 12218,
+          "success": true,
+          "planName": "Wood/Valiant đầu game",
+          "error": null
+        }
+      ],
+      "plans": [
+        {
+          "round": 2,
+          "planName": "Wood/Valiant đầu game",
+          "coreUnits": [
+            "Budaye",
+            "Anoleaf",
+            "Rockitten"
+          ],
+          "transitionUnits": [],
+          "shortTermSteps": [
+            "Mua Budaye, Anoleaf, Rockitten từ shop (3 vàng)",
+            "Round 2: mua thêm quân cost-1, ưu tiên Budaye và Anoleaf",
+            "Giữ vàng trên 10 để kiếm lãi từ round 3",
+            "Lên level 2 khi đủ 4 vàng (round 2-3)"
+          ]
+        }
+      ]
+    },
+    {
+      "gameIndex": 29,
+      "durationMs": 115125,
       "rank": 7,
+      "finishRound": 21,
+      "top4": false,
+      "win": false,
+      "ragCalls": [
+        {
+          "round": 2,
+          "attempts": 1,
+          "rateLimitRetries": 0,
+          "durationMs": 9502,
+          "success": true,
+          "planName": "Rockitten Valiant Early",
+          "error": null
+        }
+      ],
+      "plans": [
+        {
+          "round": 2,
+          "planName": "Rockitten Valiant Early",
+          "coreUnits": [
+            "Rockitten",
+            "Embra",
+            "Budaye"
+          ],
+          "transitionUnits": [],
+          "shortTermSteps": [
+            "Mua 3 Rockitten và 2 Embra từ shop (bán 1 Rockitten nếu thiếu vàng)",
+            "Đặt Rockitten và Embra lên bàn, giữ bench trống",
+            "Tiết kiệm vàng, lên level 2-3 tự nhiên trong 2 vòng",
+            "Slow roll ở level 5 để kiếm Rockitten ★★★ và valiant khác"
+          ]
+        }
+      ]
+    },
+    {
+      "gameIndex": 31,
+      "durationMs": 85172,
+      "rank": 2,
+      "finishRound": 33,
+      "top4": true,
+      "win": false,
+      "ragCalls": [
+        {
+          "round": 2,
+          "attempts": 1,
+          "rateLimitRetries": 0,
+          "durationMs": 10166,
+          "success": true,
+          "planName": "Valiant đầu game",
+          "error": null
+        }
+      ],
+      "plans": [
+        {
+          "round": 2,
+          "planName": "Valiant đầu game",
+          "coreUnits": [
+            "Budaye",
+            "Rockitten",
+            "Nut"
+          ],
+          "transitionUnits": [],
+          "shortTermSteps": [
+            "Mua cả 5 quân từ shop",
+            "Đặt tất cả lên bàn",
+            "Tiết kiệm vàng lên level 2",
+            "Mua thêm Budaye và Rockitten khi thấy"
+          ]
+        }
+      ]
+    },
+    {
+      "gameIndex": 32,
+      "durationMs": 106419,
+      "rank": 5,
+      "finishRound": 26,
+      "top4": false,
+      "win": false,
+      "ragCalls": [
+        {
+          "round": 2,
+          "attempts": 1,
+          "rateLimitRetries": 0,
+          "durationMs": 12010,
+          "success": true,
+          "planName": "Earth-Valiant Early Game",
+          "error": null
+        }
+      ],
+      "plans": [
+        {
+          "round": 2,
+          "planName": "Earth-Valiant Early Game",
+          "coreUnits": [
+            "Aardorn",
+            "Rockitten",
+            "Puparmor",
+            "Tweesher"
+          ],
+          "transitionUnits": [],
+          "shortTermSteps": [
+            "Mua Rockitten, Aardorn (giữ 1), Puparmor, Tweesher từ shop",
+            "Bán 1 bản Aardorn thừa để có đủ vàng",
+            "Lên level 2 ngay khi có 2 XP",
+            "Tiếp tục mua quân cost 1 từ shop tự nhiên để lên ★★"
+          ]
+        }
+      ]
+    },
+    {
+      "gameIndex": 33,
+      "durationMs": 106480,
+      "rank": 8,
       "finishRound": 27,
       "top4": false,
       "win": false,
       "ragCalls": [
         {
-          "round": 4,
+          "round": 2,
           "attempts": 1,
           "rateLimitRetries": 0,
-          "durationMs": 12537,
+          "durationMs": 12602,
           "success": true,
-          "planName": "Metal Valiant Early",
-          "error": null
-        },
-        {
-          "round": 15,
-          "attempts": 1,
-          "rateLimitRetries": 0,
-          "durationMs": 12388,
-          "success": true,
-          "planName": "Earth Cunning Aardart",
+          "planName": "Fire-Arcane Early",
           "error": null
         }
       ],
       "plans": [
         {
-          "round": 4,
-          "planName": "Metal Valiant Early",
+          "round": 2,
+          "planName": "Fire-Arcane Early",
           "coreUnits": [
-            "Puparmor",
-            "Nut",
-            "Budaye",
-            "Cairfrey"
-          ],
-          "transitionUnits": [],
-          "shortTermSteps": [
-            "Mua Nut, Budaye, 1 Cairfrey từ shop (tốn 4 vàng)",
-            "Bán Aardorn trên bench (thêm 1 vàng, tổng 4 vàng)",
-            "Đặt board: Puparmor front, Nut front, Tweesher back, Budaye front/mid",
-            "Level lên 4 ở round 5 (tốn 4 XP)",
-            "Giữ vàng trên 10, mua thêm Puparmor/Nut/Budaye để lên 2★",
-            "Không roll cho đến level 6-7"
-          ]
-        },
-        {
-          "round": 15,
-          "planName": "Earth Cunning Aardart",
-          "coreUnits": [
-            "Aardart",
+            "Embra",
             "Rockitten",
-            "Aardorn",
-            "Rockat",
-            "Grintot"
-          ],
-          "transitionUnits": [],
-          "shortTermSteps": [
-            "bán Narcileaf, Lightmare, Ignibus, Cairfrey",
-            "mua Rockitten và Embra từ shop",
-            "tích vàng lên 50, không roll",
-            "slow roll ở level 6 tìm Aardart thứ 3 và tướng Earth/Cunning",
-            "ghép INFINITY_EDGE lên Aardart nếu có nguyên liệu"
-          ]
-        }
-      ]
-    },
-    {
-      "gameIndex": 48,
-      "durationMs": 880343,
-      "rank": 8,
-      "finishRound": 19,
-      "top4": false,
-      "win": false,
-      "ragCalls": [
-        {
-          "round": 4,
-          "attempts": 1,
-          "rateLimitRetries": 0,
-          "durationMs": 14053,
-          "success": true,
-          "planName": "Valiant Fire Early",
-          "error": null
-        },
-        {
-          "round": 15,
-          "attempts": 1,
-          "rateLimitRetries": 0,
-          "durationMs": 16434,
-          "success": true,
-          "planName": "Valiant Cunning Slow-Roll",
-          "error": null
-        }
-      ],
-      "plans": [
-        {
-          "round": 4,
-          "planName": "Valiant Fire Early",
-          "coreUnits": [
-            "Agnite",
-            "Chenipode",
-            "Bamboon",
-            "Ignibus",
-            "Ruption"
-          ],
-          "transitionUnits": [
             "Puparmor"
           ],
-          "shortTermSteps": [
-            "Mua Agnite và Chenipode thứ 2 từ shop (tốn 4 vàng, còn 3 vàng)",
-            "Ghép Guardian Angel từ BF Sword + Chain Vest, đặt lên Agnite",
-            "Round 5: lên level 4 (tốn 4 vàng), đặt Agnite lên board, bỏ Bamboon xuống bench nếu cần slot",
-            "Round 6-7: tích lũy lên 10 vàng, roll nhẹ tìm thêm Agnite/Chenipode/Bamboon để lên ★★",
-            "Khi có 3-4 Fire (Agnite + Ignibus + Ruption), chuyển dần sang Fire 4 + Valiant 2"
-          ]
-        },
-        {
-          "round": 15,
-          "planName": "Valiant Cunning Slow-Roll",
-          "coreUnits": [
-            "Propellorcat",
-            "Chenipode",
-            "Puparmor",
-            "Cardiling",
-            "Fluttaflap",
-            "Rockat",
-            "Velocitile"
-          ],
           "transitionUnits": [
-            "Bamboon",
-            "Ruption"
+            "Aardorn"
           ],
           "shortTermSteps": [
-            "Mua Propellorcat từ shop, đặt lên board thay Aardorn",
-            "Bỏ Budaye và Anoleaf khỏi bench (không dùng)",
-            "Roll 1-2 lần để kiếm thêm Propellorcat và Chenipode, giữ 10 vàng",
-            "Ghép INFINITY_EDGE từ 2 BF_SWORD lên Propellorcat",
-            "Tiếp tục slow-roll mỗi turn: roll xuống ~10 vàng, mua Propellorcat, Chenipode, Puparmor, Cardiling"
+            "Mua 2 Embra + Rockitten + Puparmor + Aardorn từ shop (cần 5 vàng, nếu thiếu thì mua 2 Embra + 1 tank trước)",
+            "Sau round 2, mua XP để lên level 2",
+            "Đặt Embra ở hàng sau, Rockitten và Puparmor ở hàng trước",
+            "Tích lũy vàng đến level 4, sau đó slow roll để kiếm ★★ cho Embra và tank"
           ]
         }
       ]
     },
     {
-      "gameIndex": 49,
-      "durationMs": 882508,
+      "gameIndex": 35,
+      "durationMs": 90592,
       "rank": 3,
       "finishRound": 31,
       "top4": true,
       "win": false,
       "ragCalls": [
         {
-          "round": 4,
+          "round": 2,
           "attempts": 1,
           "rateLimitRetries": 0,
-          "durationMs": 12040,
+          "durationMs": 13447,
           "success": true,
-          "planName": "Wood Valiant Early",
-          "error": null
-        },
-        {
-          "round": 15,
-          "attempts": 1,
-          "rateLimitRetries": 0,
-          "durationMs": 15987,
-          "success": true,
-          "planName": "Valiant Metal Sampsack",
+          "planName": "Wood Valiant Early Rush",
           "error": null
         }
       ],
       "plans": [
         {
-          "round": 4,
-          "planName": "Wood Valiant Early",
+          "round": 2,
+          "planName": "Wood Valiant Early Rush",
           "coreUnits": [
             "Budaye",
-            "Anoleaf",
-            "Chenipode"
+            "Aardorn",
+            "Anoleaf"
+          ],
+          "transitionUnits": [
+            "Tweesher"
+          ],
+          "shortTermSteps": [
+            "Mua 2 Budaye và 1 Aardorn từ shop (tốn 3 vàng)",
+            "Đặt 1 Budaye lên bàn, giữ Budaye thứ 2 và Aardorn trên bench",
+            "Round 3: lên level 2, mua thêm quân nếu có Budaye hoặc Aardorn trong shop",
+            "Giữ tiền đến level 5, sau đó slow roll để kiếm Budaye ★3"
+          ]
+        }
+      ]
+    },
+    {
+      "gameIndex": 34,
+      "durationMs": 95477,
+      "rank": 5,
+      "finishRound": 28,
+      "top4": false,
+      "win": false,
+      "ragCalls": [
+        {
+          "round": 2,
+          "attempts": 1,
+          "rateLimitRetries": 0,
+          "durationMs": 11459,
+          "success": true,
+          "planName": "Metal Valiant Early",
+          "error": null
+        }
+      ],
+      "plans": [
+        {
+          "round": 2,
+          "planName": "Metal Valiant Early",
+          "coreUnits": [
+            "Puparmor",
+            "Nut",
+            "Aardorn"
           ],
           "transitionUnits": [],
           "shortTermSteps": [
-            "Mua Budaye thứ 2 và Anoleaf từ shop",
-            "Ghép Frozen Heart từ Chain Vest + Tear, trang bị cho Budaye",
-            "Đặt Budaye hàng trước, Anoleaf và Chenipode hàng sau",
-            "Round 5 lên level 4, giữ vàng trên 10"
+            "Mua 2 Puparmor + Nut + Aardorn, bán Tweesher để có 3 gold",
+            "Đặt Puparmor hàng trước, Aardorn và Nut hàng sau",
+            "Round 2: lên level 2, mua thêm quân cost 1-2 từ shop",
+            "Giữ tiền trên 10 gold từ round 3 trở đi"
           ]
-        },
+        }
+      ]
+    },
+    {
+      "gameIndex": 36,
+      "durationMs": 97863,
+      "rank": 8,
+      "finishRound": 22,
+      "top4": false,
+      "win": false,
+      "ragCalls": [
         {
-          "round": 15,
-          "planName": "Valiant Metal Sampsack",
+          "round": 2,
+          "attempts": 1,
+          "rateLimitRetries": 0,
+          "durationMs": 10692,
+          "success": true,
+          "planName": "Early Game Max Board",
+          "error": null
+        }
+      ],
+      "plans": [
+        {
+          "round": 2,
+          "planName": "Early Game Max Board",
           "coreUnits": [
-            "Sampsack",
-            "Chenipode",
-            "Puparmor",
+            "Embra",
+            "Weavifly",
+            "Rockitten"
+          ],
+          "transitionUnits": [],
+          "shortTermSteps": [
+            "Mua Embra, Weavifly, Rockitten từ shop (3 vàng).",
+            "Đặt cả 3 lên bàn ở hàng trước (Rockitten) và hàng sau (Embra, Weavifly).",
+            "Bỏ qua Nut và Anoleaf nếu không đủ vàng.",
+            "Ở round 2, tiết kiệm vàng để lên level 2 (cần 4 XP)."
+          ]
+        }
+      ]
+    },
+    {
+      "gameIndex": 37,
+      "durationMs": 82233,
+      "rank": 7,
+      "finishRound": 23,
+      "top4": false,
+      "win": false,
+      "ragCalls": [
+        {
+          "round": 2,
+          "attempts": 1,
+          "rateLimitRetries": 0,
+          "durationMs": 19516,
+          "success": true,
+          "planName": "Early Valiant Rush",
+          "error": null
+        }
+      ],
+      "plans": [
+        {
+          "round": 2,
+          "planName": "Early Valiant Rush",
+          "coreUnits": [
+            "Budaye",
             "Rockitten",
-            "Ignibus",
-            "Nudimind"
+            "Nut"
+          ],
+          "transitionUnits": [],
+          "shortTermSteps": [
+            "Mua Budaye và Rockitten từ shop",
+            "Đặt Budaye lên bàn",
+            "Bán Anoleaf nếu cần tiền",
+            "Tích lũy 4 vàng để lên level 2",
+            "Khi lên level 2, mua thêm quân cost 2 nếu có"
+          ]
+        }
+      ]
+    },
+    {
+      "gameIndex": 38,
+      "durationMs": 104300,
+      "rank": 6,
+      "finishRound": 29,
+      "top4": false,
+      "win": false,
+      "ragCalls": [
+        {
+          "round": 2,
+          "attempts": 1,
+          "rateLimitRetries": 0,
+          "durationMs": 11904,
+          "success": true,
+          "planName": "Earth Valiant Early",
+          "error": null
+        }
+      ],
+      "plans": [
+        {
+          "round": 2,
+          "planName": "Earth Valiant Early",
+          "coreUnits": [
+            "Rockitten",
+            "Aardorn",
+            "Embra"
           ],
           "transitionUnits": [
-            "Tikorch",
-            "Cardinale"
+            "Grintot",
+            "Rockat"
           ],
           "shortTermSteps": [
-            "Mua Tikorch và Cardinale từ shop (dùng tạm hoặc bán sau)",
-            "Lên level 7 trong 2 round tiếp theo (tốn 11 XP)",
-            "Slow roll ở level 7, giữ trên 10 vàng, tìm Sampsack thứ 3 và Puparmor/Rockitten",
-            "Ghép INFINITY_EDGE nếu có đủ nguyên liệu, đặt lên Sampsack",
-            "Bán Tikorch/Cardinale khi cần chỗ hoặc không dùng"
+            "Mua 2 Rockitten, 1 Aardorn, 1 Embra từ shop",
+            "Đặt 1 Rockitten ra bàn, giữ các quân còn lại trên ghế",
+            "Sau 4 XP lên level 2, đặt Aardorn và Embra vào bàn",
+            "Tiếp tục mua tướng cost 1-2 phù hợp, giữ vàng trên 10 để lãi"
+          ]
+        }
+      ]
+    },
+    {
+      "gameIndex": 39,
+      "durationMs": 111981,
+      "rank": 2,
+      "finishRound": 42,
+      "top4": true,
+      "win": false,
+      "ragCalls": [
+        {
+          "round": 2,
+          "attempts": 1,
+          "rateLimitRetries": 0,
+          "durationMs": 14921,
+          "success": true,
+          "planName": "Metal Arcane Early",
+          "error": null
+        }
+      ],
+      "plans": [
+        {
+          "round": 2,
+          "planName": "Metal Arcane Early",
+          "coreUnits": [
+            "Weavifly",
+            "Rockitten",
+            "Aardorn",
+            "Tweesher"
+          ],
+          "transitionUnits": [],
+          "shortTermSteps": [
+            "Mua toàn bộ 5 quân shop (2 Weavifly, Tweesher, Aardorn, Rockitten)",
+            "Đặt 1 Weavifly + Rockitten lên bàn, bench các quân còn lại",
+            "Vòng 2-2: tiết kiệm, chỉ mua thêm Weavifly nếu thấy",
+            "Vòng 2-3: lên level 4 (tốn 4 vàng)",
+            "Nếu chưa có Weavifly 2 sao, slow roll nhẹ ở level 4"
+          ]
+        }
+      ]
+    },
+    {
+      "gameIndex": 40,
+      "durationMs": 109440,
+      "rank": 8,
+      "finishRound": 18,
+      "top4": false,
+      "win": false,
+      "ragCalls": [
+        {
+          "round": 2,
+          "attempts": 1,
+          "rateLimitRetries": 0,
+          "durationMs": 10858,
+          "success": true,
+          "planName": "Valiant Earth Early",
+          "error": null
+        }
+      ],
+      "plans": [
+        {
+          "round": 2,
+          "planName": "Valiant Earth Early",
+          "coreUnits": [
+            "Budaye",
+            "Aardorn",
+            "Rockitten"
+          ],
+          "transitionUnits": [
+            "Embra",
+            "Tweesher"
+          ],
+          "shortTermSteps": [
+            "Mua hết 5 tướng trong shop (bán 1 tướng nếu thiếu vàng)",
+            "Đặt Budaye và Rockitten hàng trước, Aardorn, Embra, Tweesher hàng sau",
+            "Lên level 2 ở round 2-2, level 3 ở round 2-3",
+            "Tích lũy vàng, không roll cho đến level 4"
+          ]
+        }
+      ]
+    },
+    {
+      "gameIndex": 41,
+      "durationMs": 97240,
+      "rank": 5,
+      "finishRound": 32,
+      "top4": false,
+      "win": false,
+      "ragCalls": [
+        {
+          "round": 2,
+          "attempts": 1,
+          "rateLimitRetries": 0,
+          "durationMs": 13402,
+          "success": true,
+          "planName": "Wood-Metal Early Rush",
+          "error": null
+        }
+      ],
+      "plans": [
+        {
+          "round": 2,
+          "planName": "Wood-Metal Early Rush",
+          "coreUnits": [
+            "Puparmor",
+            "Budaye",
+            "Anoleaf"
+          ],
+          "transitionUnits": [
+            "Tweesher"
+          ],
+          "shortTermSteps": [
+            "Mua 2x Puparmor và 1x Budaye từ shop (tốn 3 vàng)",
+            "Đặt 1 Puparmor lên bàn, giữ Puparmor còn lại và Budaye trên bench",
+            "Round 3: lên level 2, đặt Budaye lên bàn",
+            "Tiếp tục mua Puparmor, Budaye, Anoleaf khi thấy trong shop",
+            "Khi có 3 bản giống nhau, lên ★★ và đặt lên bàn"
+          ]
+        }
+      ]
+    },
+    {
+      "gameIndex": 42,
+      "durationMs": 85984,
+      "rank": 8,
+      "finishRound": 19,
+      "top4": false,
+      "win": false,
+      "ragCalls": [
+        {
+          "round": 2,
+          "attempts": 1,
+          "rateLimitRetries": 0,
+          "durationMs": 12201,
+          "success": true,
+          "planName": "Wood Valiant Early",
+          "error": null
+        }
+      ],
+      "plans": [
+        {
+          "round": 2,
+          "planName": "Wood Valiant Early",
+          "coreUnits": [
+            "Budaye",
+            "Aardorn",
+            "Puparmor",
+            "Weavifly"
+          ],
+          "transitionUnits": [],
+          "shortTermSteps": [
+            "Mua 2 Budaye + Aardorn + Puparmor + Weavifly từ shop",
+            "Bán quân thừa nếu thiếu vàng, ưu tiên giữ Budaye và Aardorn",
+            "Lên level 2 ngay khi có 2 vàng",
+            "Giữ streak thắng bằng đội hình Wood/Valiant cơ bản"
+          ]
+        }
+      ]
+    },
+    {
+      "gameIndex": 43,
+      "durationMs": 82125,
+      "rank": 1,
+      "finishRound": 31,
+      "top4": true,
+      "win": true,
+      "ragCalls": [
+        {
+          "round": 2,
+          "attempts": 1,
+          "rateLimitRetries": 0,
+          "durationMs": 11652,
+          "success": true,
+          "planName": "Wood Cunning Early",
+          "error": null
+        }
+      ],
+      "plans": [
+        {
+          "round": 2,
+          "planName": "Wood Cunning Early",
+          "coreUnits": [
+            "Anoleaf",
+            "Budaye"
+          ],
+          "transitionUnits": [],
+          "shortTermSteps": [
+            "Mua cả 3 Anoleaf và Budaye từ shop",
+            "Đặt Anoleaf ra bàn (sẽ tự lên 2★)",
+            "Đặt Budaye ra bàn làm tank",
+            "Bỏ Nut nếu thiếu chỗ, giữ trên bench",
+            "Tiết kiệm vàng, lên level 2 sau 2 vàng XP"
+          ]
+        }
+      ]
+    },
+    {
+      "gameIndex": 45,
+      "durationMs": 89013,
+      "rank": 2,
+      "finishRound": 34,
+      "top4": true,
+      "win": false,
+      "ragCalls": [
+        {
+          "round": 2,
+          "attempts": 1,
+          "rateLimitRetries": 0,
+          "durationMs": 11030,
+          "success": true,
+          "planName": "Rockitten ★★ đầu game",
+          "error": null
+        }
+      ],
+      "plans": [
+        {
+          "round": 2,
+          "planName": "Rockitten ★★ đầu game",
+          "coreUnits": [
+            "Rockitten",
+            "Embra"
+          ],
+          "transitionUnits": [],
+          "shortTermSteps": [
+            "Mua 2 Rockitten và 1 Embra từ shop (tốn 3 vàng)",
+            "Bán Tweesher và Anoleaf nếu cần vàng để mua thêm quân",
+            "Đặt Rockitten ★★ hàng trước, Embra hàng sau",
+            "Lên level 2 ở round 3 để mở ô board thứ 2",
+            "Tiếp tục mua quân cost 1-2, giữ streak thắng"
+          ]
+        }
+      ]
+    },
+    {
+      "gameIndex": 44,
+      "durationMs": 98764,
+      "rank": 5,
+      "finishRound": 29,
+      "top4": false,
+      "win": false,
+      "ragCalls": [
+        {
+          "round": 2,
+          "attempts": 1,
+          "rateLimitRetries": 0,
+          "durationMs": 12603,
+          "success": true,
+          "planName": "Early Game Cost-1 Rush",
+          "error": null
+        }
+      ],
+      "plans": [
+        {
+          "round": 2,
+          "planName": "Early Game Cost-1 Rush",
+          "coreUnits": [
+            "Embra",
+            "Aardorn",
+            "Weavifly",
+            "Nut",
+            "Rockitten"
+          ],
+          "transitionUnits": [],
+          "shortTermSteps": [
+            "Mua tất cả 5 quân trong shop (tốn 5 vàng)",
+            "Đặt Embra hoặc Aardorn lên bàn làm chủ lực",
+            "Tích lũy vàng, mua thêm quân cost-1 để ghép ★★",
+            "Lên cấp 2 tự động, sau đó lên cấp 3-4 khi có 4-6 vàng dư"
+          ]
+        }
+      ]
+    },
+    {
+      "gameIndex": 47,
+      "durationMs": 104506,
+      "rank": 6,
+      "finishRound": 32,
+      "top4": false,
+      "win": false,
+      "ragCalls": [
+        {
+          "round": 2,
+          "attempts": 1,
+          "rateLimitRetries": 0,
+          "durationMs": 11664,
+          "success": true,
+          "planName": "Earth Valiant Early",
+          "error": null
+        }
+      ],
+      "plans": [
+        {
+          "round": 2,
+          "planName": "Earth Valiant Early",
+          "coreUnits": [
+            "Rockitten",
+            "Aardorn"
+          ],
+          "transitionUnits": [],
+          "shortTermSteps": [
+            "Mua 2 Rockitten + Aardorn từ shop (bán Weavifly và Embra để có 5 vàng)",
+            "Đặt Rockitten và Aardorn lên bàn",
+            "Lên level 2 ở round 2, mua thêm quân cost 1-2 phù hợp",
+            "Tích lũy đến level 5, slow roll tìm Rockitten ★★ và các quân earth/valiant"
+          ]
+        }
+      ]
+    },
+    {
+      "gameIndex": 46,
+      "durationMs": 111450,
+      "rank": 5,
+      "finishRound": 33,
+      "top4": false,
+      "win": false,
+      "ragCalls": [
+        {
+          "round": 2,
+          "attempts": 1,
+          "rateLimitRetries": 0,
+          "durationMs": 10575,
+          "success": true,
+          "planName": "Wood Valiant Early",
+          "error": null
+        }
+      ],
+      "plans": [
+        {
+          "round": 2,
+          "planName": "Wood Valiant Early",
+          "coreUnits": [
+            "Budaye",
+            "Rockitten",
+            "Embra"
+          ],
+          "transitionUnits": [],
+          "shortTermSteps": [
+            "Mua tất cả 5 quân trong shop ngay khi có đủ vàng (sau lượt đấu đầu tiên)",
+            "Đặt Budaye và Rockitten hàng trước, Embra và Weavifly hàng sau",
+            "Lên cấp 2 ở vòng 2-2 để mở thêm slot và tăng tỉ lệ cost-2",
+            "Ghép ★★ cho Budaye và Rockitten trước, sau đó đến Embra"
+          ]
+        }
+      ]
+    },
+    {
+      "gameIndex": 48,
+      "durationMs": 98008,
+      "rank": 5,
+      "finishRound": 32,
+      "top4": false,
+      "win": false,
+      "ragCalls": [
+        {
+          "round": 2,
+          "attempts": 1,
+          "rateLimitRetries": 0,
+          "durationMs": 12285,
+          "success": true,
+          "planName": "Early Valiant Water",
+          "error": null
+        }
+      ],
+      "plans": [
+        {
+          "round": 2,
+          "planName": "Early Valiant Water",
+          "coreUnits": [
+            "Tweesher",
+            "Budaye",
+            "Nut"
+          ],
+          "transitionUnits": [],
+          "shortTermSteps": [
+            "Mua Budaye, Tweesher, Nut - đặt lên bàn",
+            "Tiết kiệm vàng, lên level 2 ở vòng 2-3",
+            "Slow roll ở level 3 để kiếm 2 sao Tweesher",
+            "Khi có 2 sao Tweesher, bắt đầu lên level để mở rộng đội hình"
+          ]
+        }
+      ]
+    },
+    {
+      "gameIndex": 49,
+      "durationMs": 85448,
+      "rank": 8,
+      "finishRound": 24,
+      "top4": false,
+      "win": false,
+      "ragCalls": [
+        {
+          "round": 2,
+          "attempts": 1,
+          "rateLimitRetries": 0,
+          "durationMs": 11506,
+          "success": true,
+          "planName": "Valiant Earth Wood Early",
+          "error": null
+        }
+      ],
+      "plans": [
+        {
+          "round": 2,
+          "planName": "Valiant Earth Wood Early",
+          "coreUnits": [
+            "Rockitten",
+            "Budaye"
+          ],
+          "transitionUnits": [
+            "Tweesher",
+            "Weavifly"
+          ],
+          "shortTermSteps": [
+            "Mua cả 5 quân trong shop (tốn 5 vàng, cần bán 2 quân để có đủ vàng)",
+            "Bán Weavifly và Tweesher để lấy lại 2 vàng",
+            "Đặt Rockitten x2 và Budaye lên bàn",
+            "Lên level 2 khi đủ 4 XP (2 vàng)",
+            "Tích lũy vàng, ưu tiên slow roll ở level 5 để kiếm 2★ cho Rockitten và Budaye"
           ]
         }
       ]
     },
     {
       "gameIndex": 50,
-      "durationMs": 1012518,
-      "rank": 7,
-      "finishRound": 22,
+      "durationMs": 81161,
+      "rank": 8,
+      "finishRound": 18,
       "top4": false,
       "win": false,
       "ragCalls": [
         {
-          "round": 4,
+          "round": 2,
           "attempts": 1,
           "rateLimitRetries": 0,
-          "durationMs": 13921,
+          "durationMs": 13402,
           "success": true,
-          "planName": "Arcane Valiant Early",
-          "error": null
-        },
-        {
-          "round": 15,
-          "attempts": 1,
-          "rateLimitRetries": 0,
-          "durationMs": 18635,
-          "success": true,
-          "planName": "Fire Valiant Midgame",
+          "planName": "Valiant Metal Early",
           "error": null
         }
       ],
       "plans": [
         {
-          "round": 4,
-          "planName": "Arcane Valiant Early",
+          "round": 2,
+          "planName": "Valiant Metal Early",
           "coreUnits": [
-            "Weavifly",
             "Rockitten",
+            "Nut",
+            "Weavifly",
             "Embra",
-            "Elowind",
-            "Agnite"
+            "Anoleaf"
           ],
           "transitionUnits": [],
           "shortTermSteps": [
-            "Mua Agnite và Elowind từ shop (tốn 4 vàng, còn 2 vàng)",
-            "Ghép Rapid Firecannon từ 2 Recurve Bow -> lên Weavifly",
-            "Ghép Warmog từ 2 Giant's Belt -> lên Rockitten",
-            "Đặt Weavifly hàng sau, Rockitten + Agnite hàng trước",
-            "Sau round, lên level 4 (tốn 4 vàng)",
-            "Tiếp tục mua Arcane/Valiant unit, không roll, lên level 5-6"
-          ]
-        },
-        {
-          "round": 15,
-          "planName": "Fire Valiant Midgame",
-          "coreUnits": [
-            "Agnite",
-            "Ignibus",
-            "Ruption",
-            "Rockitten"
-          ],
-          "transitionUnits": [
-            "Elowind"
-          ],
-          "shortTermSteps": [
-            "Mua Agnite từ shop nếu có, roll nhẹ để kiếm bản thứ 3 lên ★2",
-            "Giữ Elowind làm carry tạm, không bán vội",
-            "Lên level 7 khi có 20 XP, sau đó slow roll tìm Ignibus và Ruption",
-            "Bán Rockitten khi có tank mạnh hơn (Ignibus ★2)",
-            "Ghép INFINITY_EDGE nếu có 2 BF_SWORD, đặt lên Agnite ★2"
+            "Mua toàn bộ 5 quân trong shop (tốn 5 vàng, bán 1 quân nếu cần)",
+            "Đặt Rockitten và Nut lên bàn làm tank/sát thương",
+            "Đặt Weavifly và Embra hàng sau làm carry",
+            "Lên level 2 sau trận đầu, giữ vàng trên 10 để nhận lãi",
+            "Slow roll nhẹ ở level 2-3 để kiếm 2 sao cho các quân cost 1"
           ]
         }
       ]

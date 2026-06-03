@@ -2,7 +2,7 @@ import http from "http";
 import { writeFile } from "fs/promises";
 
 import { put } from "redux-saga/effects";
-import { call, delay, getContext, select, takeLatest } from "typed-redux-saga";
+import { call, delay, getContext, select, takeEvery } from "typed-redux-saga";
 
 import { BoardSelectors, createBoardSlice } from "@shoki/board";
 
@@ -17,7 +17,6 @@ import {
 	PlayerState,
 	PlayerStateSelectors,
 	playerEntity,
-	getAllDefinitions,
 	getPlayerEntityDependencies,
 } from "@creature-chess/gamemode";
 import { createBuildAdviceContext } from "@creature-chess/tactical-ai/src/build-advisor/context";
@@ -25,6 +24,10 @@ import {
 	BuildAdviceContext,
 	BuildAdvicePlan,
 } from "@creature-chess/tactical-ai/src/build-advisor/types";
+import {
+	chooseBuildAutoPlayAction,
+	normalizeBuildAutoPlayPlan,
+} from "@creature-chess/tactical-ai/src/build-auto-player/policy";
 import {
 	Card,
 	GamePhase,
@@ -175,6 +178,7 @@ type BenchmarkSummary = {
 
 type MutableBenchmarkState = {
 	currentPlan: NormalizedBuildPlan | null;
+	buildAdviceRequested: boolean;
 	ragCalls: BenchmarkRagCall[];
 	plans: BenchmarkPlanSnapshot[];
 };
@@ -197,7 +201,9 @@ const ORIGINAL_CLEAR_TIMEOUT = global.clearTimeout.bind(global);
 const ORIGINAL_SET_INTERVAL = global.setInterval.bind(global);
 const ORIGINAL_CLEAR_INTERVAL = global.clearInterval.bind(global);
 
-const BENCHMARK_BUILD_ROUNDS = new Set([4, 15]);
+const EXPECTED_RAG_CALLS_PER_GAME = 1;
+const BENCHMARK_AUTO_LEVEL = 4;
+const BENCHMARK_AUTO_PRESET = "balanced";
 
 const BENCHMARK_BOT_ID = "rag-build-benchmark-bot";
 const BENCHMARK_BOT_NAME = "[RAG] Benchmark";
@@ -223,10 +229,6 @@ const BENCHMARK_PLAYER_PROFILE: PlayerProfile = {
 	picture: 1,
 	title: null,
 };
-
-const definitionByName = new Map(
-	getAllDefinitions().map((definition) => [definition.name.toLowerCase(), definition])
-);
 
 const sleepReal = (ms: number) =>
 	new Promise<void>((resolve) => ORIGINAL_SET_TIMEOUT(resolve, ms));
@@ -388,194 +390,6 @@ const isRateLimitErrorText = (value: string | null | undefined) => {
 		text.includes("rate-limit") ||
 		text.includes("quota")
 	);
-};
-
-const canonicalUnitName = (name: unknown) => {
-	if (typeof name !== "string") {
-		return null;
-	}
-
-	const trimmed = name.trim();
-	if (!trimmed) {
-		return null;
-	}
-
-	return definitionByName.get(trimmed.toLowerCase())?.name || trimmed;
-};
-
-const normalizeTargetStars = (value: unknown) => {
-	const parsed = Number(value);
-	if (parsed === 3) {
-		return 3;
-	}
-	return 2;
-};
-
-const normalizePlanUnit = (
-	unit: unknown,
-	fallbackPriority: PlannedUnit["priority"]
-): PlannedUnit | null => {
-	if (!unit || typeof unit !== "object") {
-		return null;
-	}
-
-	const source = unit as Record<string, unknown>;
-	const name = canonicalUnitName(source.name);
-	if (!name) {
-		return null;
-	}
-
-	const definition = definitionByName.get(name.toLowerCase());
-	if (!definition) {
-		return null;
-	}
-
-	const priority =
-		source.priority === "core" ||
-		source.priority === "support" ||
-		source.priority === "transition" ||
-		source.priority === "flex"
-			? source.priority
-			: fallbackPriority;
-
-	return {
-		name,
-		definitionId: definition.id,
-		cost: definition.cost,
-		targetStars: normalizeTargetStars(source.targetStars),
-		priority,
-		reason:
-			typeof source.reason === "string" && source.reason.trim()
-				? source.reason.trim()
-				: "",
-	};
-};
-
-const normalizeItemPlan = (itemPlan: unknown): PlannedItemAction[] => {
-	if (!Array.isArray(itemPlan)) {
-		return [];
-	}
-
-	return itemPlan
-		.map((entry) => {
-			if (!entry || typeof entry !== "object") {
-				return null;
-			}
-
-			const source = entry as Record<string, unknown>;
-			const itemId =
-				typeof source.itemId === "string" && getItemDefinition(source.itemId)
-					? source.itemId
-					: null;
-			const targetPiece = canonicalUnitName(source.targetPiece);
-
-			if (!itemId || !targetPiece) {
-				return null;
-			}
-
-			const action =
-				source.action === "craft_now" ||
-				source.action === "equip_now" ||
-				source.action === "hold" ||
-				source.action === "temporary_holder"
-					? source.action
-					: "hold";
-
-			const from = Array.isArray(source.from)
-				? source.from.filter(
-						(item): item is string =>
-							typeof item === "string" && !!getItemDefinition(item)
-				  )
-				: [];
-
-			return {
-				itemId,
-				targetPiece,
-				action,
-				reason:
-					typeof source.reason === "string" && source.reason.trim()
-						? source.reason.trim()
-						: "",
-				from,
-			};
-		})
-		.filter((entry): entry is PlannedItemAction => entry !== null);
-};
-
-const normalizeBuildPlan = (plan: BuildAdvicePlan | null | undefined) => {
-	if (!plan) {
-		return null;
-	}
-
-	const coreUnits = Array.isArray(plan.coreUnits)
-		? plan.coreUnits
-				.map((unit) => normalizePlanUnit(unit, "core"))
-				.filter((unit): unit is PlannedUnit => unit !== null)
-		: [];
-	const transitionUnits = Array.isArray(plan.transitionUnits)
-		? plan.transitionUnits
-				.map((unit) => normalizePlanUnit(unit, "transition"))
-				.filter((unit): unit is PlannedUnit => unit !== null)
-		: [];
-	const allPlannedUnits = [...coreUnits, ...transitionUnits];
-
-	if (allPlannedUnits.length === 0) {
-		return null;
-	}
-
-	const plannedUnitsByName = new Map<string, PlannedUnit>();
-	allPlannedUnits.forEach((unit) => plannedUnitsByName.set(unit.name, unit));
-
-	const avoidUnits = Array.isArray(plan.avoidUnits)
-		? plan.avoidUnits
-				.map((name) => canonicalUnitName(name))
-				.filter((name): name is string => name !== null)
-		: [];
-
-	return {
-		planName:
-			typeof plan.planName === "string" && plan.planName.trim()
-				? plan.planName.trim()
-				: "RAG Build",
-		primaryTraits: Array.isArray(plan.primaryTraits)
-			? plan.primaryTraits.filter(
-					(trait): trait is string => typeof trait === "string" && trait.trim() !== ""
-			  )
-			: [],
-		secondaryTraits: Array.isArray(plan.secondaryTraits)
-			? plan.secondaryTraits.filter(
-					(trait): trait is string => typeof trait === "string" && trait.trim() !== ""
-			  )
-			: [],
-		coreUnits,
-		transitionUnits,
-		avoidUnits,
-		rollStrategy: {
-			summary:
-				typeof plan.rollStrategy?.summary === "string"
-					? plan.rollStrategy.summary
-					: "",
-			targetLevel:
-				typeof plan.rollStrategy?.targetLevel === "number"
-					? plan.rollStrategy.targetLevel
-					: null,
-			slowRollAt:
-				typeof plan.rollStrategy?.slowRollAt === "number"
-					? plan.rollStrategy.slowRollAt
-					: null,
-		},
-		itemPlan: normalizeItemPlan(plan.itemPlan),
-		shortTermSteps: Array.isArray(plan.shortTermSteps)
-			? plan.shortTermSteps.filter(
-					(step): step is string => typeof step === "string" && step.trim() !== ""
-			  )
-			: [],
-		desiredUnitNames: new Set(allPlannedUnits.map((unit) => unit.name)),
-		coreUnitNames: new Set(coreUnits.map((unit) => unit.name)),
-		transitionUnitNames: new Set(transitionUnits.map((unit) => unit.name)),
-		avoidUnitNames: new Set(avoidUnits),
-		plannedUnitsByName,
-	};
 };
 
 const createPlayerEntityForBenchmark = (
@@ -1162,14 +976,13 @@ const chooseNextPlanAction = (
 	plan: NormalizedBuildPlan,
 	settings: GamemodeSettings
 ) =>
-	createRecoverItemAction(state, plan) ||
-	createCraftItemAction(state, plan) ||
-	createEquipPlannedItemAction(state, plan) ||
-	findBestShopBuyAction(state, plan, settings) ||
-	findBestBoardPromotionAction(state, plan) ||
-	createBuyXpAction(state, plan, settings) ||
-	createRerollAction(state, plan, settings) ||
-	createHoldComponentAction(state, plan);
+	chooseBuildAutoPlayAction(
+		state,
+		plan,
+		settings,
+		BENCHMARK_AUTO_LEVEL,
+		BENCHMARK_AUTO_PRESET
+	);
 
 const getBenchmarkRlAgent = () => {
 	if (!benchmarkRlAgent) {
@@ -1522,7 +1335,7 @@ const selectGuidedBotAction = (
 const runPlanExecution = function* (plan: NormalizedBuildPlan, settings: GamemodeSettings) {
 	let actionCount = 0;
 
-	while (actionCount < 20) {
+	while (actionCount < 200) {
 		const state: PlayerState = yield* select();
 
 		if (state.roundInfo.phase !== GamePhase.PREPARING) {
@@ -1536,7 +1349,7 @@ const runPlanExecution = function* (plan: NormalizedBuildPlan, settings: Gamemod
 
 		yield put(action.action);
 		actionCount += 1;
-		yield* delay(25);
+		yield* delay(BOT_ACTION_TIME_MS);
 	}
 };
 
@@ -1693,7 +1506,7 @@ const requestBuildPlanWithRetry = async (
 				config.ragTimeoutMs
 			);
 			const body = response.body as BuildAdviceResponse;
-			const plan = normalizeBuildPlan(body.plan);
+			const plan = normalizeBuildAutoPlayPlan(body.plan);
 			const answer =
 				typeof body.answer === "string" ? body.answer : "Missing answer";
 			const rateLimited =
@@ -1795,7 +1608,7 @@ const ragBuildBenchmarkBotSaga = function* (
 ) {
 	const playerId = yield* getContext<string>("id");
 
-	yield takeLatest(GameEvents.gamePhaseStartedEvent, function* ({ payload }) {
+	yield takeEvery(GameEvents.gamePhaseStartedEvent, function* ({ payload }) {
 		const state: PlayerState = yield* select();
 		const round = payload.round ?? state.roundInfo.round;
 		const alive = state.playerInfo.health > 0;
@@ -1817,7 +1630,8 @@ const ragBuildBenchmarkBotSaga = function* (
 
 		yield* delay(1000);
 
-		if (BENCHMARK_BUILD_ROUNDS.has(round)) {
+		if (!benchmarkState.buildAdviceRequested) {
+			benchmarkState.buildAdviceRequested = true;
 			const context = getBuildAdviceContext(playerId);
 			if (context) {
 				const { call: ragCall, plan } = yield* call(
@@ -1842,6 +1656,14 @@ const ragBuildBenchmarkBotSaga = function* (
 			}
 		}
 
+		const latestState: PlayerState = yield* select();
+		if (
+			latestState.roundInfo.phase !== GamePhase.PREPARING ||
+			latestState.playerInfo.health <= 0
+		) {
+			return;
+		}
+
 		if (!alive) {
 			return;
 		}
@@ -1850,12 +1672,13 @@ const ragBuildBenchmarkBotSaga = function* (
 			yield* call(runPlanExecution, benchmarkState.currentPlan, config.settings);
 		}
 
-		yield* call(
-			runGuidedBotPreparation,
-			personality,
-			benchmarkState.currentPlan,
-			config.settings
-		);
+		const afterActionsState: PlayerState = yield* select();
+		if (
+			afterActionsState.roundInfo.phase !== GamePhase.PREPARING ||
+			afterActionsState.playerInfo.health <= 0
+		) {
+			return;
+		}
 
 		if (isRlBenchmarkMode(config.benchmarkBotMode)) {
 			const positioned = yield* call(runBenchmarkRlPositioning, config);
@@ -1904,6 +1727,7 @@ const runSingleBenchmarkGame = async (
 	const entities: PlayerEntity[] = [];
 	const benchmarkState: MutableBenchmarkState = {
 		currentPlan: null,
+		buildAdviceRequested: false,
 		ragCalls: [],
 		plans: [],
 	};
@@ -2004,7 +1828,7 @@ const summarizeResults = (
 		winRate: completedGames > 0 ? winGames / completedGames : 0,
 		averageRank: completedGames > 0 ? totalRank / completedGames : 0,
 		benchmarkBotMode: config.benchmarkBotMode,
-		expectedRagCalls: completedGames * BENCHMARK_BUILD_ROUNDS.size,
+		expectedRagCalls: completedGames * EXPECTED_RAG_CALLS_PER_GAME,
 		totalRagCalls: allRagCalls.length,
 		successfulRagCalls: allRagCalls.filter((call) => call.success).length,
 		totalRateLimitRetries: allRagCalls.reduce(

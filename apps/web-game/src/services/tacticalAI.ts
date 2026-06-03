@@ -1,184 +1,245 @@
 import { getCurrentSocket } from "./socket";
 
 export interface PositioningRequest {
-  myBoard: any;
-  enemyBoard: any;
+	myBoard: any;
+	enemyBoard: any;
 }
 
 export interface PositioningAdvice {
-  formation: string;
-  adjustment: string;
-  winRate: number;
-  avgSurvivorMargin: number;
-  confidence: "low" | "medium" | "high";
-  moves: Array<{ pieceId: string; targetX: number; targetY: number }>;
-  explanation: string;
-  alternatives: Array<{ formation: string; winRate: number }>;
-  testedScenarios: number;
-  opponentBreakdown?: Array<{
-    label: string;
-    winRate: number;
-    avgSurvivorMargin: number;
-    testedScenarios: number;
-  }>;
+	formation: string;
+	adjustment: string;
+	winRate: number;
+	avgSurvivorMargin: number;
+	confidence: "low" | "medium" | "high";
+	moves: Array<{ pieceId: string; targetX: number; targetY: number }>;
+	explanation: string;
+	alternatives: Array<{ formation: string; winRate: number }>;
+	testedScenarios: number;
+	opponentBreakdown?: Array<{
+		label: string;
+		winRate: number;
+		avgSurvivorMargin: number;
+		testedScenarios: number;
+	}>;
 }
 
 export interface CoachResponse {
-  answer: string;
-  sources: string[];
-  plan?: any;
+	answer: string;
+	sources: string[];
+	plan?: any;
+}
+
+export type BuildAutoPlayLevel = 1 | 2 | 3 | 4;
+export type BuildAutoPlayPreset = "balanced" | "stabilize" | "economy";
+
+export interface BuildAutoPlayStatus {
+	enabled: boolean;
+	level: BuildAutoPlayLevel | null;
+	preset: BuildAutoPlayPreset | null;
+	planName: string | null;
+	round: number | null;
+	activity:
+		| "analyzing"
+		| "choosing_action"
+		| "acting"
+		| "waiting"
+		| "error"
+		| "disabled";
+	message: string;
+	recentSteps: string[];
 }
 
 export interface BattleAnalysis {
-  winner: "win" | "loss" | "draw";
-  summary: string;
-  issues: Array<any>;
-  recommendations: Array<any>;
-  stats: any;
+	winner: "win" | "loss" | "draw";
+	summary: string;
+	issues: Array<any>;
+	recommendations: Array<any>;
+	stats: any;
 }
 
+const RAG_SERVICE_URL = process.env.RAG_SERVICE_URL || "http://localhost:8003";
+
 const emitWithAck = <T>(event: string, data: any): Promise<T> => {
-  return new Promise((resolve, reject) => {
-    const socket = getCurrentSocket();
-    if (!socket) {
-      reject(new Error("Socket not connected"));
-      return;
-    }
-    socket.emit(event, data, (response: any) => {
-      if (response?.success) {
-        resolve(response);
-      } else {
-        reject(new Error(response?.error || "Request failed"));
-      }
-    });
-  });
+	return new Promise((resolve, reject) => {
+		const socket = getCurrentSocket();
+		if (!socket) {
+			reject(new Error("Socket not connected"));
+			return;
+		}
+		socket.emit(event, data, (response: any) => {
+			if (response?.success) {
+				resolve(response);
+			} else {
+				reject(new Error(response?.error || "Request failed"));
+			}
+		});
+	});
 };
 
 export const requestPositioningAdvice = (
-  myBoard: any
-): Promise<{ success: boolean; advice?: PositioningAdvice; error?: string }> => {
-  return emitWithAck("requestPositioningAdvice", { myBoard });
+	myBoard: any
+): Promise<{
+	success: boolean;
+	advice?: PositioningAdvice;
+	error?: string;
+}> => {
+	return emitWithAck("requestPositioningAdvice", { myBoard });
 };
 
-export const requestCoachAdvice = (query: string, context?: any): Promise<{ success: boolean; response?: CoachResponse; error?: string }> => {
-  return emitWithAck("requestCoachAdvice", { query, context });
+export const requestCoachAdvice = (
+	query: string,
+	context?: any
+): Promise<{ success: boolean; response?: CoachResponse; error?: string }> => {
+	return emitWithAck("requestCoachAdvice", { query, context });
 };
 
 export const requestCoachAdviceStream = async (
-  query: string,
-  context?: any,
-  onChunk?: (text: string) => void
+	query: string,
+	context?: any,
+	onChunk?: (text: string) => void
 ): Promise<void> => {
-  const res = await fetch("http://localhost:8003/query-stream", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ query, context }),
-  });
-  if (!res.body) return;
-  const reader = res.body.getReader();
-  const decoder = new TextDecoder();
-  let done = false;
-  while (!done) {
-    const { value, done: readerDone } = await reader.read();
-    done = readerDone;
-    if (value) {
-      const chunk = decoder.decode(value, { stream: true });
-      if (onChunk) onChunk(chunk);
-    }
-  }
+	const res = await fetch(`${RAG_SERVICE_URL}/query-stream`, {
+		method: "POST",
+		headers: { "Content-Type": "application/json" },
+		body: JSON.stringify({ query, context }),
+	});
+	if (!res.body) return;
+	const reader = res.body.getReader();
+	const decoder = new TextDecoder();
+	let done = false;
+	while (!done) {
+		const { value, done: readerDone } = await reader.read();
+		done = readerDone;
+		if (value) {
+			const chunk = decoder.decode(value, { stream: true });
+			if (onChunk) onChunk(chunk);
+		}
+	}
 };
 
 export const requestBuildAdvice = (
-  note?: string
+	note?: string
 ): Promise<{ success: boolean; response?: CoachResponse; error?: string }> => {
-  return emitWithAck("requestBuildAdvice", { note });
+	return emitWithAck("requestBuildAdvice", { note });
 };
 
 export const requestBuildAdviceStream = (
-  note?: string,
-  onChunk?: (text: string) => void
+	note?: string,
+	onChunk?: (text: string) => void
 ): Promise<CoachResponse> => {
-  return new Promise((resolve, reject) => {
-    const socket = getCurrentSocket();
-    if (!socket) {
-      reject(new Error("Socket not connected"));
-      return;
-    }
+	return new Promise((resolve, reject) => {
+		const socket = getCurrentSocket();
+		if (!socket) {
+			reject(new Error("Socket not connected"));
+			return;
+		}
 
-    const requestId = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
-    let answer = "";
+		const requestId = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+		let answer = "";
 
-    const cleanup = () => {
-      socket.off("buildAdviceStreamChunk", handleChunk);
-      socket.off("buildAdviceStreamDone", handleDone);
-      socket.off("buildAdviceStreamError", handleError);
-    };
+		const cleanup = () => {
+			socket.off("buildAdviceStreamChunk", handleChunk);
+			socket.off("buildAdviceStreamDone", handleDone);
+			socket.off("buildAdviceStreamError", handleError);
+		};
 
-    const handleChunk = (payload: any) => {
-      if (payload?.requestId !== requestId || !payload?.chunk) {
-        return;
-      }
+		const handleChunk = (payload: any) => {
+			if (payload?.requestId !== requestId || !payload?.chunk) {
+				return;
+			}
 
-      answer += payload.chunk;
-      onChunk?.(payload.chunk);
-    };
+			answer += payload.chunk;
+			onChunk?.(payload.chunk);
+		};
 
-    const handleDone = (payload: any) => {
-      if (payload?.requestId !== requestId) {
-        return;
-      }
+		const handleDone = (payload: any) => {
+			if (payload?.requestId !== requestId) {
+				return;
+			}
 
-      cleanup();
-      resolve({
-        answer: payload.answer || answer,
-        sources: payload.sources || [],
-        plan: payload.plan || null,
-      });
-    };
+			cleanup();
+			resolve({
+				answer: payload.answer || answer,
+				sources: payload.sources || [],
+				plan: payload.plan || null,
+			});
+		};
 
-    const handleError = (payload: any) => {
-      if (payload?.requestId !== requestId) {
-        return;
-      }
+		const handleError = (payload: any) => {
+			if (payload?.requestId !== requestId) {
+				return;
+			}
 
-      cleanup();
-      reject(new Error(payload?.error || "Build advice stream failed"));
-    };
+			cleanup();
+			reject(new Error(payload?.error || "Build advice stream failed"));
+		};
 
-    socket.on("buildAdviceStreamChunk", handleChunk);
-    socket.on("buildAdviceStreamDone", handleDone);
-    socket.on("buildAdviceStreamError", handleError);
+		socket.on("buildAdviceStreamChunk", handleChunk);
+		socket.on("buildAdviceStreamDone", handleDone);
+		socket.on("buildAdviceStreamError", handleError);
 
-    socket.emit(
-      "requestBuildAdviceStream",
-      { requestId, note },
-      (response: any) => {
-        if (response?.success) {
-          return;
-        }
+		socket.emit(
+			"requestBuildAdviceStream",
+			{ requestId, note },
+			(response: any) => {
+				if (response?.success) {
+					return;
+				}
 
-        cleanup();
-        reject(new Error(response?.error || "Build advice stream request failed"));
-      }
-    );
-  });
+				cleanup();
+				reject(
+					new Error(response?.error || "Build advice stream request failed")
+				);
+			}
+		);
+	});
+};
+
+export const startBuildAutoPlay = (
+	plan: any,
+	level: BuildAutoPlayLevel,
+	preset: BuildAutoPlayPreset = "balanced"
+): Promise<{ success: boolean; state: BuildAutoPlayStatus }> =>
+	emitWithAck("startBuildAutoPlay", { plan, level, preset });
+
+export const stopBuildAutoPlay = (): Promise<{
+	success: boolean;
+	state: BuildAutoPlayStatus;
+}> => emitWithAck("stopBuildAutoPlay", {});
+
+export const requestBuildAutoPlayState = (): Promise<{
+	success: boolean;
+	state: BuildAutoPlayStatus;
+}> => emitWithAck("requestBuildAutoPlayState", {});
+
+export const subscribeBuildAutoPlayStatus = (
+	onStatus: (status: BuildAutoPlayStatus) => void
+) => {
+	const socket = getCurrentSocket();
+	if (!socket) return () => undefined;
+	socket.on("buildAutoPlayStatus", onStatus);
+	return () => {
+		socket.off("buildAutoPlayStatus", onStatus);
+	};
 };
 
 export const requestCounterAdvice = (
-  enemyArchetype: string,
-  enemyPieces: Array<{ name: string }>
+	enemyArchetype: string,
+	enemyPieces: Array<{ name: string }>
 ): Promise<{ success: boolean; response?: CoachResponse; error?: string }> => {
-  return emitWithAck("requestCounterAdvice", { enemyArchetype, enemyPieces });
+	return emitWithAck("requestCounterAdvice", { enemyArchetype, enemyPieces });
 };
 
 export const requestItemAdvice = (
-  pieceName: string,
-  role: string,
-  currentItems: string[]
+	pieceName: string,
+	role: string,
+	currentItems: string[]
 ): Promise<{ success: boolean; response?: CoachResponse; error?: string }> => {
-  return emitWithAck("requestItemAdvice", { pieceName, role, currentItems });
+	return emitWithAck("requestItemAdvice", { pieceName, role, currentItems });
 };
 
-export const requestBattleAnalysis = (data: any): Promise<{ success: boolean; analysis?: BattleAnalysis; error?: string }> => {
-  return emitWithAck("requestBattleAnalysis", data);
+export const requestBattleAnalysis = (
+	data: any
+): Promise<{ success: boolean; analysis?: BattleAnalysis; error?: string }> => {
+	return emitWithAck("requestBattleAnalysis", data);
 };

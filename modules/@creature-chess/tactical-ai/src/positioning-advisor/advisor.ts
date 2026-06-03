@@ -20,6 +20,7 @@ import {
 	PieceMove,
 	SimulationConfig,
 	DEFAULT_SIMULATION_CONFIG,
+	StrategySelectionMode,
 } from "./types";
 
 const applyBoardMove = (
@@ -167,7 +168,8 @@ export class PositioningAdvisor {
 	async getAdvice(
 		myBoard: BoardState<PieceModel>,
 		enemyBoard: BoardState<PieceModel>,
-		potentialEnemyBoard?: BoardState<PieceModel>
+		potentialEnemyBoard?: BoardState<PieceModel>,
+		options: { selectionMode?: StrategySelectionMode } = {}
 	): Promise<PositioningAdvice | null> {
 		if (!this.modelLoaded) {
 			throw new Error("Model not loaded. Call loadModel() first.");
@@ -258,7 +260,11 @@ export class PositioningAdvisor {
 			})
 		);
 
-		const advice = pickBestStrategy(candidates, this.config);
+		const advice = pickBestStrategy(
+			candidates,
+			this.config,
+			options.selectionMode
+		);
 		console.log(
 			`[Advisor] pickBestStrategy returned: ${advice ? `formation=${advice.formation}, winRate=${advice.winRate}, confidence=${advice.confidence}` : "null"}`
 		);

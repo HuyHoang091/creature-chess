@@ -1,17 +1,18 @@
 import http from "http";
 import { Socket } from "socket.io";
+
 import { BoardState } from "@shoki/board";
+
 import { PieceModel } from "@creature-chess/models";
 
-import {
-	BuildAdviceContext,
-	BuildAdvicePlan,
-} from "../build-advisor/types";
+import { BuildAdviceContext, BuildAdvicePlan } from "../build-advisor/types";
+import { BuildAutoPlayerController } from "../build-auto-player/controller";
+import { BuildAutoPlayPreset } from "../build-auto-player/policy";
+import { getCache, hashKey } from "../cache/cache";
 import { PositioningAdvice } from "../positioning-advisor/types";
-import { getPositioningAdvisor } from "./advisor-instance";
 import { analyzeBattle } from "../post-battle-analyzer/analyzer";
 import { BattleReplayData } from "../post-battle-analyzer/types";
-import { getCache, hashKey } from "../cache/cache";
+import { getPositioningAdvisor } from "./advisor-instance";
 
 const RAG_SERVICE_URL = process.env.RAG_SERVICE_URL || "http://localhost:8003";
 
@@ -137,8 +138,11 @@ const chunkText = (text: string, chunkSize = 120) => {
 
 export interface TacticalAIPluginDeps {
 	getOpponentBoard?: (playerId: string) => BoardState<PieceModel> | null;
-	getPotentialOpponentBoard?: (playerId: string) => BoardState<PieceModel> | null;
+	getPotentialOpponentBoard?: (
+		playerId: string
+	) => BoardState<PieceModel> | null;
 	getBuildAdviceContext?: (playerId: string) => BuildAdviceContext | null;
+	buildAutoPlayer?: BuildAutoPlayerController;
 }
 
 export interface PositioningRequest {
@@ -200,7 +204,10 @@ const handlePositioningRequest = async (
 		let enemyBoard: BoardState<PieceModel> | null = null;
 		let potentialEnemyBoard: BoardState<PieceModel> | null = null;
 
-		if (data.enemyBoard && Object.keys(data.enemyBoard.pieces || {}).length > 0) {
+		if (
+			data.enemyBoard &&
+			Object.keys(data.enemyBoard.pieces || {}).length > 0
+		) {
 			enemyBoard = data.enemyBoard;
 		} else if (deps.getOpponentBoard) {
 			const playerId = (data as any).playerId;
@@ -503,14 +510,20 @@ export const registerTacticalAIEvents = (
 	socket: Socket,
 	deps: TacticalAIPluginDeps
 ) => {
-	console.log("[TacticalAI] registerTacticalAIEvents loaded for socket", socket.id);
-	socket.on("requestPositioningAdvice", (data: PositioningRequest, callback) => {
-		console.log("[TacticalAI] requestPositioningAdvice received");
-		const requestData = { ...data, playerId: socket.data.id.toString() };
-		handlePositioningRequest(requestData, deps, callback).catch(() => {
-			callback({ success: false, error: "Unexpected error" });
-		});
-	});
+	console.log(
+		"[TacticalAI] registerTacticalAIEvents loaded for socket",
+		socket.id
+	);
+	socket.on(
+		"requestPositioningAdvice",
+		(data: PositioningRequest, callback) => {
+			console.log("[TacticalAI] requestPositioningAdvice received");
+			const requestData = { ...data, playerId: socket.data.id.toString() };
+			handlePositioningRequest(requestData, deps, callback).catch(() => {
+				callback({ success: false, error: "Unexpected error" });
+			});
+		}
+	);
 
 	socket.on("requestCoachAdvice", (data: CoachRequest, callback) => {
 		handleCoachRequest(data, callback).catch(() => {
@@ -519,11 +532,14 @@ export const registerTacticalAIEvents = (
 	});
 
 	socket.on("requestBuildAdvice", (data: { note?: string }, callback) => {
-		handleBuildRequest(socket.data.id.toString(), data?.note, deps, callback).catch(
-			() => {
-				callback({ success: false, error: "Unexpected error" });
-			}
-		);
+		handleBuildRequest(
+			socket.data.id.toString(),
+			data?.note,
+			deps,
+			callback
+		).catch(() => {
+			callback({ success: false, error: "Unexpected error" });
+		});
 	});
 
 	socket.on(
@@ -570,7 +586,10 @@ export const registerTacticalAIEvents = (
 
 	socket.on(
 		"requestItemAdvice",
-		(data: { pieceName: string; role: string; currentItems: string[] }, callback) => {
+		(
+			data: { pieceName: string; role: string; currentItems: string[] },
+			callback
+		) => {
 			handleCoachRequest(
 				{
 					query: `Recommend items for ${data.pieceName} (role: ${data.role}). Current items: ${
@@ -590,4 +609,67 @@ export const registerTacticalAIEvents = (
 			callback({ success: false, error: err.message || "Analysis failed" });
 		}
 	});
+
+	const emitBuildAutoPlayStatus = (status: unknown) => {
+		socket.emit("buildAutoPlayStatus", status);
+	};
+	const unsubscribeBuildAutoPlay = deps.buildAutoPlayer?.subscribe(
+		emitBuildAutoPlayStatus
+	);
+	const startBuildAutoPlay = (
+		data: {
+			plan?: BuildAdvicePlan;
+			level?: unknown;
+			preset?: BuildAutoPlayPreset;
+		},
+		callback?: (result: unknown) => void
+	) => {
+		try {
+			if (!deps.buildAutoPlayer) {
+				throw new Error("Build auto-play unavailable");
+			}
+			const state = deps.buildAutoPlayer.start(
+				data?.plan as BuildAdvicePlan,
+				data?.level,
+				data?.preset || "balanced"
+			);
+			callback?.({ success: true, state });
+		} catch (error: any) {
+			callback?.({
+				success: false,
+				error: error?.message || "Could not start auto-play",
+			});
+		}
+	};
+	const stopBuildAutoPlay = (
+		_data: unknown,
+		callback?: (result: unknown) => void
+	) => {
+		if (!deps.buildAutoPlayer) {
+			callback?.({ success: false, error: "Build auto-play unavailable" });
+			return;
+		}
+		callback?.({ success: true, state: deps.buildAutoPlayer.stop() });
+	};
+	const requestBuildAutoPlayState = (
+		_data: unknown,
+		callback?: (result: unknown) => void
+	) => {
+		if (!deps.buildAutoPlayer) {
+			callback?.({ success: false, error: "Build auto-play unavailable" });
+			return;
+		}
+		callback?.({ success: true, state: deps.buildAutoPlayer.getStatus() });
+	};
+
+	socket.on("startBuildAutoPlay", startBuildAutoPlay);
+	socket.on("stopBuildAutoPlay", stopBuildAutoPlay);
+	socket.on("requestBuildAutoPlayState", requestBuildAutoPlayState);
+
+	return () => {
+		unsubscribeBuildAutoPlay?.();
+		socket.off("startBuildAutoPlay", startBuildAutoPlay);
+		socket.off("stopBuildAutoPlay", stopBuildAutoPlay);
+		socket.off("requestBuildAutoPlayState", requestBuildAutoPlayState);
+	};
 };

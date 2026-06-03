@@ -3,6 +3,7 @@ import {
 	PositioningAdvice,
 	SimulationConfig,
 	DEFAULT_SIMULATION_CONFIG,
+	StrategySelectionMode,
 } from "./types";
 
 const getConfidence = (
@@ -67,11 +68,42 @@ const generateExplanation = (candidate: FormationCandidate): string => {
 	return `Formation "${candidate.formationName}" + "${candidate.adjustmentName}": tỷ lệ thắng ${wrPercent}%, trung bình sống sót hơn đối thủ ${margin} quân`;
 };
 
+const createAdvice = (
+	best: FormationCandidate,
+	candidates: FormationCandidate[]
+): PositioningAdvice => {
+	const alternatives = [...candidates]
+		.filter((candidate) => candidate !== best)
+		.sort(compareByPreservation)
+		.slice(0, 3)
+		.map((candidate) => ({
+			formation: candidate.formationName,
+			winRate: candidate.avgWinRate,
+		}));
+
+	return {
+		formation: best.formationName,
+		adjustment: best.adjustmentName,
+		winRate: best.avgWinRate,
+		avgSurvivorMargin: best.avgSurvivorMargin,
+		confidence: getConfidence(best, candidates),
+		moves: best.moves,
+		explanation: generateExplanation(best),
+		alternatives,
+		testedScenarios: best.scenarioResults.length,
+	};
+};
+
 export const pickBestStrategy = (
 	candidates: FormationCandidate[],
-	config: SimulationConfig = DEFAULT_SIMULATION_CONFIG
+	config: SimulationConfig = DEFAULT_SIMULATION_CONFIG,
+	selectionMode: StrategySelectionMode = "balanced"
 ): PositioningAdvice | null => {
 	if (candidates.length === 0) return null;
+
+	if (selectionMode === "max") {
+		return createAdvice([...candidates].sort(compareByPreservation)[0], candidates);
+	}
 
 	const viable = candidates.filter(
 		(c) =>
