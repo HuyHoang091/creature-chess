@@ -164,9 +164,10 @@
 .chatContainer {
 	display: flex;
 	flex-direction: column;
-	height: 300px;
+	height: 350px;
 	min-height: 0;
 	max-width: 100%;
+	position: relative;
 }
 .chatMessages {
 	flex: 1;
@@ -178,6 +179,7 @@
 	margin-bottom: 8px;
 	scrollbar-width: thin;
 	scrollbar-color: #463714 #0f1419;
+	padding-bottom: 20px;
 }
 .chatMessages::-webkit-scrollbar {
 	width: 4px;
@@ -1302,4 +1304,83 @@
 	font-size: 10px;
 	color: #cdd0d4;
 	padding: 1px 0;
+}
+
+/* Floating chat actions */
+.floatingActions {
+	position: absolute;
+	bottom: 46px;
+	left: 8px;
+	right: 8px;
+	display: flex;
+	flex-wrap: nowrap;
+	gap: 4px;
+	justify-content: center;
+	z-index: 10;
+	pointer-events: auto;
+	animation: floatUp 0.25s ease-out;
+	overflow-x: auto;
+	scrollbar-width: none; /* Hide scrollbar for Firefox */
+}
+
+.floatingActions::-webkit-scrollbar {
+	display: none; /* Hide scrollbar for Chrome/Safari/Webkit */
+}
+
+@keyframes floatUp {
+	from {
+		opacity: 0;
+		transform: translateY(6px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+.floatingBtn {
+	flex: 0 0 auto;
+	background: rgba(15, 20, 25, 0.96);
+	border: 1px solid rgba(200, 170, 110, 0.5);
+	border-radius: 4px;
+	color: #f0e6d2;
+	cursor: pointer;
+	font-size: 10px;
+	font-weight: 500;
+	padding: 5px 8px;
+	transition: all 0.15s ease-in-out;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	box-shadow: 0 4px 10px rgba(0, 0, 0, 0.6);
+	white-space: nowrap;
+}
+
+.floatingBtn:hover:not(:disabled) {
+	background: rgba(200, 170, 110, 0.18);
+	border-color: #c8aa6e;
+	transform: translateY(-1px);
+	box-shadow: 0 6px 12px rgba(200, 170, 110, 0.25);
+}
+
+.floatingBtn:active:not(:disabled) {
+	transform: translateY(0);
+}
+
+.floatingBtn:disabled {
+	opacity: 0.48;
+	cursor: not-allowed;
+}
+
+.floatingBtnExecute {
+	background: rgba(15, 20, 25, 0.96);
+	border: 1px solid rgba(10, 200, 185, 0.65);
+	color: #0ac8b9;
+	font-weight: bold;
+}
+
+.floatingBtnExecute:hover:not(:disabled) {
+	background: rgba(10, 200, 185, 0.18);
+	border-color: #0ac8b9;
+	box-shadow: 0 6px 12px rgba(10, 200, 185, 0.3);
 }

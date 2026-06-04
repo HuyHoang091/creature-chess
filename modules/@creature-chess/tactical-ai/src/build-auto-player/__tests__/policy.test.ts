@@ -152,6 +152,58 @@ describe("build auto-play policy", () => {
 		).toContain("buy");
 	});
 
+	test("does not place a duplicate one-star unit and prefers a cost 3 replacement", () => {
+		const state = makeState({
+			level: 2,
+			money: 0,
+			boardPieces: [makePiece(1, "board-budaye")],
+			benchPieces: [
+				makePiece(1, "bench-budaye"),
+				makePiece(17, "bench-velocitile"),
+				makePiece(5, "bench-nut"),
+			],
+		});
+		const plan = makePlan();
+
+		expect(
+			chooseBuildAutoPlayAction(state, plan, GamemodeSettingsPresets.default, 4)
+				?.name
+		).toBe("bench-to-board:Velocitile");
+	});
+
+	test("uses a low cost replacement only when no cost 3 replacement exists", () => {
+		const state = makeState({
+			level: 2,
+			money: 0,
+			boardPieces: [makePiece(1, "board-budaye")],
+			benchPieces: [makePiece(1, "bench-budaye"), makePiece(5, "bench-nut")],
+		});
+		const plan = makePlan();
+
+		expect(
+			chooseBuildAutoPlayAction(state, plan, GamemodeSettingsPresets.default, 4)
+				?.name
+		).toBe("bench-to-board:Nut");
+	});
+
+	test("allows placing a duplicate unit when the bench copy is upgraded", () => {
+		const state = makeState({
+			level: 2,
+			money: 0,
+			boardPieces: [makePiece(1, "board-budaye")],
+			benchPieces: [
+				makePiece(1, "bench-budaye-2-star", 1),
+				makePiece(17, "bench-velocitile"),
+			],
+		});
+		const plan = makePlan();
+
+		expect(
+			chooseBuildAutoPlayAction(state, plan, GamemodeSettingsPresets.default, 4)
+				?.name
+		).toBe("bench-to-board:Budaye");
+	});
+
 	test("never sells core, upgraded, or item-carrying units", () => {
 		const plan = makePlan();
 		const state = makeState();

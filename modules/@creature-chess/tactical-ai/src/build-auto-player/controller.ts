@@ -310,7 +310,7 @@ export class BuildAutoPlayerController {
 			this.tacticalBlockedRound = null;
 			this.publish(
 				"waiting",
-				"Đang combat, Coach tạm dừng và sẽ tiếp tục khi vào preparing..."
+				"Đang combat, Coach tạm dừng và sẽ tiếp tục ở vòng tiếp theo..."
 			);
 			return;
 		}
@@ -355,7 +355,7 @@ export class BuildAutoPlayerController {
 			this.tacticalBlockedRound = null;
 			this.publish(
 				"waiting",
-				"Đang combat, Coach tạm dừng và sẽ tiếp tục khi vào preparing..."
+				"Đang combat, Coach tạm dừng và sẽ tiếp tục ở vòng tiếp theo..."
 			);
 			return;
 		}

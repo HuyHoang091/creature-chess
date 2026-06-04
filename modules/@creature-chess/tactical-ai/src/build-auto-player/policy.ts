@@ -413,6 +413,35 @@ const getRosterScore = (
 	);
 };
 
+const canPlaceRosterCandidate = (
+	candidate: PieceModel,
+	board: PieceModel[]
+) =>
+	candidate.stage >= 1 ||
+	!board.some((piece) => piece.definitionId === candidate.definitionId);
+
+const isDuplicateOneStarBoardPiece = (
+	piece: PieceModel,
+	board: PieceModel[]
+) =>
+	piece.stage < 1 &&
+	board.some(
+		(other) =>
+			other.id !== piece.id &&
+			other.stage < 1 &&
+			other.definitionId === piece.definitionId
+	);
+
+const compareRosterCandidates = (
+	a: PieceModel,
+	b: PieceModel,
+	plan: NormalizedBuildPlan,
+	personality: BotPersonality
+) =>
+	b.stage - a.stage ||
+	Number(b.definition.cost >= 3) - Number(a.definition.cost >= 3) ||
+	getRosterScore(b, plan, personality) - getRosterScore(a, plan, personality);
+
 const findRosterAction = (
 	state: PlayerState,
 	plan: NormalizedBuildPlan,
@@ -425,11 +454,8 @@ const findRosterAction = (
 
 	const board = BoardSelectors.getAllPieces(state.board);
 	const candidate = BoardSelectors.getAllPieces(state.bench)
-		.sort(
-			(a, b) =>
-				getRosterScore(b, plan, personality) -
-				getRosterScore(a, plan, personality)
-		)[0];
+		.filter((piece) => canPlaceRosterCandidate(piece, board))
+		.sort((a, b) => compareRosterCandidates(a, b, plan, personality))[0];
 	if (!candidate) {
 		return null;
 	}
@@ -461,6 +487,8 @@ const findRosterAction = (
 	const replace = board
 		.sort(
 			(a, b) =>
+				Number(isDuplicateOneStarBoardPiece(b, board)) -
+					Number(isDuplicateOneStarBoardPiece(a, board)) ||
 				getRosterScore(a, plan, personality) -
 				getRosterScore(b, plan, personality)
 		)

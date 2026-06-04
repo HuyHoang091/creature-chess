@@ -44,7 +44,7 @@ const INITIAL_COACH_MESSAGES: CoachMessage[] = [
 	{
 		role: "ai",
 		kind: "welcome",
-		text: "Chào bạn, mình là Coach. Mình có thể giúp gì cho bạn trong ván này?",
+		text: "Chào bạn, tôi là trợ lý Coach. Tôi có thể giúp gì cho bạn?",
 	},
 ];
 
@@ -186,7 +186,7 @@ const groupAutoSteps = (steps: string[]) =>
 const TacticalAIPanel: React.FC = () => {
 	const [open, setOpen] = React.useState(false);
 	const [activeTab, setActiveTab] = React.useState<"positioning" | "coach">(
-		"positioning"
+		"coach"
 	);
 	const [loading, setLoading] = React.useState(false);
 	const [positioningResult, setPositioningResult] =
@@ -199,6 +199,8 @@ const TacticalAIPanel: React.FC = () => {
 		React.useState<BuildAutoPlayPreset>("balanced");
 	const [autoStatus, setAutoStatus] =
 		React.useState<BuildAutoPlayStatus | null>(null);
+	const [latestPlan, setLatestPlan] = React.useState<any | null>(null);
+	const [autoExecutedThisPlan, setAutoExecutedThisPlan] = React.useState(false);
 	const chatMessagesRef = React.useRef<HTMLDivElement>(null);
 	const agentStepsRef = React.useRef<HTMLDivElement>(null);
 	const lastAutoMessageKeyRef = React.useRef<string | null>(null);
@@ -489,6 +491,8 @@ const TacticalAIPanel: React.FC = () => {
 					};
 					return updated;
 				});
+				setLatestPlan(buildResponse.plan || null);
+				setAutoExecutedThisPlan(false);
 				setLoading(false);
 				return;
 			}
@@ -738,7 +742,7 @@ const TacticalAIPanel: React.FC = () => {
 			{
 				role: "ai",
 				kind: "permission",
-				text: "Bạn muốn bật tự động ở mức nào?",
+				text: "Cấu hình tự động: Hãy chọn cách tôi thực hiện.",
 			},
 		]);
 	};
@@ -875,7 +879,10 @@ const TacticalAIPanel: React.FC = () => {
 						</button>
 						<button
 							className={styles.permissionCancel}
-							onClick={() => setPendingPlan(null)}
+							onClick={() => {
+								setPendingPlan(null);
+								setAutoExecutedThisPlan(false);
+							}}
 							disabled={autoEnabled}
 						>
 							Hủy
@@ -890,37 +897,6 @@ const TacticalAIPanel: React.FC = () => {
 							</div>
 						) : (
 							<CoachMessageRenderer text={msg.text} />
-						)}
-						{msg.kind === "welcome" && (
-							<div className={styles.quickActions}>
-								<button
-									onClick={() => handleCoachSend("/pos")}
-									disabled={!canSendCoachMessage}
-								>
-									Gợi ý xếp quân
-								</button>
-								<button
-									onClick={() => handleCoachSend("/build")}
-									disabled={!canSendCoachMessage}
-								>
-									Gợi ý build
-								</button>
-								<button
-									onClick={() => handleCoachSend("/item")}
-									disabled={!canSendCoachMessage}
-								>
-									Gợi ý đồ
-								</button>
-							</div>
-						)}
-						{msg.plan && (
-							<button
-								className={styles.executeBuildBtn}
-								onClick={() => handleExecuteBuild(msg.plan)}
-								disabled={autoEnabled}
-							>
-								Thực thi build
-							</button>
 						)}
 					</>
 				)}
@@ -949,7 +925,7 @@ const TacticalAIPanel: React.FC = () => {
 					<div className={styles.panelHeader}>
 						<span className={styles.panelTitle}>
 							<TacticalAIBrainIcon className={styles.panelTitleIcon} />
-							<span>Coach</span>
+							<span>Coach Agent</span>
 						</span>
 						<button className={styles.closeBtn} onClick={() => setOpen(false)}>
 							✕
@@ -958,6 +934,12 @@ const TacticalAIPanel: React.FC = () => {
 
 					<div className={styles.tabs}>
 						<button
+							className={activeTab === "coach" ? styles.tabActive : styles.tab}
+							onClick={() => setActiveTab("coach")}
+						>
+							Hỏi Coach
+						</button>
+						<button
 							className={
 								activeTab === "positioning" ? styles.tabActive : styles.tab
 							}
@@ -965,32 +947,78 @@ const TacticalAIPanel: React.FC = () => {
 						>
 							Xếp Quân
 						</button>
-						<button
-							className={activeTab === "coach" ? styles.tabActive : styles.tab}
-							onClick={() => setActiveTab("coach")}
-						>
-							Hỏi Coach
-						</button>
 					</div>
 
 					<div className={styles.panelBody}>
-						{activeTab === "positioning" && (
-							<PositioningTab
-								loading={loading}
-								result={positioningResult}
-								board={board}
-								localPlayerId={localPlayerId}
-								canUsePositioning={canUsePositioning}
-								roundNumber={roundNumber}
-								onRequest={handlePositioningRequest}
-							/>
-						)}
-
 						{activeTab === "coach" && (
 							<div className={styles.chatContainer}>
 								<div className={styles.chatMessages} ref={chatMessagesRef}>
 									{coachMessages.map(renderCoachMessage)}
 								</div>
+
+								{(!loading && !autoEnabled && pendingPlan === null) && (
+									<div className={styles.floatingActions}>
+										<button
+											className={styles.floatingBtn}
+											onClick={() => handleCoachSend("/pos")}
+											disabled={!canSendCoachMessage}
+										>
+											Gợi ý xếp quân
+										</button>
+
+										{!latestPlan ? (
+											<button
+												className={styles.floatingBtn}
+												onClick={() => handleCoachSend("/build")}
+												disabled={!canSendCoachMessage}
+											>
+												Gợi ý đội hình
+											</button>
+										) : !autoExecutedThisPlan && pendingPlan === null ? (
+											<button
+												className={`${styles.floatingBtn} ${styles.floatingBtnExecute}`}
+												onClick={() => {
+													handleExecuteBuild(latestPlan);
+													setAutoExecutedThisPlan(true);
+												}}
+												disabled={!canSendCoachMessage}
+											>
+												Triển khai đội hình
+											</button>
+										) : (
+											<>
+												<button
+													className={styles.floatingBtn}
+													onClick={() => handleCoachSend("/build")}
+													disabled={!canSendCoachMessage}
+												>
+													Gợi ý đội hình
+												</button>
+												{pendingPlan === null && (
+													<button
+														className={`${styles.floatingBtn} ${styles.floatingBtnExecute}`}
+														onClick={() => {
+															handleExecuteBuild(latestPlan);
+															setAutoExecutedThisPlan(true);
+														}}
+														disabled={!canSendCoachMessage}
+													>
+														Triển khai đội hình
+													</button>
+												)}
+											</>
+										)}
+
+										<button
+											className={styles.floatingBtn}
+											onClick={() => handleCoachSend("/item")}
+											disabled={!canSendCoachMessage}
+										>
+											Gợi ý trang bị
+										</button>
+									</div>
+								)}
+
 								<div className={styles.chatInputRow}>
 									<input
 										className={styles.chatInput}
@@ -1017,6 +1045,18 @@ const TacticalAIPanel: React.FC = () => {
 									</button>
 								</div>
 							</div>
+						)}
+
+						{activeTab === "positioning" && (
+							<PositioningTab
+								loading={loading}
+								result={positioningResult}
+								board={board}
+								localPlayerId={localPlayerId}
+								canUsePositioning={canUsePositioning}
+								roundNumber={roundNumber}
+								onRequest={handlePositioningRequest}
+							/>
 						)}
 					</div>
 				</div>
