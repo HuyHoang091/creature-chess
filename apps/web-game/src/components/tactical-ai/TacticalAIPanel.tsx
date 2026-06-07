@@ -925,7 +925,7 @@ const TacticalAIPanel: React.FC = () => {
 					<div className={styles.panelHeader}>
 						<span className={styles.panelTitle}>
 							<TacticalAIBrainIcon className={styles.panelTitleIcon} />
-							<span>Coach Agent</span>
+							<span>Tactical AI</span>
 						</span>
 						<button className={styles.closeBtn} onClick={() => setOpen(false)}>
 							✕
