@@ -327,6 +327,20 @@ const handleCoachRequest = async (
 	}
 };
 
+const buildBuildQuery = (noteText?: string): string => {
+	if (noteText) {
+		// The player's note is a DIRECTIVE the plan must follow, not a hint.
+		return (
+			`The player wants this build direction: "${noteText}". ` +
+			`Build a plan that follows the player's requested direction from the ` +
+			`current state (units, transition, roll/level and item plan to reach it). ` +
+			`Do not substitute a different comp you think is stronger; commit to the ` +
+			`player's intent and only note risks or the closest viable version if needed.`
+		);
+	}
+	return "Recommend the strongest realistic build for the current state.";
+};
+
 const handleBuildRequest = async (
 	playerId: string,
 	note: string | undefined,
@@ -346,9 +360,7 @@ const handleBuildRequest = async (
 		}
 
 		const noteText = note?.trim();
-		const query = noteText
-			? `Recommend the strongest realistic build for the current state. Extra player note: ${noteText}`
-			: "Recommend the strongest realistic build for the current state.";
+		const query = buildBuildQuery(noteText);
 		const cache = getCache();
 		const cacheKey = hashKey([
 			"build",
@@ -413,9 +425,7 @@ const streamBuildAdvice = async (
 	}
 
 	const noteText = note?.trim();
-	const query = noteText
-		? `Recommend the strongest realistic build for the current state. Extra player note: ${noteText}`
-		: "Recommend the strongest realistic build for the current state.";
+	const query = buildBuildQuery(noteText);
 	const cache = getCache();
 	const cacheKey = hashKey([
 		"build",

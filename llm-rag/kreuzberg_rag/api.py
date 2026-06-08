@@ -14,11 +14,36 @@ from .document_processor import DocumentProcessor
 from .embedder import Embedder
 from .retriever import Retriever
 from .coach_engine import CoachEngine
+from .agent_engine import AgentEngine
+from .conversation_memory import ConversationMemory
 
 
 class QueryRequest(BaseModel):
     query: str
     context: Dict[str, Any] = {}
+
+
+class AgentRequest(BaseModel):
+    query: str
+    context: Dict[str, Any] = {}
+    session_id: Optional[str] = None
+    smalltalk: bool = False
+
+
+class AgentActionMemoryRequest(BaseModel):
+    session_id: str
+    query: str = ""
+    tool: str
+    args: Dict[str, Any] = {}
+
+
+class AgentPlanResponse(BaseModel):
+    tool: str
+    clientAction: Optional[str] = None
+    args: Dict[str, Any] = {}
+    reason: str = ""
+    smalltalk: bool = False
+    needs: List[str] = []
 
 
 class BuildAdviceRequest(BaseModel):
@@ -49,12 +74,13 @@ class BuildAdviceResponse(AdviceResponse):
 
 # Global instances
 coach_engine: CoachEngine = None
+agent_engine: AgentEngine = None
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Initialize RAG pipeline on startup."""
-    global coach_engine
+    global coach_engine, agent_engine
 
     print("Initializing Kreuzberg RAG pipeline...")
 
@@ -74,7 +100,10 @@ async def lifespan(app: FastAPI):
 
     # 4. Create coach engine
     coach_engine = CoachEngine(retriever)
-    print("RAG pipeline ready!")
+
+    # 5. Create agent engine (routing + agentic RAG + conversation memory)
+    agent_engine = AgentEngine(coach_engine, ConversationMemory())
+    print("RAG + Agent pipeline ready!")
 
     yield
 
@@ -99,7 +128,52 @@ app.add_middleware(
 
 @app.get("/health")
 def health():
-    return {"status": "ok", "rag_ready": coach_engine is not None}
+    return {
+        "status": "ok",
+        "rag_ready": coach_engine is not None,
+        "agent_ready": agent_engine is not None,
+    }
+
+
+@app.post("/agent", response_model=AgentPlanResponse)
+def agent_plan(request: AgentRequest):
+    """Route a free-form message to the right tool (intent detection)."""
+    plan = agent_engine.plan(
+        request.query, request.context, session_id=request.session_id
+    )
+    return AgentPlanResponse(
+        tool=plan["tool"],
+        clientAction=plan.get("clientAction"),
+        args=plan.get("args", {}),
+        reason=plan.get("reason", ""),
+        smalltalk=plan.get("smalltalk", False),
+        needs=plan.get("needs", []),
+    )
+
+
+@app.post("/agent-stream")
+def agent_stream(request: AgentRequest):
+    """Stream a general-knowledge answer using agentic RAG (with re-query)."""
+    def _gen():
+        try:
+            for token in agent_engine.answer_stream(
+                request.query, request.context,
+                session_id=request.session_id, smalltalk=request.smalltalk,
+            ):
+                yield token
+        except Exception as e:
+            yield f"\n\n[Lỗi xử lý: {str(e)}]"
+
+    return StreamingResponse(_gen(), media_type="text/event-stream")
+
+
+@app.post("/agent-action-memory")
+def agent_action_memory(request: AgentActionMemoryRequest):
+    """Record that a client-side action tool ran, for follow-up context."""
+    agent_engine.record_action(
+        request.session_id, request.query, request.tool, request.args
+    )
+    return {"status": "ok"}
 
 
 @app.post("/query", response_model=AdviceResponse)

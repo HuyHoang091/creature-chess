@@ -305,6 +305,14 @@
 	overflow: visible;
 }
 
+.thinkingCard {
+	border-style: dashed;
+	border-color: rgba(200, 170, 110, 0.45);
+	background: rgba(15, 20, 25, 0.7);
+	font-style: italic;
+	opacity: 0.92;
+}
+
 .autoAgentCard {
 	box-sizing: border-box;
 	display: flex;

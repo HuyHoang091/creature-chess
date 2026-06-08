@@ -61,6 +61,106 @@ export interface BattleAnalysis {
 
 const RAG_SERVICE_URL = process.env.RAG_SERVICE_URL || "http://localhost:8003";
 
+export interface AgentPlan {
+	tool: string;
+	clientAction:
+		| "positioning"
+		| "build"
+		| "item"
+		| "counter"
+		| "scout"
+		| null;
+	args: Record<string, any>;
+	reason: string;
+	smalltalk: boolean;
+	needs: string[];
+}
+
+/**
+ * Ask the agent which tool a free-form message maps to. Returns a routing
+ * decision the UI can act on (run a game action) or "general_advice" to stream
+ * a RAG answer.
+ */
+export const requestAgentPlan = async (
+	query: string,
+	context?: any,
+	sessionId?: string
+): Promise<AgentPlan> => {
+	const res = await fetch(`${RAG_SERVICE_URL}/agent`, {
+		method: "POST",
+		headers: { "Content-Type": "application/json" },
+		body: JSON.stringify({
+			query,
+			context: context || {},
+			session_id: sessionId,
+		}),
+	});
+	if (!res.ok) {
+		throw new Error(`Agent routing failed (${res.status})`);
+	}
+	return res.json();
+};
+
+/**
+ * Stream a general-knowledge answer using agentic RAG (re-query when weak).
+ */
+export const requestAgentStream = async (
+	query: string,
+	context?: any,
+	onChunk?: (text: string) => void,
+	sessionId?: string,
+	smalltalk?: boolean
+): Promise<void> => {
+	const res = await fetch(`${RAG_SERVICE_URL}/agent-stream`, {
+		method: "POST",
+		headers: { "Content-Type": "application/json" },
+		body: JSON.stringify({
+			query,
+			context: context || {},
+			session_id: sessionId,
+			smalltalk: !!smalltalk,
+		}),
+	});
+	if (!res.body) return;
+	const reader = res.body.getReader();
+	const decoder = new TextDecoder();
+	let done = false;
+	while (!done) {
+		const { value, done: readerDone } = await reader.read();
+		done = readerDone;
+		if (value) {
+			const chunk = decoder.decode(value, { stream: true });
+			if (onChunk) onChunk(chunk);
+		}
+	}
+};
+
+/**
+ * Tell the agent that a client-side action tool ran, so its intent is folded
+ * into the conversation memory for the next turn. Fire-and-forget.
+ */
+export const recordAgentAction = async (
+	sessionId: string,
+	query: string,
+	tool: string,
+	args?: Record<string, any>
+): Promise<void> => {
+	try {
+		await fetch(`${RAG_SERVICE_URL}/agent-action-memory`, {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({
+				session_id: sessionId,
+				query,
+				tool,
+				args: args || {},
+			}),
+		});
+	} catch {
+		// Memory is best-effort; ignore failures.
+	}
+};
+
 const emitWithAck = <T>(event: string, data: any): Promise<T> => {
 	return new Promise((resolve, reject) => {
 		const socket = getCurrentSocket();

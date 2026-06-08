@@ -68,7 +68,18 @@ Context from game guides will be provided below. Use it to answer the player's q
 BUILD_REQUEST_PROMPT = """
 You are handling a /build request with a structured game-state snapshot.
 
-Priorities:
+PLAYER DIRECTION (highest priority):
+- If the player requested a specific composition or direction (e.g. "build 8 fire",
+  "đi 8 lửa", "carry Agnigon", "team nước"), you MUST build toward THAT direction.
+  Do NOT replace it with a different comp you think is stronger.
+- Adapt the requested direction to be viable from the current state (suggest the
+  right units, transition, roll/level plan and items to reach it). If the request
+  is hard or suboptimal, still commit to it and add a short note on risks plus the
+  closest viable version — but the plan must follow the player's intent.
+- Only when the player gave NO specific direction should you recommend the
+  strongest realistic build yourself.
+
+Priorities (apply within the player's chosen direction):
 - Maximize realistic top-4 strength from the CURRENT state, not only ideal late game.
 - Read the build-state JSON carefully, especially unitPool, ownedUnitProgress, currentLevelOdds, allLevelOdds, inventoryItems, craftableInventoryItems, boardPieces, benchPieces, and shopCards.
 - Strongly account for copy pressure: units with low remainingCopies are harder to hit.

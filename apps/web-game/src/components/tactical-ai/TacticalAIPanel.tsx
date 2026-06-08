@@ -4,9 +4,10 @@ import { useSelector } from "react-redux";
 import { useLocalPlayerId } from "~/auth/context";
 import {
 	requestPositioningAdvice,
-	requestCoachAdviceStream,
 	requestBuildAdviceStream,
-	requestBattleAnalysis,
+	requestAgentPlan,
+	requestAgentStream,
+	recordAgentAction,
 	requestBuildAutoPlayState,
 	startBuildAutoPlay,
 	stopBuildAutoPlay,
@@ -15,6 +16,7 @@ import {
 	BuildAutoPlayPreset,
 	BuildAutoPlayStatus,
 	PositioningAdvice,
+	AgentPlan,
 } from "~/services/tacticalAI";
 import { AppState } from "~/store/state";
 
@@ -36,7 +38,7 @@ type CoachMessage = {
 	role: "user" | "ai";
 	text: string;
 	plan?: any;
-	kind?: "welcome" | "permission" | "auto";
+	kind?: "welcome" | "permission" | "auto" | "thinking";
 	status?: BuildAutoPlayStatus;
 };
 
@@ -203,6 +205,10 @@ const TacticalAIPanel: React.FC = () => {
 	const [autoExecutedThisPlan, setAutoExecutedThisPlan] = React.useState(false);
 	const chatMessagesRef = React.useRef<HTMLDivElement>(null);
 	const agentStepsRef = React.useRef<HTMLDivElement>(null);
+	// Session id is scoped per match (see effect below) so context from an old
+	// match never leaks into a new one. The ref holds the active id; it is
+	// initialized/refreshed by the match-scope effect.
+	const sessionIdRef = React.useRef<string>("");
 	const lastAutoMessageKeyRef = React.useRef<string | null>(null);
 	const previousCoachMessageCountRef = React.useRef(INITIAL_COACH_MESSAGES.length);
 	const previousOpenRef = React.useRef(open);
@@ -292,9 +298,61 @@ const TacticalAIPanel: React.FC = () => {
 	const selectedPieceId = useSelector<AppState, string | null>(
 		(state) => state.game.ui.selectedPieceId
 	);
+	const inGame = useSelector<AppState, boolean>(
+		(state) => state.game.ui.inGame
+	);
 	const inventory = useSelector<AppState, string[]>(
 		(state) => state.game.playerInfo.inventory
 	);
+
+	// Scope the coach session per match + player so context never leaks across
+	// matches. A fresh id is minted when a match starts (inGame false->true) or
+	// the player changes; it persists across panel remounts within the match.
+	const ensureSessionId = React.useCallback(() => {
+		const storageKey = `tacticalCoachSession:${localPlayerId || "anon"}`;
+		if (!sessionIdRef.current) {
+			let existing: string | null = null;
+			try {
+				existing = window.sessionStorage.getItem(storageKey);
+			} catch {
+				existing = null;
+			}
+			sessionIdRef.current =
+				existing ||
+				`coach-${localPlayerId || "anon"}-${Date.now()}-${Math.random()
+					.toString(36)
+					.slice(2)}`;
+			try {
+				window.sessionStorage.setItem(storageKey, sessionIdRef.current);
+			} catch {
+				// sessionStorage unavailable; in-memory ref still works.
+			}
+		}
+		return sessionIdRef.current;
+	}, [localPlayerId]);
+
+	const prevInGameRef = React.useRef(inGame);
+	const prevPlayerIdRef = React.useRef(localPlayerId);
+	React.useEffect(() => {
+		const matchStarted = inGame && !prevInGameRef.current;
+		const playerChanged = localPlayerId !== prevPlayerIdRef.current;
+		prevInGameRef.current = inGame;
+		prevPlayerIdRef.current = localPlayerId;
+		if (matchStarted || playerChanged) {
+			// New match (or player): mint a fresh session id and drop stale chat.
+			const storageKey = `tacticalCoachSession:${localPlayerId || "anon"}`;
+			const fresh = `coach-${localPlayerId || "anon"}-${Date.now()}-${Math.random()
+				.toString(36)
+				.slice(2)}`;
+			sessionIdRef.current = fresh;
+			try {
+				window.sessionStorage.setItem(storageKey, fresh);
+			} catch {
+				// ignore
+			}
+			setCoachMessages(INITIAL_COACH_MESSAGES);
+		}
+	}, [inGame, localPlayerId]);
 	const autoEnabled = !!autoStatus?.enabled;
 	const canSendCoachMessage = !loading && !autoEnabled;
 	const scrollCoachToBottom = React.useCallback(() => {
@@ -420,294 +478,342 @@ const TacticalAIPanel: React.FC = () => {
 		setLoading(true);
 
 		const lower = raw.toLowerCase();
+		const sessionId = ensureSessionId();
+		const selectedPiece = selectedPieceId
+			? myPieces.find((p) => p.id === selectedPieceId)
+			: undefined;
+		const currentOpponent = opponentId
+			? playerList.find((p) => p.id === opponentId)
+			: null;
+		const agentContext = {
+			pieces: myPieces.map((p) => ({
+				name: p.definition?.name || "",
+				definitionId: p.definitionId,
+			})),
+			selectedPiece: selectedPiece?.definition?.name || undefined,
+			phase: GamePhase[phase] || undefined,
+			opponentName: currentOpponent?.name || undefined,
+		};
 
-		try {
-			// /pos or /xếp → trigger positioning advice
-			if (lower === "/pos" || lower === "/xếp" || lower === "/xep") {
-				setActiveTab("positioning");
-				if (!canUsePositioning) {
-					setCoachMessages((prev) => [
-						...prev,
-						{
-							role: "ai",
-							text: isPvE
-								? "Round PvE không hỗ trợ gợi ý xếp quân."
-								: "Chưa reveal đủ 2 đối thủ để chạy gợi ý xếp quân.",
-						},
-					]);
-					setLoading(false);
-					return;
+		// Shared helpers.
+		const appendChunk = (chunk: string) => {
+			setCoachMessages((prev) => {
+				const last = prev[prev.length - 1];
+				if (!last || last.role !== "ai") return prev;
+				const updated = [...prev];
+				updated[updated.length - 1] = { ...last, text: last.text + chunk };
+				return updated;
+			});
+		};
+		const pushAi = (text: string) =>
+			setCoachMessages((prev) => [...prev, { role: "ai", text }]);
+		const showThinking = (label: string) =>
+			setCoachMessages((prev) => [
+				...prev,
+				{ role: "ai", kind: "thinking", text: label },
+			]);
+		const clearThinking = () =>
+			setCoachMessages((prev) =>
+				prev.filter((message) => message.kind !== "thinking")
+			);
+
+		// ---- Tool: positioning ----
+		const runPositioning = async () => {
+			setActiveTab("positioning");
+			if (!canUsePositioning) {
+				pushAi(
+					isPvE
+						? "Round PvE không hỗ trợ gợi ý xếp quân."
+						: "Chưa reveal đủ 2 đối thủ để chạy gợi ý xếp quân."
+				);
+				return;
+			}
+			await handlePositioningRequest();
+			pushAi(
+				"Đã chuyển sang tab Xếp Quân và gửi yêu cầu phân tích cho cả 2 đối thủ."
+			);
+		};
+
+		// ---- Tool: build ----
+		const runBuild = async (buildNote?: string) => {
+			setCoachMessages((prev) => [...prev, { role: "ai", text: "" }]);
+			await waitForCoachThinking();
+			const buildResponse = await requestBuildAdviceStream(
+				buildNote || undefined,
+				appendChunk
+			);
+			setCoachMessages((prev) => {
+				const last = prev[prev.length - 1];
+				if (!last || last.role !== "ai") return prev;
+				const updated = [...prev];
+				updated[updated.length - 1] = {
+					...last,
+					plan: buildResponse.plan || undefined,
+					text:
+						last.text.trim() ||
+						buildResponse.answer ||
+						"Coach chưa lấy được gợi ý build.",
+				};
+				return updated;
+			});
+			setLatestPlan(buildResponse.plan || null);
+			setAutoExecutedThisPlan(false);
+		};
+
+		// ---- Tool: item (per specified piece) ----
+		const runItem = async (pieceName?: string) => {
+			const wanted = (pieceName || "").trim();
+			const matchByName = (name: string) => {
+				const q = name.toLowerCase();
+				const pieces = myPieces.filter((p) => p.definition?.name);
+				return (
+					pieces.find((p) => p.definition!.name!.toLowerCase() === q) ||
+					pieces.find((p) =>
+						p.definition!.name!.toLowerCase().startsWith(q)
+					) ||
+					pieces.find((p) => p.definition!.name!.toLowerCase().includes(q))
+				);
+			};
+
+			let targetName = "";
+			let role = "general";
+			let currentItems: string[] = [];
+
+			if (wanted) {
+				const onBoard = matchByName(wanted);
+				if (onBoard) {
+					targetName = onBoard.definition?.name || wanted;
+					role = onBoard.definition?.traits?.[0] || "general";
+					currentItems =
+						(onBoard as any).itemIds || (onBoard as any).items || [];
+				} else {
+					// Named creature not on board — still advise for that exact
+					// creature, do not silently pick another piece.
+					targetName = wanted;
 				}
-				await handlePositioningRequest();
-				setCoachMessages((prev) => [
-					...prev,
-					{
-						role: "ai",
-						text: "Đã chuyển sang tab Xếp Quân và gửi yêu cầu phân tích cho cả 2 đối thủ.",
-					},
-				]);
-				setLoading(false);
+			} else if (selectedPieceId) {
+				const selected = myPieces.find((p) => p.id === selectedPieceId);
+				if (selected) {
+					targetName = selected.definition?.name || "";
+					role = selected.definition?.traits?.[0] || "general";
+					currentItems =
+						(selected as any).itemIds || (selected as any).items || [];
+				}
+			}
+
+			if (!targetName) {
+				pushAi(
+					'Bạn muốn tư vấn trang bị cho quân nào? Hãy nêu tên quân (vd: "Tweesher lên đồ gì") hoặc chọn một quân trên bàn.'
+				);
 				return;
 			}
 
-			// /build or /team → build advice (streaming)
+			setCoachMessages((prev) => [...prev, { role: "ai", text: "" }]);
+			await waitForCoachThinking();
+			await requestAgentStream(
+				`Gợi ý item cho ${targetName} (role: ${role}). Current items: ${currentItems.join(", ") || "none"}`,
+				agentContext,
+				appendChunk,
+				sessionId
+			);
+		};
+
+		// ---- Tool: counter ----
+		const runCounter = async (archetypeArg?: string) => {
+			const enemyPieces = matchBoard
+				? BoardSelectors.getAllPieces(matchBoard).filter(
+						(p) => p.ownerId !== localPlayerId
+					)
+				: [];
+			if (enemyPieces.length === 0) {
+				const opp = opponentId
+					? playerList.find((p) => p.id === opponentId)
+					: null;
+				if (!opp) {
+					pushAi("Chưa có dữ liệu đối thủ để phân tích counter.");
+					return;
+				}
+				pushAi(
+					`🛡️ Counter ${opp.name} (Lv.${opp.level}, HP ${opp.health}): Đang ở vòng mua đồ nên chưa thấy chi tiết quân địch. Hãy dùng /scout để xem tổng quan.`
+				);
+				return;
+			}
+			const archetype =
+				archetypeArg || enemyPieces[0]?.definition?.traits?.[0] || "mixed";
+			setCoachMessages((prev) => [...prev, { role: "ai", text: "" }]);
+			await waitForCoachThinking();
+			await requestAgentStream(
+				`Counter đội hình ${archetype}. Enemy: ${enemyPieces.map((p) => p.definition?.name || "").join(", ")}`,
+				{ ...agentContext, enemyArchetype: archetype },
+				appendChunk,
+				sessionId
+			);
+		};
+
+		// ---- Tool: scout ----
+		const runScout = () => {
+			const enemyPieces = matchBoard
+				? BoardSelectors.getAllPieces(matchBoard).filter(
+						(p) => p.ownerId !== localPlayerId
+					)
+				: [];
+			if (enemyPieces.length > 0) {
+				const names = enemyPieces
+					.map((p) => p.definition?.name || "?")
+					.join(", ");
+				const traits = [
+					...new Set(enemyPieces.flatMap((p) => p.definition?.traits || [])),
+				].join(", ");
+				pushAi(
+					`📋 Scout đối thủ (combat):\nQuân: ${names}\nTộc/hệ: ${traits || "Không rõ"}\nSố lượng: ${enemyPieces.length}`
+				);
+				return;
+			}
+			const realOpp = opponentId
+				? playerList.find((p) => p.id === opponentId)
+				: null;
+			const potOpp = potentialOpponentId
+				? playerList.find((p) => p.id === potentialOpponentId)
+				: null;
+			if (!realOpp) {
+				pushAi("Chưa có thông tin đối thủ.");
+				return;
+			}
+			const lines = [
+				`📋 Scout đối thủ (preparing):`,
+				`👤 Đối thủ chính: ${realOpp.name} (Lv.${realOpp.level}, HP ${realOpp.health}, Streak ${realOpp.streakAmount ?? 0})`,
+			];
+			if (potOpp) {
+				lines.push(
+					`👤 Đối thủ phụ: ${potOpp.name} (Lv.${potOpp.level}, HP ${potOpp.health})`
+				);
+			}
+			pushAi(lines.join("\n"));
+		};
+
+		// ---- Tool: general (agentic RAG) ----
+		const runGeneral = async (question: string, smalltalk = false) => {
+			setCoachMessages((prev) => [...prev, { role: "ai", text: "" }]);
+			await waitForCoachThinking();
+			await requestAgentStream(
+				question,
+				agentContext,
+				appendChunk,
+				sessionId,
+				smalltalk
+			);
+		};
+
+		// Dispatch an agent routing decision to the matching tool.
+		const dispatchAgentPlan = async (plan: AgentPlan, question: string) => {
+			switch (plan.clientAction) {
+				case "positioning":
+					await runPositioning();
+					return;
+				case "build":
+					await runBuild(plan.args?.note || question);
+					return;
+				case "item":
+					if (plan.args?.pieceNameAmbiguous) {
+						const candidates: string[] =
+							plan.args?.pieceNameCandidates || [];
+						pushAi(
+							`Ý bạn là quân nào? Có thể là: ${candidates.join(", ")}. Hãy nêu rõ tên quân.`
+						);
+						return;
+					}
+					await runItem(plan.args?.pieceName);
+					return;
+				case "counter":
+					await runCounter(plan.args?.archetype);
+					return;
+				case "scout":
+					runScout();
+					return;
+				default:
+					await runGeneral(question, plan.smalltalk);
+			}
+		};
+
+		try {
+			// Explicit slash commands keep working as fast-paths.
+			if (lower === "/pos" || lower === "/xếp" || lower === "/xep") {
+				await runPositioning();
+				return;
+			}
 			if (
 				lower.startsWith("/build") ||
 				lower.startsWith("/team") ||
 				lower.startsWith("/doi")
 			) {
-				const buildNote = raw.replace(/^\/(build|team|doi)\s*/i, "").trim();
-				setCoachMessages((prev) => [...prev, { role: "ai", text: "" }]);
-				await waitForCoachThinking();
-				const buildResponse = await requestBuildAdviceStream(
-					buildNote || undefined,
-					(chunk) => {
-						setCoachMessages((prev) => {
-							const last = prev[prev.length - 1];
-							if (!last || last.role !== "ai") return prev;
-							const updated = [...prev];
-							updated[updated.length - 1] = {
-								...last,
-								text: last.text + chunk,
-							};
-							return updated;
-						});
-					}
-				);
-				setCoachMessages((prev) => {
-					const last = prev[prev.length - 1];
-					if (!last || last.role !== "ai") {
-						return prev;
-					}
-
-					const updated = [...prev];
-					updated[updated.length - 1] = {
-						...last,
-						plan: buildResponse.plan || undefined,
-						text:
-							last.text.trim() ||
-							buildResponse.answer ||
-							"Coach chưa lấy được gợi ý build.",
-					};
-					return updated;
-				});
-				setLatestPlan(buildResponse.plan || null);
-				setAutoExecutedThisPlan(false);
-				setLoading(false);
+				await runBuild(raw.replace(/^\/(build|team|doi)\s*/i, "").trim());
 				return;
 			}
-
-			// /item or /đồ → item advice for selected piece (streaming)
 			if (
 				lower.startsWith("/item") ||
 				lower.startsWith("/đồ") ||
 				lower.startsWith("/do")
 			) {
-				const targetPiece = selectedPieceId
-					? myPieces.find((p) => p.id === selectedPieceId)
-					: myPieces[0];
-				if (!targetPiece) {
-					setCoachMessages((prev) => [
-						...prev,
-						{
-							role: "ai",
-							text: "Không tìm thấy quân nào để gợi ý đồ. Vui lòng chọn một quân trên bàn.",
-						},
-					]);
-					setLoading(false);
-					return;
-				}
-				const role = targetPiece.definition?.traits?.[0] || "general";
-				const currentItems =
-					(targetPiece as any).itemIds || (targetPiece as any).items || [];
-				setCoachMessages((prev) => [...prev, { role: "ai", text: "" }]);
-				await waitForCoachThinking();
-				await requestCoachAdviceStream(
-					`Gợi ý item cho ${targetPiece.definition?.name || "Quân"} (role: ${role}). Current items: ${currentItems.join(", ") || "none"}`,
-					{},
-					(chunk) => {
-						setCoachMessages((prev) => {
-							const last = prev[prev.length - 1];
-							if (!last || last.role !== "ai") return prev;
-							const updated = [...prev];
-							updated[updated.length - 1] = {
-								...last,
-								text: last.text + chunk,
-							};
-							return updated;
-						});
-					}
-				);
-				setLoading(false);
+				const pieceName = raw.replace(/^\/(item|đồ|do)\s*/i, "").trim();
+				await runItem(pieceName || undefined);
 				return;
 			}
-
-			// /counter or /khắc → counter advice (streaming)
 			if (
 				lower.startsWith("/counter") ||
 				lower.startsWith("/khắc") ||
 				lower.startsWith("/khac")
 			) {
-				const enemyPieces = matchBoard
-					? BoardSelectors.getAllPieces(matchBoard).filter(
-							(p) => p.ownerId !== localPlayerId
-						)
-					: [];
-				if (enemyPieces.length === 0) {
-					const opp = opponentId
-						? playerList.find((p) => p.id === opponentId)
-						: null;
-					if (!opp) {
-						setCoachMessages((prev) => [
-							...prev,
-							{
-								role: "ai",
-								text: "Chưa có dữ liệu đối thủ để phân tích counter.",
-							},
-						]);
-						setLoading(false);
-						return;
-					}
-					setCoachMessages((prev) => [
-						...prev,
-						{
-							role: "ai",
-							text: `🛡️ Counter ${opp.name} (Lv.${opp.level}, HP ${opp.health}): Đang ở vòng mua đồ nên chưa thấy chi tiết quân địch. Hãy dùng /scout để xem tổng quan.`,
-						},
-					]);
-					setLoading(false);
-					return;
-				}
-				const archetype = enemyPieces[0]?.definition?.traits?.[0] || "mixed";
-				setCoachMessages((prev) => [...prev, { role: "ai", text: "" }]);
-				await waitForCoachThinking();
-				await requestCoachAdviceStream(
-					`Counter đội hình ${archetype}. Enemy: ${enemyPieces.map((p) => p.definition?.name || "").join(", ")}`,
-					{ enemyArchetype: archetype },
-					(chunk) => {
-						setCoachMessages((prev) => {
-							const last = prev[prev.length - 1];
-							if (!last || last.role !== "ai") return prev;
-							const updated = [...prev];
-							updated[updated.length - 1] = {
-								...last,
-								text: last.text + chunk,
-							};
-							return updated;
-						});
-					}
-				);
-				setLoading(false);
+				await runCounter();
 				return;
 			}
-
-			// /scout or /đối or /doi → show opponent info
-			if (
-				lower.startsWith("/scout") ||
-				lower.startsWith("/đối") ||
-				lower.startsWith("/doi")
-			) {
-				const enemyPieces = matchBoard
-					? BoardSelectors.getAllPieces(matchBoard).filter(
-							(p) => p.ownerId !== localPlayerId
-						)
-					: [];
-				if (enemyPieces.length > 0) {
-					const names = enemyPieces
-						.map((p) => p.definition?.name || "?")
-						.join(", ");
-					const traits = [
-						...new Set(enemyPieces.flatMap((p) => p.definition?.traits || [])),
-					].join(", ");
-					setCoachMessages((prev) => [
-						...prev,
-						{
-							role: "ai",
-							text: `📋 Scout đối thủ (combat):\nQuân: ${names}\nTộc/hệ: ${traits || "Không rõ"}\nSố lượng: ${enemyPieces.length}`,
-						},
-					]);
-					setLoading(false);
-					return;
-				}
-
-				// Preparing phase: use playerList info
-				const realOpp = opponentId
-					? playerList.find((p) => p.id === opponentId)
-					: null;
-				const potOpp = potentialOpponentId
-					? playerList.find((p) => p.id === potentialOpponentId)
-					: null;
-				if (!realOpp) {
-					setCoachMessages((prev) => [
-						...prev,
-						{ role: "ai", text: "Chưa có thông tin đối thủ." },
-					]);
-					setLoading(false);
-					return;
-				}
-				const lines = [
-					`📋 Scout đối thủ (preparing):`,
-					`👤 Đối thủ chính: ${realOpp.name} (Lv.${realOpp.level}, HP ${realOpp.health}, Streak ${realOpp.streakAmount ?? 0})`,
-				];
-				if (potOpp) {
-					lines.push(
-						`👤 Đối thủ phụ: ${potOpp.name} (Lv.${potOpp.level}, HP ${potOpp.health})`
-					);
-				}
-				setCoachMessages((prev) => [
-					...prev,
-					{ role: "ai", text: lines.join("\n") },
-				]);
-				setLoading(false);
+			if (lower.startsWith("/scout") || lower.startsWith("/đối")) {
+				runScout();
 				return;
 			}
-
-			// /help → list commands
 			if (lower === "/help" || lower === "/?") {
-				setCoachMessages((prev) => [
-					...prev,
-					{
-						role: "ai",
-						text:
-							`📌 Danh sách lệnh nhanh:\n` +
-							`/pos hoặc /xếp — Gợi ý xếp quân\n` +
-							`/build hoặc /team — Gợi ý đội hình\n` +
-							`/item hoặc /đồ — Gợi ý item cho quân đang chọn\n` +
-							`/counter hoặc /khắc — Phân tích counter đối thủ\n` +
-							`/scout hoặc /đối — Xem thông tin đối thủ\n` +
-							`/help — Hiện danh sách lệnh`,
-					},
-				]);
-				setLoading(false);
+				pushAi(
+					`📌 Bạn có thể hỏi tự nhiên, Coach sẽ tự chọn chức năng phù hợp.\n\n` +
+						`Hoặc dùng lệnh nhanh:\n` +
+						`/pos hoặc /xếp — Gợi ý xếp quân\n` +
+						`/build hoặc /team — Gợi ý đội hình\n` +
+						`/item hoặc /đồ — Gợi ý item cho quân (vd: "Tweesher lên đồ gì")\n` +
+						`/counter hoặc /khắc — Phân tích counter đối thủ\n` +
+						`/scout hoặc /đối — Xem thông tin đối thủ\n` +
+						`/help — Hiện danh sách lệnh`
+				);
 				return;
 			}
 
-			// Default: streaming coach chat
-			setCoachMessages((prev) => [...prev, { role: "ai", text: "" }]);
-			await waitForCoachThinking();
-			await requestCoachAdviceStream(
-				raw,
-				{
-					pieces: myPieces.map((p) => ({
-						name: p.definition?.name || "",
-						definitionId: p.definitionId,
-					})),
-				},
-				(chunk) => {
-					setCoachMessages((prev) => {
-						const last = prev[prev.length - 1];
-						if (!last || last.role !== "ai") return prev;
-						const updated = [...prev];
-						updated[updated.length - 1] = { ...last, text: last.text + chunk };
-						return updated;
-					});
-				}
-			);
+			// Free-form message: let the agent route it to the right tool.
+			showThinking("Coach đang suy nghĩ...");
+			let plan: AgentPlan | null = null;
+			try {
+				plan = await requestAgentPlan(raw, agentContext, sessionId);
+			} catch {
+				plan = null;
+			}
+			clearThinking();
+
+			if (plan && plan.clientAction) {
+				void recordAgentAction(sessionId, raw, plan.tool, plan.args);
+				await dispatchAgentPlan(plan, raw);
+			} else {
+				await runGeneral(raw);
+			}
 		} catch (e: any) {
-			setCoachMessages((prev) => [
-				...prev,
-				{ role: "ai", text: `Lỗi: ${e.message}` },
-			]);
+			setCoachMessages((prev) => {
+				const last = prev[prev.length - 1];
+				const errorText = `Lỗi: ${e?.message || "Không xử lý được yêu cầu."}`;
+				if (last && last.role === "ai" && !last.text.trim() && !last.kind) {
+					const updated = [...prev];
+					updated[updated.length - 1] = { ...last, text: errorText };
+					return updated.filter((m) => m.kind !== "thinking");
+				}
+				return [
+					...prev.filter((m) => m.kind !== "thinking"),
+					{ role: "ai", text: errorText },
+				];
+			});
 		} finally {
 			setLoading(false);
 		}
@@ -764,6 +870,17 @@ const TacticalAIPanel: React.FC = () => {
 			return (
 				<div key={index} className={styles.userMessage}>
 					{msg.text}
+				</div>
+			);
+		}
+
+		if (msg.kind === "thinking") {
+			return (
+				<div key={index} className={`${styles.agentCard} ${styles.thinkingCard || ""}`}>
+					<div className={styles.agentHeader}>
+						<span className={styles.spinner} />
+						<span>{msg.text || "Coach đang suy nghĩ..."}</span>
+					</div>
 				</div>
 			);
 		}

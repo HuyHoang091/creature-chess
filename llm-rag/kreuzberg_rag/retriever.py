@@ -35,17 +35,36 @@ class Retriever:
 
     def search(self, query: str, top_k: int = 5) -> List[Tuple[DocumentChunk, float]]:
         """Hybrid search: combine BM25 and semantic scores."""
+        results, _ = self.search_scored(query, top_k=top_k)
+        return results
+
+    def search_scored(
+        self, query: str, top_k: int = 5
+    ) -> Tuple[List[Tuple[DocumentChunk, float]], float]:
+        """Like search(), but also returns an ABSOLUTE relevance signal.
+
+        The combined score is normalized per-query (relative) and useless for
+        judging coverage across queries. The second value is the raw maximum
+        semantic cosine (embeddings are L2-normalized), an absolute measure of
+        how relevant the best chunk is.
+        """
         if not self.chunks:
-            return []
+            return [], 0.0
+
+        # Guard against empty/whitespace queries.
+        tokens = query.lower().split()
+        if not tokens:
+            return [], 0.0
 
         # BM25 scores
-        bm25_scores = self.bm25.get_scores(query.lower().split())
+        bm25_scores = self.bm25.get_scores(tokens)
         bm25_max = bm25_scores.max() if bm25_scores.max() > 0 else 1
         bm25_normalized = bm25_scores / bm25_max
 
         # Semantic scores
         query_embedding = self.embedder.encode_query(query)
         semantic_scores = np.dot(self.embeddings, query_embedding)
+        absolute_relevance = float(semantic_scores.max()) if len(semantic_scores) else 0.0
         semantic_max = semantic_scores.max() if semantic_scores.max() > 0 else 1
         semantic_normalized = semantic_scores / semantic_max
 
@@ -69,4 +88,4 @@ class Retriever:
         for idx in top_indices:
             results.append((self.chunks[idx], float(combined[idx])))
 
-        return results
+        return results, absolute_relevance
