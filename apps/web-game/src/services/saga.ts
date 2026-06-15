@@ -204,8 +204,9 @@ const buildHandshakeRequest = async (
 	intent: HandshakeIntent
 ): Promise<HandshakeRequest | null> => {
 	if (state.auth.mode === "account" && state.auth.accessToken) {
+		const isLocalToken = state.auth.accessToken.startsWith("local_");
 		return {
-			type: AUTH0_ENABLED ? "auth0" : "local",
+			type: isLocalToken ? "local" : (AUTH0_ENABLED ? "auth0" : "local"),
 			data: {
 				accessToken: state.auth.accessToken,
 				intent,

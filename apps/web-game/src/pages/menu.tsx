@@ -18,12 +18,13 @@ import { ProfileCommands } from "~/store/profile/state";
 
 import styles from "./MenuPage.module.css";
 
-const LandingAccountActions = () => {
+const Auth0SocialButton = () => {
 	const { loginWithRedirect } = useAuth0();
 
 	return (
-		<button className={styles.primaryBtn} onClick={() => loginWithRedirect()}>
-			Sign In
+		<button className={styles.secondaryBtn} onClick={() => loginWithRedirect()}>
+			<Users size={18} />
+			Social
 		</button>
 	);
 };
@@ -111,11 +112,7 @@ export function MenuPage() {
 						</div>
 					</div>
 
-					{AUTH0_ENABLED && authMode !== "guest" && <LandingAccountActions />}
-
-					{!AUTH0_ENABLED && (
-						<>
-							<div className={styles.modeSwitch}>
+					<div className={styles.modeSwitch}>
 								<button
 									className={formMode === "login" ? styles.modeActive : ""}
 									onClick={() => setFormMode("login")}
@@ -154,16 +151,14 @@ export function MenuPage() {
 								/>
 							</label>
 							<button className={styles.primaryBtn} onClick={onLocalAuth}>
-								{formMode === "login" ? (
-									<LogIn size={18} />
-								) : (
-									<UserPlus size={18} />
-								)}
-								{formMode === "login" ? "Sign In" : "Create Account"}
-							</button>
-							{error && <div className={styles.error}>{error}</div>}
-						</>
-					)}
+							{formMode === "login" ? (
+								<LogIn size={18} />
+							) : (
+								<UserPlus size={18} />
+							)}
+							{formMode === "login" ? "Sign In" : "Create Account"}
+						</button>
+						{error && <div className={styles.error}>{error}</div>}
 
 					<div className={styles.quickActions}>
 						<button className={styles.secondaryBtn} onClick={onPlayGuest}>
@@ -171,15 +166,19 @@ export function MenuPage() {
 							Guest
 						</button>
 
-						<button
-							className={styles.secondaryBtn}
-							onClick={() =>
-								dispatch(AppShellCommands.setModal("signin-required"))
-							}
-						>
-							<Users size={18} />
-							Social
-						</button>
+						{AUTH0_ENABLED ? (
+							<Auth0SocialButton />
+						) : (
+							<button
+								className={styles.secondaryBtn}
+								onClick={() =>
+									dispatch(AppShellCommands.setModal("signin-required"))
+								}
+							>
+								<Users size={18} />
+								Social
+							</button>
+						)}
 					</div>
 
 					{authMode === "guest" && (

@@ -1,0 +1,67 @@
+# ============================================================
+# SDO Service Configuration for Creature Chess
+# ============================================================
+
+services:
+  # --- Tier 1: Databases (Critical, no scale) ---
+  redis:
+    tier: 1
+    depends_on: []
+    min_containers: 1
+    max_containers: 1
+    scalable: false
+    cpu_high: 80
+    cpu_low: 20
+    mem_danger: 90
+    mem_warning: 80
+    cooldown_seconds: 60
+
+  postgres:
+    tier: 1
+    depends_on: []
+    min_containers: 1
+    max_containers: 1
+    scalable: false
+    cpu_high: 80
+    cpu_low: 20
+    mem_danger: 90
+    mem_warning: 80
+    cooldown_seconds: 60
+
+  # --- Tier 2: API & Game Servers (Scalable) ---
+  server-info:
+    tier: 2
+    depends_on: ["postgres"]
+    min_containers: 1
+    max_containers: 3
+    scalable: true
+    cpu_high: 80
+    cpu_low: 20
+    mem_danger: 90
+    mem_warning: 80
+    cooldown_seconds: 45
+
+  server-game:
+    tier: 2
+    depends_on: ["postgres", "redis"]
+    min_containers: 1
+    max_containers: 3
+    scalable: true
+    cpu_high: 80
+    cpu_low: 20
+    mem_danger: 90
+    mem_warning: 80
+    cooldown_seconds: 45
+
+  # --- Tier 3: Frontend (Highly Scalable) ---
+  frontend:
+    tier: 3
+    depends_on: ["server-game", "server-info"]
+    min_containers: 1
+    max_containers: 4
+    scalable: true
+    cpu_high: 80
+    cpu_low: 20
+    mem_danger: 90
+    mem_warning: 80
+    cooldown_seconds: 30

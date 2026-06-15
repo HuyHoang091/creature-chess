@@ -101,6 +101,8 @@ module.exports = {
 			APP_AUTH0_DOMAIN: JSON.stringify(process.env.AUTH0_DOMAIN),
 			APP_AUTH0_SPA_CLIENT_ID: JSON.stringify(process.env.AUTH0_SPA_CLIENT_ID),
 			APP_AUTH0_API_AUDIENCE: JSON.stringify(process.env.AUTH0_API_AUDIENCE),
+			
+			APP_RAG_URL: JSON.stringify(process.env.RAG_SERVICE_URL),
 		}),
 		new HtmlWebpackPlugin({
 			scriptLoading: "blocking",

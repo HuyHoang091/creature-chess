@@ -123,18 +123,7 @@ const Auth0Bootstrap = ({ children }: { children: React.ReactNode }) => {
 		}
 
 		if (!isAuthenticated) {
-			const storedMode = getStoredMode();
-			if (storedMode === "guest") {
-				dispatch(AuthCommands.setMode("guest"));
-				return;
-			}
-
-			dispatch(AuthCommands.setMode("anonymous"));
-			dispatch(AuthCommands.setStatus("unauthenticated"));
-			dispatch(AppShellCommands.setScreen("landing"));
-			dispatch(AppShellCommands.setBootstrapped(true));
-			setPlayer(null);
-			return;
+			return; // Handled by Auth0OrLocalBootstrap routing to LocalBootstrap
 		}
 
 		dispatch(AuthCommands.setMode("account"));
@@ -276,6 +265,29 @@ const LocalBootstrap = ({ children }: { children: React.ReactNode }) => {
 	);
 };
 
+const Auth0OrLocalBootstrap = ({ children }: { children: React.ReactNode }) => {
+	const { isLoading, isAuthenticated } = useAuth0();
+	const dispatch = useDispatch();
+
+	React.useEffect(() => {
+		if (isLoading) {
+			dispatch(AppShellCommands.setScreen("auth-loading"));
+			dispatch(AuthCommands.setStatus("loading"));
+		}
+	}, [isLoading, dispatch]);
+
+	if (isLoading) {
+		// Just render children without providing a player context yet
+		return <>{children}</>;
+	}
+
+	if (isAuthenticated) {
+		return <Auth0Bootstrap>{children}</Auth0Bootstrap>;
+	}
+
+	return <LocalBootstrap>{children}</LocalBootstrap>;
+};
+
 export const SessionBootstrapProvider = ({
 	children,
 }: {
@@ -305,7 +317,7 @@ export const SessionBootstrapProvider = ({
 	}, [dispatch, mode, requiresProfileCompletion, status, token]);
 
 	return AUTH0_ENABLED ? (
-		<Auth0Bootstrap>{children}</Auth0Bootstrap>
+		<Auth0OrLocalBootstrap>{children}</Auth0OrLocalBootstrap>
 	) : (
 		<LocalBootstrap>{children}</LocalBootstrap>
 	);

@@ -1,4 +1,5 @@
 import http from "http";
+import https from "https";
 import { Socket } from "socket.io";
 
 import { BoardState } from "@shoki/board";
@@ -22,7 +23,8 @@ const httpPost = (
 ): Promise<{ ok: boolean; status: number; json(): Promise<any> }> => {
 	return new Promise((resolve, reject) => {
 		const data = JSON.stringify(body);
-		const req = http.request(
+		const requestModule = url.startsWith("https://") ? https : http;
+		const req = requestModule.request(
 			url,
 			{
 				method: "POST",
@@ -56,7 +58,8 @@ const httpPostStreamJsonLines = (
 ): Promise<void> => {
 	return new Promise((resolve, reject) => {
 		const data = JSON.stringify(body);
-		const req = http.request(
+		const requestModule = url.startsWith("https://") ? https : http;
+		const req = requestModule.request(
 			url,
 			{
 				method: "POST",

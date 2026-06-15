@@ -13,3 +13,4 @@ npm-debug.log
 apps/**/dist/
 
 modules/**/*.js
+v3.0/

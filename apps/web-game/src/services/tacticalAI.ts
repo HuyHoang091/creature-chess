@@ -59,7 +59,7 @@ export interface BattleAnalysis {
 	stats: any;
 }
 
-const RAG_SERVICE_URL = process.env.RAG_SERVICE_URL || "http://localhost:8003";
+const RAG_SERVICE_URL = APP_RAG_URL || "http://localhost:8003";
 
 export interface AgentPlan {
 	tool: string;

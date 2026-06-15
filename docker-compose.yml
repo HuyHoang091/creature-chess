@@ -20,6 +20,15 @@ services:
     networks:
       - creature-chess
     restart: unless-stopped
+    labels:
+      - "sdo.managed=true"
+      - "sdo.service=redis"
+      - "sdo.tier=1"
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
 
   # ==========================================
   # PostgreSQL Database
@@ -43,6 +52,15 @@ services:
     networks:
       - creature-chess
     restart: unless-stopped
+    labels:
+      - "sdo.managed=true"
+      - "sdo.service=postgres"
+      - "sdo.tier=1"
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
 
   # ==========================================
   # pgAdmin (quản lý DB qua web)
@@ -66,44 +84,6 @@ services:
   # ==========================================
   # App - Creature Chess (game + info + web)
   # ==========================================
-  # app:
-  #   build:
-  #     context: .
-  #     dockerfile: Dockerfile
-  #   environment:
-  #     - NODE_ENV=${NODE_ENV}
-  #     - AUTH0_ENABLED=${AUTH0_ENABLED}
-  #     - AUTH0_DOMAIN=${AUTH0_DOMAIN}
-  #     - AUTH0_SPA_CLIENT_ID=${AUTH0_SPA_CLIENT_ID}
-  #     - AUTH0_MACHINE_TO_MACHINE_CLIENT_ID=${AUTH0_MACHINE_TO_MACHINE_CLIENT_ID}
-  #     - AUTH0_MANAGEMENT_CLIENT_SECRET=${AUTH0_MANAGEMENT_CLIENT_SECRET}
-  #     - CREATURE_CHESS_APP_URL=${CREATURE_CHESS_APP_URL}
-  #     - GAME_SERVER_URL=${GAME_SERVER_URL}
-  #     - API_INFO_URL=${API_INFO_URL}
-  #     - CREATURE_CHESS_IMAGE_URL=${CREATURE_CHESS_IMAGE_URL}
-  #     - DATABASE_URL=${DATABASE_URL}
-  #     - POSTGRES_DB=${POSTGRES_DB}
-  #     - POSTGRES_USER=${POSTGRES_USER}
-  #     - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-  #     - NODE_APP_INSTANCE=${NODE_APP_INSTANCE}
-  #     - METRICS_USERNAME=${METRICS_USERNAME}
-  #     - METRICS_PASSWORD=${METRICS_PASSWORD}
-
-  #     - REDIS_URL=${REDIS_URL}
-  #   depends_on:
-  #     postgres:
-  #       condition: service_healthy
-  #     redis:
-  #       condition: service_started
-  #   networks:
-  #     - creature-chess
-  #   restart: unless-stopped
-  #   # Debug
-  #   ulimits:
-  #     nofile:
-  #       soft: 300000
-  #       hard: 300000
-
   server-info:
     build: .
     command: yarn start-server-info
@@ -114,10 +94,62 @@ services:
     networks:
       - creature-chess
     restart: unless-stopped
+    labels:
+      - "sdo.managed=true"
+      - "sdo.service=server-info"
+      - "sdo.tier=2"
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 2048M
 
   server-game:
     build: .
     command: yarn start-server-game
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      REDIS_URL: redis://redis:6379
+      RAG_SERVICE_URL: ${RAG_SERVICE_URL}
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - creature-chess
+    restart: unless-stopped
+    labels:
+      - "sdo.managed=true"
+      - "sdo.service=server-game"
+      - "sdo.tier=2"
+    ulimits:
+      nofile:
+        soft: 300000
+        hard: 300000
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 2048M
+
+  frontend:
+    build: .
+    command: yarn dev-web-game
+    networks:
+      - creature-chess
+    restart: unless-stopped
+    labels:
+      - "sdo.managed=true"
+      - "sdo.service=frontend"
+      - "sdo.tier=3"
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 2048M
+
+  server-admin:
+    build: .
+    command: yarn start-server-admin
     environment:
       DATABASE_URL: ${DATABASE_URL}
       REDIS_URL: redis://redis:6379
@@ -127,14 +159,19 @@ services:
     networks:
       - creature-chess
     restart: unless-stopped
-    ulimits:
-      nofile:
-        soft: 300000
-        hard: 300000
 
-  frontend:
+  admin-web:
     build: .
-    command: yarn dev-web-game
+    command: yarn dev-admin-web
+    networks:
+      - creature-chess
+    restart: unless-stopped
+
+  ssh-bastion:
+    image: alpine:latest
+    command: sh -c "apk add --no-cache openssh && ssh-keygen -A && echo 'root:adminpass' | chpasswd && sed -i 's/^#PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config && sed -i 's/AllowTcpForwarding no/AllowTcpForwarding yes/g' /etc/ssh/sshd_config && /usr/sbin/sshd -D"
+    ports:
+      - "2222:22"
     networks:
       - creature-chess
     restart: unless-stopped
@@ -181,3 +218,38 @@ services:
       nofile:
         soft: 300000
         hard: 300000
+
+  # ==========================================
+  # Service Docker Orchestrator (SDO v3.0)
+  # ==========================================
+  sdo:
+    image: sdo:latest
+    privileged: true
+    restart: unless-stopped
+    volumes:
+      - ./sdo.yml:/app/sdo.yml:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /sys:/sys:ro
+      - /var/lib/docker:/var/lib/docker:ro
+      - /:/host:ro
+      - ./docker-compose.yml:/app/docker-compose.yml:ro
+    environment:
+      - SDO_PROBE_ENABLED=false # Thêm dòng này để tắt tính năng Probe sai lệch
+      - SDO_CONFIG=/app/sdo.yml
+      - SDO_AGENT_MODE=dry-run # Mặc định để dry-run, bạn có thể đổi thành live
+      - SDO_PROM_PORT=9090
+      - SDO_METRICS_PORT=9200
+      - SDO_CADVISOR_PORT=8080
+      - SDO_NODE_EXPORTER_PORT=9100
+      - SDO_DASHBOARD_PORT=9300
+      - PYTHONUNBUFFERED=1
+      - SDO_COMPOSE_FILE=/app/docker-compose.yml
+    ports:
+      - "5174:80" # SDO UI
+      - "9090:9090" # Prometheus
+      - "8080:8080" # cAdvisor
+      - "9100:9100" # Node Exporter
+      - "9200:9200" # SDO Agent
+      - "9300:9300" # SDO Dashboard
+    networks:
+      - creature-chess

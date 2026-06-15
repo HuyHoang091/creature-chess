@@ -3,6 +3,7 @@ declare const APP_URL: string;
 declare const APP_API_URL: string;
 declare const APP_ADMIN_URL: string;
 declare const APP_IMAGE_ROOT: string;
+declare const APP_RAG_URL: string;
 
 declare const APP_AUTH0_ENABLED: string;
 declare const APP_AUTH0_DOMAIN: string;
