@@ -31,7 +31,32 @@ export const NotificationPanel = ({ onClose }: { onClose: () => void }) => {
 								key={item.id}
 								className={`${styles.item} ${!item.read ? styles.unread : ""}`}
 							>
-								<div className={styles.message}>{item.message}</div>
+								<div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+									<div className={styles.message}>{item.message}</div>
+									{item.data?.type === "game_event" && item.data?.pageSlug && (
+										<a
+											href={`/events/${item.data.pageSlug}`}
+											target="_blank"
+											rel="noopener noreferrer"
+											style={{
+												fontSize: '12px',
+												color: 'var(--primary-color)',
+												textDecoration: 'none',
+												fontWeight: 'bold',
+												background: 'rgba(59, 130, 246, 0.1)',
+												padding: '4px 8px',
+												borderRadius: '4px',
+												display: 'inline-flex',
+												alignItems: 'center',
+												gap: '4px',
+												alignSelf: 'flex-start'
+											}}
+											onClick={() => dispatch(NotificationCommands.markRead(item.id))}
+										>
+											View Event
+										</a>
+									)}
+								</div>
 								<button
 									className={styles.removeBtn}
 									onClick={() =>

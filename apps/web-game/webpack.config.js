@@ -72,6 +72,7 @@ module.exports = {
 	output: {
 		filename: "bundle-[contenthash].js",
 		path: outDir,
+		publicPath: "/",
 	},
 
 	plugins: [
@@ -93,6 +94,7 @@ module.exports = {
 			),
 			APP_URL: JSON.stringify(process.env.CREATURE_CHESS_APP_URL),
 			APP_API_URL: JSON.stringify(process.env.API_INFO_URL),
+			APP_ADMIN_API_URL: JSON.stringify(process.env.ADMIN_API_URL || "http://localhost:3003"),
 			APP_ADMIN_URL: JSON.stringify(
 				process.env.ADMIN_APP_URL || "http://localhost:8091"
 			),

@@ -175,6 +175,32 @@ export type AdminBot = {
 	vision: number;
 };
 
+export type EventTask = {
+	id: string;
+	title: string;
+	description: string;
+	type: "play_games" | "win_games" | "custom";
+	target: number;
+	reward?: { gold?: number; gems?: number; tickets?: number };
+};
+
+export type EventReward = {
+	id: string;
+	title: string;
+	description: string;
+	type: "gold" | "gems" | "tickets" | "custom";
+	amount: number;
+	icon?: string;
+};
+
+export type EventPageSection = {
+	id: string;
+	type: "banner" | "countdown" | "tasks" | "rewards" | "description" | "leaderboard";
+	order: number;
+	visible: boolean;
+	config?: Record<string, unknown>;
+};
+
 export type AdminEvent = {
 	id: string;
 	name: string;
@@ -182,6 +208,19 @@ export type AdminEvent = {
 	status: "draft" | "scheduled" | "active" | "ended";
 	startsAt: string | null;
 	endsAt: string | null;
+	bannerUrl: string | null;
+	themeColor: string | null;
+	pageSlug: string | null;
+	tasks: EventTask[];
+	rewards: EventReward[];
+	pageContent: EventPageSection[];
+};
+
+export type AdminUserCurrency = {
+	userId: string;
+	gold: number;
+	gems: number;
+	tickets: number;
 };
 
 export type MonitoringResponse = {
@@ -529,6 +568,39 @@ export const adminApi = {
 				method: "PATCH",
 				body: JSON.stringify(payload),
 			},
+			token
+		),
+	deleteEvent: (token: string, eventId: string) =>
+		adminFetch<{ success: boolean }>(
+			`/events/${eventId}`,
+			{ method: "DELETE" },
+			token
+		),
+	broadcastEventNotification: (token: string, eventId: string) =>
+		adminFetch<{ success: boolean; sent: number }>(
+			`/events/${eventId}/broadcast`,
+			{ method: "POST" },
+			token
+		),
+	eventPageUrl: (pageSlug: string) =>
+		`${APP_ADMIN_API_URL.replace('/admin', '')}/events/${pageSlug}`,
+	currencies: (token: string, params?: { q?: string }) => {
+		const query = new URLSearchParams();
+		if (params?.q) query.set("q", params.q);
+		return adminFetch<{ currencies: AdminUserCurrency[] }>(
+			`/currencies?${query.toString()}`,
+			{ method: "GET" },
+			token
+		);
+	},
+	updateCurrency: (
+		token: string,
+		userId: string,
+		payload: { gold?: number; gems?: number; tickets?: number }
+	) =>
+		adminFetch<{ currency: AdminUserCurrency }>(
+			`/currencies/${userId}`,
+			{ method: "PATCH", body: JSON.stringify(payload) },
 			token
 		),
 	monitoring: (token: string, params: { range: string; logLevel?: string }) => {

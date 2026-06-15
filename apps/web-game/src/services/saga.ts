@@ -110,6 +110,16 @@ const listenForConnection = function* (socket: Socket, slices: BoardSlices) {
 			expiresAt?: string | null;
 		}) => emit({ type: "forced-logout", payload });
 
+		const onSystemNotification = (payload: any) =>
+			emit({
+				type: "action",
+				payload: NotificationCommands.pushNotification({
+					id: payload.id || `sys-${Date.now()}`,
+					message: payload.message,
+					data: payload.data,
+				}),
+			});
+
 		socket.on("connected", onLobbyConnected);
 		socket.on("gameConnected", onGameConnected);
 		socket.on("friendsSnapshot", onFriendsSnapshot);
@@ -118,6 +128,7 @@ const listenForConnection = function* (socket: Socket, slices: BoardSlices) {
 		socket.on("roomJoinRequestReceived", onJoinRequestReceived);
 		socket.on("roomInviteReceived", onRoomInviteReceived);
 		socket.on("auth:forcedLogout", onForcedLogout);
+		socket.on("system:notification", onSystemNotification);
 
 		return () => {
 			socket.off("connected", onLobbyConnected);
@@ -128,6 +139,7 @@ const listenForConnection = function* (socket: Socket, slices: BoardSlices) {
 			socket.off("roomJoinRequestReceived", onJoinRequestReceived);
 			socket.off("roomInviteReceived", onRoomInviteReceived);
 			socket.off("auth:forcedLogout", onForcedLogout);
+			socket.off("system:notification", onSystemNotification);
 		};
 	});
 

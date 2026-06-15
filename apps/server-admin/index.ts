@@ -77,6 +77,9 @@ let runtimeMetrics: MonitoringBucket = {
 const getAdminAppOrigins = () => {
 	return [
 		process.env.ADMIN_APP_URL,
+		process.env.CREATURE_CHESS_APP_URL,
+		"http://localhost:8090",
+		"http://127.0.0.1:8090",
 		"http://localhost:8091",
 		"http://127.0.0.1:8091",
 	]
@@ -1940,6 +1943,42 @@ async function startServer() {
 		}
 	);
 
+
+	function serializeEvent(item: any) {
+		let tasks: any[] = [];
+		let rewards: any[] = [];
+		let pageContent: any[] = [];
+		try { tasks = item.tasks ? JSON.parse(item.tasks) : []; } catch { tasks = []; }
+		try { rewards = item.rewards ? JSON.parse(item.rewards) : []; } catch { rewards = []; }
+		try { pageContent = item.page_content ? JSON.parse(item.page_content) : []; } catch { pageContent = []; }
+		return {
+			id: item.id,
+			name: item.name,
+			description: item.description ?? "",
+			status: item.status,
+			startsAt: item.starts_at?.toISOString() ?? null,
+			endsAt: item.ends_at?.toISOString() ?? null,
+			bannerUrl: item.banner_url ?? null,
+			themeColor: item.theme_color ?? null,
+			pageSlug: item.page_slug ?? null,
+			eventType: item.event_type ?? null,
+			config: item.config ? (() => { try { return JSON.parse(item.config); } catch { return {}; } })() : {},
+			tasks,
+			rewards,
+			pageContent,
+		};
+	}
+
+	function generateSlug(name: string) {
+		return name
+			.toLowerCase()
+			.normalize("NFD")
+			.replace(/[\u0300-\u036f]/g, "")
+			.replace(/[^a-z0-9]+/g, "-")
+			.replace(/^-+|-+$/g, "")
+			.slice(0, 80) + "-" + randomBytes(4).toString("hex");
+	}
+
 	app.get("/events", async (req, res) => {
 		const admin = await requireAdminPermission(
 			req,
@@ -1955,14 +1994,7 @@ async function startServer() {
 			take: 80,
 		});
 		return res.status(200).json({
-			events: events.map((item: any) => ({
-				id: item.id,
-				name: item.name,
-				description: item.description ?? "",
-				status: item.status,
-				startsAt: item.starts_at?.toISOString() ?? null,
-				endsAt: item.ends_at?.toISOString() ?? null,
-			})),
+			events: events.map(serializeEvent),
 		});
 	});
 
@@ -1992,20 +2024,38 @@ async function startServer() {
 		if (!EVENT_STATUSES.has(status)) {
 			return res.status(400).json({ message: "Invalid event status" });
 		}
+		const slug = generateSlug(name);
 		const event = await (database.prisma.game_events as any).create({
 			data: {
-				id: randomBytes(16).toString("hex"),
 				name: name.slice(0, 80),
-				description:
-					typeof req.body?.description === "string"
-						? req.body.description.trim().slice(0, 500)
-						: null,
+				description: typeof req.body?.description === "string"
+					? req.body.description.trim().slice(0, 2000)
+					: null,
 				status,
+				event_type: req.body?.eventType ? String(req.body.eventType).slice(0, 40) : "generic",
 				starts_at: req.body?.startsAt ? new Date(req.body.startsAt) : null,
 				ends_at: req.body?.endsAt ? new Date(req.body.endsAt) : null,
+				banner_url: req.body?.bannerUrl ? String(req.body.bannerUrl).slice(0, 500) : null,
+				theme_color: req.body?.themeColor ? String(req.body.themeColor).slice(0, 20) : null,
+				page_slug: slug,
+				tasks: req.body?.tasks ? JSON.stringify(req.body.tasks) : null,
+				rewards: req.body?.rewards ? JSON.stringify(req.body.rewards) : null,
+				config: req.body?.config ? JSON.stringify(req.body.config) : null,
+				page_content: req.body?.pageContent ? JSON.stringify(req.body.pageContent) : JSON.stringify([
+					{ id: "banner", type: "banner", order: 0, visible: true },
+					{ id: "countdown", type: "countdown", order: 1, visible: true },
+					{ id: "description", type: "description", order: 2, visible: true },
+					{ id: "tasks", type: "tasks", order: 3, visible: true },
+					{ id: "rewards", type: "rewards", order: 4, visible: true },
+				]),
 			},
 		});
-		return res.status(201).json({ event });
+		await createAuditLog(database, {
+			actorUserId: admin.id,
+			action: "admin.event.created",
+			metadata: { eventId: event.id, name: event.name, status: event.status },
+		});
+		return res.status(201).json({ event: serializeEvent(event) });
 		}
 	);
 
@@ -2036,7 +2086,7 @@ async function startServer() {
 			data.name = name.slice(0, 80);
 		}
 		if (req.body?.description !== undefined) {
-			data.description = String(req.body.description).trim().slice(0, 500);
+			data.description = String(req.body.description).trim().slice(0, 2000);
 		}
 		if (req.body?.status !== undefined) {
 			if (!EVENT_STATUSES.has(req.body.status)) {
@@ -2050,13 +2100,156 @@ async function startServer() {
 		if (req.body?.endsAt !== undefined) {
 			data.ends_at = req.body.endsAt ? new Date(req.body.endsAt) : null;
 		}
+		if (req.body?.bannerUrl !== undefined) {
+			data.banner_url = req.body.bannerUrl ? String(req.body.bannerUrl).slice(0, 500) : null;
+		}
+		if (req.body?.themeColor !== undefined) {
+			data.theme_color = req.body.themeColor ? String(req.body.themeColor).slice(0, 20) : null;
+		}
+		if (req.body?.eventType !== undefined) {
+			data.event_type = req.body.eventType ? String(req.body.eventType).slice(0, 40) : "generic";
+		}
+		if (req.body?.config !== undefined) {
+			data.config = req.body.config ? JSON.stringify(req.body.config) : null;
+		}
+		if (req.body?.tasks !== undefined) {
+			data.tasks = JSON.stringify(req.body.tasks);
+		}
+		if (req.body?.rewards !== undefined) {
+			data.rewards = JSON.stringify(req.body.rewards);
+		}
+		if (req.body?.pageContent !== undefined) {
+			data.page_content = JSON.stringify(req.body.pageContent);
+		}
 		const event = await (database.prisma.game_events as any).update({
 			where: { id: req.params.id },
 			data,
 		});
-		return res.status(200).json({ event });
+		await createAuditLog(database, {
+			actorUserId: admin.id,
+			action: "admin.event.updated",
+			metadata: { eventId: event.id, fields: Object.keys(data) },
+		});
+		return res.status(200).json({ event: serializeEvent(event) });
 		}
 	);
+
+	// DELETE /events/:id — remove event
+	app.delete(
+		"/events/:id",
+		rateLimit({ windowMs: RATE_LIMIT_WINDOW_MS, max: 30, prefix: "admin-event-delete", keyBuilder: getAdminRateLimitActorKey }),
+		async (req, res) => {
+			const admin = await requireAdminPermission(req, res, database, ADMIN_PERMISSIONS.event_management);
+			if (!admin) return;
+			await (database.prisma.game_events as any).delete({ where: { id: req.params.id } });
+			await createAuditLog(database, { actorUserId: admin.id, action: "admin.event.deleted", metadata: { eventId: req.params.id } });
+			return res.status(200).json({ success: true });
+		}
+	);
+
+	// POST /events/:id/broadcast — send notification to all users about this event
+	app.post(
+		"/events/:id/broadcast",
+		rateLimit({ windowMs: RATE_LIMIT_WINDOW_MS, max: 10, prefix: "admin-event-broadcast", keyBuilder: getAdminRateLimitActorKey }),
+		async (req, res) => {
+			const admin = await requireAdminPermission(req, res, database, ADMIN_PERMISSIONS.event_management);
+			if (!admin) return;
+			const event = await (database.prisma.game_events as any).findFirst({ where: { id: req.params.id } });
+			if (!event) return res.status(404).json({ message: "Event not found" });
+
+			// get all users
+			const users = await (database.prisma.users as any).findMany({
+				where: { locked_at: null },
+				select: { id: true },
+				take: 5000,
+			});
+
+			let sent = 0;
+			const batchSize = 100;
+			for (let i = 0; i < users.length; i += batchSize) {
+				const batch = users.slice(i, i + batchSize);
+				await Promise.all(batch.map((u: any) =>
+					createUserNotification(database, {
+						userId: u.id,
+						type: "game_event",
+						title: `🎉 Sự kiện mới: ${event.name}`,
+						message: event.description ? event.description.slice(0, 200) : "Một sự kiện mới đã bắt đầu! Tham gia ngay.",
+						data: { eventId: event.id, pageSlug: event.page_slug, type: "game_event" },
+					}).catch(() => undefined)
+				));
+				sent += batch.length;
+			}
+
+			await forceLogoutPublisher.publish("admin:moderation", {
+				type: "system_notification",
+				payload: {
+					id: `event-${event.id}`,
+					message: event.description ? event.description.slice(0, 200) : "Một sự kiện mới đã bắt đầu! Tham gia ngay.",
+					data: { eventId: event.id, pageSlug: event.page_slug, type: "game_event" }
+				}
+			});
+
+			await createAuditLog(database, {
+				actorUserId: admin.id,
+				action: "admin.event.broadcast",
+				metadata: { eventId: event.id, sent },
+			});
+			return res.status(200).json({ success: true, sent });
+		}
+	);
+
+
+	// GET /currencies — admin list user currencies
+	app.get(
+		"/currencies",
+		rateLimit({ windowMs: RATE_LIMIT_WINDOW_MS, max: 60, prefix: "admin-currencies", keyBuilder: getAdminRateLimitActorKey }),
+		async (req, res) => {
+			const admin = await requireAdminPermission(req, res, database, ADMIN_PERMISSIONS.user_management);
+			if (!admin) return;
+			const currencies = await (database.prisma as any).user_currencies?.findMany?.({
+				take: 200,
+				orderBy: { updated_at: "desc" },
+			}) ?? [];
+			return res.status(200).json({
+				currencies: currencies.map((c: any) => ({
+					userId: c.user_id,
+					gold: c.gold,
+					gems: c.gems,
+					tickets: c.tickets,
+				})),
+			});
+		}
+	);
+
+	// PATCH /currencies/:userId — admin adjust user currency
+	app.patch(
+		"/currencies/:userId",
+		rateLimit({ windowMs: RATE_LIMIT_WINDOW_MS, max: 120, prefix: "admin-currency-update", keyBuilder: getAdminRateLimitActorKey }),
+		async (req, res) => {
+			const admin = await requireAdminPermission(req, res, database, ADMIN_PERMISSIONS.user_management);
+			if (!admin) return;
+			const { userId } = req.params;
+			const { gold, gems, tickets } = req.body || {};
+			const data: Record<string, number> = {};
+			if (typeof gold === "number") data.gold = Math.max(0, gold);
+			if (typeof gems === "number") data.gems = Math.max(0, gems);
+			if (typeof tickets === "number") data.tickets = Math.max(0, tickets);
+			const currency = await (database.prisma as any).user_currencies?.upsert?.({
+				where: { user_id: userId },
+				create: { user_id: userId, ...data },
+				update: data,
+			}) ?? { user_id: userId, gold: data.gold ?? 0, gems: data.gems ?? 0, tickets: data.tickets ?? 0 };
+			await createAuditLog(database, {
+				actorUserId: admin.id,
+				targetUserId: userId,
+				action: "admin.currency.updated",
+				metadata: data,
+			});
+			return res.status(200).json({ currency: { userId: currency.user_id, gold: currency.gold, gems: currency.gems, tickets: currency.tickets } });
+		}
+	);
+
+
 
 	app.get("/monitoring", async (req, res) => {
 		const admin = await requireAdminPermission(

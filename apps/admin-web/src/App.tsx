@@ -1,5 +1,5 @@
 import React from "react";
-
+import { EventCMSEditor } from "./EventCMSEditor";
 import {
 	Activity,
 	AlertTriangle,
@@ -173,9 +173,6 @@ export const App = () => {
 		}
 	});
 
-	// Event Modal state
-	const [isCreateEventOpen, setIsCreateEventOpen] = React.useState(false);
-
 	// User detail Modal tab state
 	const [activeUserTab, setActiveUserTab] = React.useState<"basic" | "activity" | "permissions">("basic");
 
@@ -244,17 +241,6 @@ export const App = () => {
 	const [selectedBotId, setSelectedBotId] = React.useState<string | null>(null);
 	const [selectedBotDraft, setSelectedBotDraft] = React.useState<AdminBot | null>(null);
 	const [botCheckpoints, setBotCheckpoints] = React.useState<Record<string, Pick<AdminBot, "ambition" | "composure" | "vision">>>({});
-
-	const [events, setEvents] = React.useState<AdminEvent[]>([]);
-	const [eventsBusy, setEventsBusy] = React.useState(false);
-	const [editingEvent, setEditingEvent] = React.useState<AdminEvent | null>(null);
-	const [eventDraft, setEventDraft] = React.useState({
-		name: "",
-		description: "",
-		status: "draft" as AdminEvent["status"],
-		startsAt: "",
-		endsAt: "",
-	});
 
 	const [monitoring, setMonitoring] = React.useState<MonitoringResponse | null>(null);
 	const [monitoringBusy, setMonitoringBusy] = React.useState(false);
@@ -398,21 +384,6 @@ export const App = () => {
 		}
 	}, [currentUser, token]);
 
-	const loadEvents = React.useCallback(async () => {
-		if (!token || !hasPermission(currentUser, "event_management")) {
-			return;
-		}
-		setEventsBusy(true);
-		try {
-			const payload = await adminApi.events(token);
-			setEvents(payload.events);
-		} catch (error) {
-			setPageError((error as Error).message);
-		} finally {
-			setEventsBusy(false);
-		}
-	}, [currentUser, token]);
-
 	const loadMonitoring = React.useCallback(async () => {
 		if (!token || !hasPermission(currentUser, "server_monitoring")) {
 			return;
@@ -500,8 +471,6 @@ export const App = () => {
 			loadReports().catch(() => undefined);
 		} else if (tab === "bots") {
 			loadBots().catch(() => undefined);
-		} else if (tab === "events") {
-			loadEvents().catch(() => undefined);
 		} else if (tab === "monitoring") {
 			loadMonitoring().catch(() => undefined);
 		} else if (tab === "subscriptions") {
@@ -696,55 +665,6 @@ export const App = () => {
 			});
 			showToast(t("toastBotSaved"), "success");
 			await loadBots();
-		} catch (error) {
-			showToast((error as Error).message || t("toastError"), "error");
-		}
-	};
-
-	const onSubmitEvent = async (event: React.FormEvent) => {
-		event.preventDefault();
-		if (!token) {
-			return;
-		}
-		try {
-			await adminApi.createEvent(token, {
-				name: eventDraft.name,
-				description: eventDraft.description,
-				status: eventDraft.status,
-				startsAt: eventDraft.startsAt || null,
-				endsAt: eventDraft.endsAt || null,
-			});
-			showToast(t("toastEventCreated"), "success");
-			setEventDraft({
-				name: "",
-				description: "",
-				status: "draft",
-				startsAt: "",
-				endsAt: "",
-			});
-			await loadEvents();
-		} catch (error) {
-			showToast((error as Error).message || t("toastError"), "error");
-		}
-	};
-
-	const onUpdateEvent = async (event: React.FormEvent<HTMLFormElement>) => {
-		event.preventDefault();
-		if (!token || !editingEvent) {
-			return;
-		}
-		const formData = new FormData(event.currentTarget);
-		try {
-			await adminApi.updateEvent(token, editingEvent.id, {
-				name: String(formData.get("name") || "").trim(),
-				description: String(formData.get("description") || "").trim(),
-				status: formData.get("status") as AdminEvent["status"],
-				startsAt: String(formData.get("startsAt") || "").trim() || null,
-				endsAt: String(formData.get("endsAt") || "").trim() || null,
-			});
-			showToast(t("toastEventUpdated"), "success");
-			setEditingEvent(null);
-			await loadEvents();
 		} catch (error) {
 			showToast((error as Error).message || t("toastError"), "error");
 		}
@@ -1397,52 +1317,7 @@ export const App = () => {
 				)}
 
 				{tab === "events" && (
-					<section className={styles.sectionStack}>
-						<div className={styles.toolbar}>
-							<div />
-							<button
-								className={styles.primaryButton}
-								onClick={() => setIsCreateEventOpen(true)}
-							>
-								<Plus size={16} />
-								<span>{t("openCreateEventModal")}</span>
-							</button>
-						</div>
-
-						<div className={styles.panel}>
-							<div className={styles.panelHeader}>
-								<h2>{t("createdEvents")}</h2>
-								<span className={styles.muted}>{eventsBusy ? t("loading") : `${events.length} ${lang === "vi" ? "sự kiện" : "events"}`}</span>
-							</div>
-							<div className={styles.cardGrid}>
-								{events.map((item) => (
-									<div key={item.id} className={styles.configCard}>
-										<div className={styles.rowTitle}>{item.name}</div>
-										<div className={styles.rowMeta}>{getStatusLabel(item.status, lang)}</div>
-										<div className={styles.helpText}>{item.description || t("noDescription")}</div>
-										<div className={styles.keyValueGrid}>
-											<div>
-												<span>{t("startsAt")}</span>
-												<strong>{formatDateTime(item.startsAt, lang)}</strong>
-											</div>
-											<div>
-												<span>{t("endsAt")}</span>
-												<strong>{formatDateTime(item.endsAt, lang)}</strong>
-											</div>
-										</div>
-										<div className={styles.formActions}>
-											<button
-												className={styles.ghostButton}
-												onClick={() => setEditingEvent(item)}
-											>
-												{t("edit")}
-											</button>
-										</div>
-									</div>
-								))}
-							</div>
-						</div>
-					</section>
+					<EventCMSEditor token={token} lang={lang} t={t} showToast={showToast} />
 				)}
 
 				{tab === "subscriptions" && (
@@ -2243,147 +2118,6 @@ export const App = () => {
 							</div>
 						</div>
 					) : null}
-				</Modal>
-			) : null}
-
-			{editingEvent ? (
-				<Modal
-					title={t("editEventTitle")}
-					onClose={() => setEditingEvent(null)}
-					footer={
-						<div className={styles.modalActions} style={{ marginTop: 0 }}>
-							<button type="button" className={styles.ghostButton} onClick={() => setEditingEvent(null)}>
-								{t("cancel")}
-							</button>
-							<button className={styles.primaryButton} type="submit" form="editEventForm">
-								{t("saveChanges")}
-							</button>
-						</div>
-					}
-				>
-					<form id="editEventForm" className={styles.sectionStack} onSubmit={onUpdateEvent}>
-						<label className={styles.field}>
-							<span>{t("eventName")}</span>
-							<input name="name" defaultValue={editingEvent.name} required />
-						</label>
-						<label className={styles.field}>
-							<span>{t("status")}</span>
-							<select name="status" defaultValue={editingEvent.status}>
-								<option value="draft">draft</option>
-								<option value="scheduled">scheduled</option>
-								<option value="active">active</option>
-								<option value="ended">ended</option>
-							</select>
-						</label>
-						<label className={styles.field}>
-							<span>{t("startsAt")}</span>
-							<input
-								type="datetime-local"
-								name="startsAt"
-								defaultValue={editingEvent.startsAt?.slice(0, 16) || ""}
-							/>
-						</label>
-						<label className={styles.field}>
-							<span>{t("endsAt")}</span>
-							<input
-								type="datetime-local"
-								name="endsAt"
-								defaultValue={editingEvent.endsAt?.slice(0, 16) || ""}
-							/>
-						</label>
-						<label className={styles.field}>
-							<span>{t("description")}</span>
-							<textarea
-								name="description"
-								rows={4}
-								defaultValue={editingEvent.description}
-							/>
-						</label>
-					</form>
-				</Modal>
-			) : null}
-
-			{isCreateEventOpen ? (
-				<Modal
-					title={t("createEventTitle")}
-					onClose={() => setIsCreateEventOpen(false)}
-					footer={
-						<div className={styles.modalActions} style={{ marginTop: 0 }}>
-							<button type="button" className={styles.ghostButton} onClick={() => setIsCreateEventOpen(false)}>
-								{t("cancel")}
-							</button>
-							<button className={styles.primaryButton} type="submit" form="createEventForm">
-								{t("createEvent")}
-							</button>
-						</div>
-					}
-				>
-					<form id="createEventForm" className={styles.sectionStack} onSubmit={(event) => {
-						onSubmitEvent(event).then(() => {
-							setIsCreateEventOpen(false);
-						}).catch(() => undefined);
-					}}>
-						<label className={styles.field}>
-							<span>{t("eventName")}</span>
-							<input
-								value={eventDraft.name}
-								onChange={(event) =>
-									setEventDraft((state) => ({ ...state, name: event.target.value }))
-								}
-								required
-							/>
-						</label>
-						<label className={styles.field}>
-							<span>{t("status")}</span>
-							<select
-								value={eventDraft.status}
-								onChange={(event) =>
-									setEventDraft((state) => ({
-										...state,
-										status: event.target.value as AdminEvent["status"],
-									}))
-								}
-							>
-								<option value="draft">draft</option>
-								<option value="scheduled">scheduled</option>
-								<option value="active">active</option>
-								<option value="ended">ended</option>
-							</select>
-						</label>
-						<label className={styles.field}>
-							<span>{t("startsAt")}</span>
-							<input
-								type="datetime-local"
-								value={eventDraft.startsAt}
-								onChange={(event) =>
-									setEventDraft((state) => ({ ...state, startsAt: event.target.value }))
-								}
-							/>
-						</label>
-						<label className={styles.field}>
-							<span>{t("endsAt")}</span>
-							<input
-								type="datetime-local"
-								value={eventDraft.endsAt}
-								onChange={(event) =>
-									setEventDraft((state) => ({ ...state, endsAt: event.target.value }))
-								}
-							/>
-						</label>
-						<label className={styles.field}>
-							<span>{t("description")}</span>
-							<textarea
-								value={eventDraft.description}
-								onChange={(event) =>
-									setEventDraft((state) => ({
-										...state,
-										description: event.target.value,
-									}))
-								}
-								rows={4}
-							/>
-						</label>
-					</form>
 				</Modal>
 			) : null}
 

@@ -1,0 +1,518 @@
+/* =====================================================
+   Shared layout utilities
+   ===================================================== */
+.root {
+  display: flex;
+  flex-direction: column;
+  background: radial-gradient(circle at 50% 0%, #1a2235 0%, #080a0f 100%);
+  min-height: 100vh;
+  height: 100vh;
+  color: #f0e6d2;
+  font-family: 'Inter', 'Segoe UI', sans-serif;
+  overflow-y: auto;
+}
+
+/* Sticky header */
+.header {
+  padding: 16px 28px;
+  background: rgba(10, 13, 20, 0.85);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  box-shadow: 0 4px 32px rgba(0,0,0,0.5);
+}
+
+.eventName {
+  font-weight: 800;
+  font-size: 20px;
+  letter-spacing: 0.4px;
+  flex: 1;
+}
+
+.closeBtn {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 8px;
+  padding: 8px 18px;
+  color: #e2e8f0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 14px;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+.closeBtn:hover {
+  background: rgba(255,255,255,0.14);
+  color: #fff;
+  transform: translateX(-2px);
+}
+
+/* Countdown badge */
+.countdownBadge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #94a3b8;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 8px;
+  padding: 6px 14px;
+  background: rgba(255,255,255,0.03);
+}
+
+/* Content wrapper */
+.content {
+  max-width: 960px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 40px 24px 80px;
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+}
+
+/* Banner */
+.banner {
+  width: 100%;
+  height: 320px;
+  border-radius: 20px;
+  overflow: hidden;
+  border: 2px solid rgba(255,255,255,0.08);
+  box-shadow: 0 16px 64px rgba(0,0,0,0.7);
+  position: relative;
+}
+.banner::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0,0,0,0.75) 0%, transparent 55%);
+}
+.banner img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+}
+
+/* Description box */
+.descriptionBox {
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 16px;
+  padding: 28px 32px;
+  font-size: 16px;
+  line-height: 1.8;
+  color: #cbd5e1;
+  white-space: pre-wrap;
+}
+
+/* Section header */
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 24px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 24px;
+}
+
+/* =====================================================
+   Shared card
+   ===================================================== */
+.card {
+  background: linear-gradient(145deg, rgba(28,38,54,0.85), rgba(12,17,28,0.95));
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 16px;
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
+}
+.card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 3px;
+  background: var(--tc, #3b82f6);
+}
+.card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(255,255,255,0.15);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+}
+
+.cardTitle {
+  font-weight: 800;
+  font-size: 17px;
+  color: #fff;
+}
+.cardDesc {
+  font-size: 14px;
+  color: #94a3b8;
+  line-height: 1.5;
+}
+
+/* Progress bar */
+.progressWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.progressTrack {
+  height: 10px;
+  background: rgba(0,0,0,0.5);
+  border-radius: 5px;
+  overflow: hidden;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.4);
+}
+.progressFill {
+  height: 100%;
+  border-radius: 5px;
+  background: linear-gradient(90deg, var(--tc, #3b82f6), #60a5fa);
+  transition: width 0.6s ease-out;
+}
+.progressLabel {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: #64748b;
+  font-weight: 600;
+}
+
+/* Claim button */
+.claimBtn {
+  width: 100%;
+  padding: 11px 0;
+  border-radius: 10px;
+  border: none;
+  background: linear-gradient(135deg, var(--tc, #3b82f6), #1d4ed8);
+  color: #fff;
+  font-weight: 800;
+  font-size: 14px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-top: auto;
+}
+.claimBtn:hover:not(:disabled) {
+  filter: brightness(1.2);
+  transform: scale(1.02);
+}
+.claimBtn:disabled {
+  background: #1e293b;
+  color: #475569;
+  cursor: not-allowed;
+}
+.claimBtn.claimed {
+  background: #064e3b;
+  color: #34d399;
+  cursor: not-allowed;
+}
+
+/* Grids */
+.grid2 { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px,1fr)); gap: 18px; }
+.grid3 { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px,1fr)); gap: 16px; }
+
+/* Loading / error */
+.center {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 60px 24px;
+}
+
+/* =====================================================
+   DAILY LOGIN calendar
+   ===================================================== */
+.calendarGrid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 10px;
+}
+.calendarDay {
+  aspect-ratio: 1;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.07);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  font-size: 13px;
+  font-weight: 700;
+  position: relative;
+  transition: all 0.2s;
+  cursor: default;
+  background: rgba(255,255,255,0.02);
+  color: #475569;
+}
+.calendarDay.past {
+  background: rgba(255,255,255,0.04);
+  color: #334155;
+  border-color: transparent;
+}
+.calendarDay.claimed {
+  background: rgba(16, 185, 129, 0.12);
+  border-color: rgba(16, 185, 129, 0.4);
+  color: #34d399;
+}
+.calendarDay.today {
+  background: rgba(59,130,246,0.15);
+  border-color: var(--tc, #3b82f6);
+  color: #fff;
+  cursor: pointer;
+  animation: pulse 2s infinite;
+}
+.calendarDay.today:hover {
+  background: rgba(59,130,246,0.3);
+  transform: scale(1.05);
+}
+.calendarDay.future {
+  background: transparent;
+  color: #1e293b;
+  border-color: rgba(255,255,255,0.04);
+}
+.calendarDay .dayLabel { font-size: 11px; font-weight: 600; opacity: 0.6; }
+.calendarDay .dayReward { font-size: 10px; color: #f59e0b; font-weight: 700; }
+.calendarDay .checkMark { font-size: 18px; }
+@keyframes pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(59,130,246,0.5); }
+  50% { box-shadow: 0 0 0 8px rgba(59,130,246,0); }
+}
+
+/* =====================================================
+   COMPETITION leaderboard
+   ===================================================== */
+.leaderboard {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.leaderboardRow {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 20px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.06);
+  background: rgba(255,255,255,0.02);
+  transition: background 0.2s;
+}
+.leaderboardRow:hover { background: rgba(255,255,255,0.05); }
+.leaderboardRow.gold { border-color: rgba(234,179,8,0.5); background: rgba(234,179,8,0.07); }
+.leaderboardRow.silver { border-color: rgba(148,163,184,0.4); background: rgba(148,163,184,0.05); }
+.leaderboardRow.bronze { border-color: rgba(180,83,9,0.4); background: rgba(180,83,9,0.07); }
+.rank { font-size: 18px; font-weight: 900; width: 32px; text-align: center; flex-shrink: 0; }
+.playerName { flex: 1; font-weight: 700; font-size: 15px; }
+.playerScore { font-weight: 800; font-size: 15px; color: var(--tc, #3b82f6); }
+.prizeTag {
+  font-size: 12px; font-weight: 700;
+  padding: 3px 10px; border-radius: 20px;
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.1);
+  color: #f59e0b;
+  flex-shrink: 0;
+}
+
+/* =====================================================
+   CO-OP code entry
+   ===================================================== */
+.coopBox {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 18px;
+  padding: 36px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  text-align: center;
+}
+.myCodeDisplay {
+  font-size: 32px;
+  font-weight: 900;
+  letter-spacing: 6px;
+  color: var(--tc, #3b82f6);
+  background: rgba(59,130,246,0.08);
+  border: 2px solid rgba(59,130,246,0.25);
+  border-radius: 12px;
+  padding: 16px 32px;
+  font-family: 'Courier New', monospace;
+}
+.coopInput {
+  width: 100%;
+  max-width: 320px;
+  padding: 12px 18px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 10px;
+  color: #fff;
+  font-size: 18px;
+  letter-spacing: 4px;
+  text-align: center;
+  font-weight: 700;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.coopInput:focus { border-color: var(--tc, #3b82f6); }
+.coopSubmitBtn {
+  padding: 12px 36px;
+  border-radius: 10px;
+  border: none;
+  background: linear-gradient(135deg, var(--tc, #3b82f6), #1d4ed8);
+  color: #fff;
+  font-weight: 800;
+  font-size: 15px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.coopSubmitBtn:hover { filter: brightness(1.2); transform: scale(1.03); }
+.progressMilestones {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 8px;
+}
+.milestoneRow {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 18px;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.07);
+  background: rgba(255,255,255,0.02);
+}
+.milestoneIcon { font-size: 20px; }
+.milestoneInfo { flex: 1; }
+.milestoneName { font-weight: 700; font-size: 14px; }
+.milestonePoints { font-size: 12px; color: #64748b; }
+.milestoneReward { font-size: 13px; color: #f59e0b; font-weight: 700; }
+.milestoneLock { font-size: 18px; opacity: 0.3; }
+
+/* =====================================================
+   LUCKY SPIN wheel
+   ===================================================== */
+.spinContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 32px;
+}
+.wheelWrapper {
+  position: relative;
+  width: 280px;
+  height: 280px;
+}
+.wheel {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  position: relative;
+  border: 6px solid rgba(255,255,255,0.1);
+  box-shadow: 0 0 40px rgba(0,0,0,0.6), 0 0 80px rgba(59,130,246,0.15);
+  transition: transform 4s cubic-bezier(0.17, 0.67, 0.12, 0.99);
+  overflow: hidden;
+}
+.wheelPointer {
+  position: absolute;
+  top: -20px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 36px;
+  z-index: 5;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+}
+.spinBtn {
+  padding: 14px 48px;
+  border-radius: 12px;
+  border: none;
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: #000;
+  font-weight: 900;
+  font-size: 17px;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-transform: uppercase;
+  box-shadow: 0 4px 20px rgba(245,158,11,0.4);
+}
+.spinBtn:hover:not(:disabled) { filter: brightness(1.1); transform: scale(1.04); }
+.spinBtn:disabled { background: #1e293b; color: #475569; cursor: not-allowed; box-shadow: none; }
+.spinPrizesGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px,1fr));
+  gap: 10px;
+  width: 100%;
+}
+.spinPrizeItem {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 10px;
+  padding: 14px 10px;
+  text-align: center;
+  font-size: 13px;
+  transition: all 0.2s;
+}
+.spinPrizeItem.highlight {
+  border-color: #f59e0b;
+  background: rgba(245,158,11,0.1);
+  box-shadow: 0 0 16px rgba(245,158,11,0.2);
+  animation: wonPulse 0.5s ease;
+}
+@keyframes wonPulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.08); }
+  100% { transform: scale(1); }
+}
+.spinPrizeEmoji { font-size: 24px; margin-bottom: 6px; }
+.spinPrizeName { font-weight: 700; color: #e2e8f0; }
+
+/* =====================================================
+   TOP-UP bonus tiers
+   ===================================================== */
+.topupTiers {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.topupTier {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 20px 24px;
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,0.07);
+  background: rgba(255,255,255,0.02);
+  transition: all 0.25s;
+}
+.topupTier.active {
+  border-color: rgba(16,185,129,0.5);
+  background: rgba(16,185,129,0.06);
+}
+.topupAmount { font-size: 22px; font-weight: 900; min-width: 90px; }
+.topupReward { flex: 1; }
+.topupRewardLabel { font-weight: 800; font-size: 16px; }
+.topupRewardSub { font-size: 13px; color: #64748b; margin-top: 3px; }
+.topupStatus {
+  font-size: 13px; font-weight: 700;
+  padding: 5px 14px; border-radius: 20px;
+}
+.topupStatus.done { background: rgba(16,185,129,0.15); color: #34d399; border: 1px solid rgba(16,185,129,0.3); }
+.topupStatus.pending { background: rgba(255,255,255,0.05); color: #64748b; border: 1px solid rgba(255,255,255,0.08); }

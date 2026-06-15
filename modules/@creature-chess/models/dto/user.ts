@@ -16,4 +16,9 @@ export interface UserDTO {
 		personalInfo?: string | null;
 	} | null;
 	socialEligible?: boolean;
+	currencies?: {
+		gold: number;
+		gems: number;
+		tickets: number;
+	};
 }

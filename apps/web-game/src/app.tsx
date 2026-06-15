@@ -8,6 +8,7 @@ import { VoiceChatProvider } from "~/services/voiceChat";
 import { AppRouter } from "./router/AppRouter";
 import { AppShellCommands } from "./store/appShell/state";
 import { AppState } from "./store/state";
+import { NotificationCommands } from "~/store/notifications/state";
 
 export const App = withErrorBoundary(() => {
 	const [error, resetError] = useErrorBoundary();
@@ -15,10 +16,29 @@ export const App = withErrorBoundary(() => {
 	const modal = useSelector((state: AppState) => state.appShell.modal);
 
 	useEffect(() => {
-		// document.cookie.split(";").forEach((c) => {
-		// 	document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
-		// });
-	}, []);
+		const loadActiveEvents = async () => {
+			try {
+				const response = await fetch(`${APP_API_URL}/events/public`);
+				if (response.ok) {
+					const data = await response.json();
+					if (data.events && Array.isArray(data.events)) {
+						data.events.forEach((event: any) => {
+							dispatch(
+								NotificationCommands.pushNotification({
+									id: `event-${event.id}`,
+									message: event.description ? event.description.slice(0, 200) : "Một sự kiện mới đã bắt đầu! Tham gia ngay.",
+									data: { eventId: event.id, pageSlug: event.pageSlug, type: "game_event" },
+								})
+							);
+						});
+					}
+				}
+			} catch (err) {
+				console.error("Failed to load active events:", err);
+			}
+		};
+		loadActiveEvents();
+	}, [dispatch]);
 
 	if (error) {
 		return (

@@ -141,16 +141,55 @@ model reports {
 }
 
 model game_events {
-  id          String   @id @default(uuid())
-  name        String   @db.VarChar(80)
-  description String?  @db.VarChar(500)
-  status      String   @default("draft") @db.VarChar(20)
-  starts_at   DateTime?
-  ends_at     DateTime?
-  created_at  DateTime @default(now())
-  updated_at  DateTime @default(now()) @updatedAt
+  id            String   @id @default(uuid())
+  name          String   @db.VarChar(80)
+  description   String?  @db.VarChar(2000)
+  status        String   @default("draft") @db.VarChar(20)
+  event_type    String?  @default("generic") @db.VarChar(40) // daily_login | competition | coop | lucky_spin | topup_bonus | play_games | win_games | generic
+  starts_at     DateTime?
+  ends_at       DateTime?
+  banner_url    String?  @db.VarChar(500)
+  theme_color   String?  @db.VarChar(20)
+  page_slug     String?  @unique @db.VarChar(100)
+  tasks         String?  // JSON array of task objects
+  rewards       String?  // JSON array of reward objects
+  page_content  String?  // Full JSON layout of the event page sections
+  config        String?  // JSON: flexible per-type config data
+  created_at    DateTime @default(now())
+  updated_at    DateTime @default(now()) @updatedAt
 
   @@index([status, starts_at])
+  @@index([page_slug])
+}
+
+model user_currencies {
+  id         String   @id @default(uuid())
+  user_id    String   @unique
+  gold       Int      @default(0)
+  gems       Int      @default(0)
+  tickets    Int      @default(0)
+  updated_at DateTime @default(now()) @updatedAt
+  created_at DateTime @default(now())
+
+  @@index([user_id])
+}
+
+model event_player_progress {
+  id           String   @id @default(uuid())
+  event_id     String
+  user_id      String
+  task_id      String   @db.VarChar(80)
+  progress     Int      @default(0)
+  completed    Boolean  @default(false)
+  claimed      Boolean  @default(false)
+  completed_at DateTime?
+  claimed_at   DateTime?
+  created_at   DateTime @default(now())
+  updated_at   DateTime @default(now()) @updatedAt
+
+  @@unique([event_id, user_id, task_id])
+  @@index([event_id, user_id])
+  @@index([user_id, event_id])
 }
 
 model admin_sessions {

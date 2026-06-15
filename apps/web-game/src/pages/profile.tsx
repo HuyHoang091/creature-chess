@@ -87,16 +87,13 @@ export const ProfilePage = () => {
 					<h2>{currentUser.nickname || "New Player"}</h2>
 					<div className={styles.stats}>
 						<span>
-							<Trophy size={14} />
-							{currentUser.stats.wins} wins
+							🪙 {currentUser.currencies?.gold?.toLocaleString() || 0} Gold
 						</span>
 						<span>
-							<Swords size={14} />
-							{currentUser.stats.gamesPlayed} games
+							💎 {currentUser.currencies?.gems?.toLocaleString() || 0} Gems
 						</span>
 						<span>
-							<ShieldCheck size={14} />
-							{currentUser.role === "admin" ? "Admin" : "Player"}
+							🎫 {currentUser.currencies?.tickets?.toLocaleString() || 0} Tickets
 						</span>
 					</div>
 				</div>

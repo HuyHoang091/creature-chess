@@ -292,7 +292,12 @@ export const startServer = async ({ io }: { io: Server }) => {
 							userId?: string;
 							reason?: string;
 							expiresAt?: string | null;
+							payload?: any;
 						};
+						if (payload.type === "system_notification" && payload.payload) {
+							io.emit("system:notification", payload.payload);
+							return;
+						}
 						if (payload.type !== "force_logout" || !payload.userId) {
 							return;
 						}

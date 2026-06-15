@@ -18,6 +18,7 @@ import { ResultPage } from "../pages/result";
 import { SettingsPage } from "../pages/settings";
 import { VFXStorybook } from "../pages/storybook/VFXStorybook";
 import { AppState } from "../store";
+import { EventPage } from "../pages/event/EventPage";
 
 export const AppRouter = () => {
 	const pathname = window.location.pathname;
@@ -25,6 +26,13 @@ export const AppRouter = () => {
 	const isInLobby = useSelector((state: AppState) => state.lobby !== null);
 	const screen = useSelector((state: AppState) => state.appShell.screen);
 	const panel = useSelector((state: AppState) => state.appShell.panel);
+
+	if (pathname.startsWith("/events/")) {
+		const slug = pathname.split("/events/")[1];
+		if (slug) {
+			return <EventPage slug={slug} />;
+		}
+	}
 
 	if (pathname === "/storybook") {
 		return <VFXStorybook />;

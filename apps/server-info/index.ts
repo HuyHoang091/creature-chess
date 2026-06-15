@@ -790,6 +790,159 @@ async function startServer() {
 		});
 	});
 
+	function serializeEvent(item: any) {
+		let tasks: any[] = [];
+		let rewards: any[] = [];
+		let pageContent: any[] = [];
+		try { tasks = item.tasks ? JSON.parse(item.tasks) : []; } catch { tasks = []; }
+		try { rewards = item.rewards ? JSON.parse(item.rewards) : []; } catch { rewards = []; }
+		try { pageContent = item.page_content ? JSON.parse(item.page_content) : []; } catch { pageContent = []; }
+		return {
+			id: item.id,
+			name: item.name,
+			description: item.description ?? "",
+			status: item.status,
+			startsAt: item.starts_at?.toISOString() ?? null,
+			endsAt: item.ends_at?.toISOString() ?? null,
+			bannerUrl: item.banner_url ?? null,
+			themeColor: item.theme_color ?? null,
+			pageSlug: item.page_slug ?? null,
+			eventType: item.event_type ?? null,
+			config: item.config ? (() => { try { return JSON.parse(item.config); } catch { return {}; } })() : {},
+			tasks,
+			rewards,
+			pageContent,
+		};
+	}
+
+	app.get("/events/public", async (req, res) => {
+		const events = await (database.prisma.game_events as any).findMany({
+			where: { status: "active" },
+			orderBy: { created_at: "desc" },
+		});
+		return res.status(200).json({ events: events.map(serializeEvent) });
+	});
+
+	app.get("/events/public/:slug", async (req, res) => {
+		const event = await (database.prisma.game_events as any).findFirst({
+			where: { page_slug: req.params.slug, status: { in: ["active", "scheduled"] } },
+		});
+		if (!event) return res.status(404).json({ message: "Event not found or not active" });
+		return res.status(200).json({ event: serializeEvent(event) });
+	});
+
+	app.post("/events/claim", async (req, res) => {
+		const user = await requireAuthenticatedUser(req, res, authClient, database);
+		if (!user) return; // 401 response is handled by requireAuthenticatedUser
+
+		const { eventId, taskId } = req.body;
+		if (!eventId || !taskId) return res.status(400).json({ message: "Missing eventId or taskId" });
+
+		// 1. Fetch event
+		const event = await (database.prisma.game_events as any).findFirst({
+			where: { id: eventId, status: "active" },
+		});
+		if (!event) return res.status(404).json({ message: "Event not active or not found" });
+
+		// 2. Determine reward based on taskId
+		let goldReward = 0;
+		let gemsReward = 0;
+
+		const tasks = event.tasks ? JSON.parse(event.tasks) : [];
+		const rewards = event.rewards ? JSON.parse(event.rewards) : [];
+
+		if (taskId.startsWith("daily_login_day_")) {
+			// e.g. daily_login_day_0, daily_login_day_1...
+			const dayIndex = parseInt(taskId.replace("daily_login_day_", ""), 10);
+			if (rewards.length > 0 && !isNaN(dayIndex)) {
+				const r = rewards[dayIndex % rewards.length];
+				if (r.type === "gems") gemsReward += r.amount;
+				if (r.type === "gold" || r.type === "coins") goldReward += r.amount;
+			}
+		} else if (taskId.startsWith("daily_login_milestone_")) {
+			const mId = taskId.replace("daily_login_milestone_", "");
+			const r = rewards.find((rw: any) => rw.id === mId);
+			if (r) {
+				if (r.type === "gems") gemsReward += r.amount;
+				if (r.type === "gold" || r.type === "coins") goldReward += r.amount;
+			}
+		} else if (taskId.startsWith("reward_")) {
+			const r = rewards.find((rw: any) => rw.id === taskId);
+			if (r) {
+				if (r.type === "gems") gemsReward += r.amount;
+				if (r.type === "gold" || r.type === "coins") goldReward += r.amount;
+			}
+		} else {
+			// Find task in tasks list
+			const task = tasks.find((t: any) => t.id === taskId);
+			if (!task) return res.status(404).json({ message: "Task not found" });
+			if (task.reward?.gold) goldReward += task.reward.gold;
+			if (task.reward?.gems) gemsReward += task.reward.gems;
+		}
+
+		if (goldReward === 0 && gemsReward === 0) {
+			return res.status(400).json({ message: "No reward defined for this task" });
+		}
+
+		try {
+			// 3. Check if already claimed and atomic insert
+			// We use event_player_progress to track claims per task per user
+			const existing = await (database.prisma as any).event_player_progress.findFirst({
+				where: { user_id: user.id, event_id: eventId, task_id: taskId, claimed: true }
+			});
+			if (existing) return res.status(400).json({ message: "Already claimed" });
+
+			// Upsert progress to marked as claimed
+			await (database.prisma as any).event_player_progress.upsert({
+				where: {
+					event_id_user_id_task_id: {
+						event_id: eventId,
+						user_id: user.id,
+						task_id: taskId
+					}
+				},
+				create: {
+					event_id: eventId,
+					user_id: user.id,
+					task_id: taskId,
+					progress: 1,
+					completed: true,
+					claimed: true,
+					claimed_at: new Date()
+				},
+				update: {
+					completed: true,
+					claimed: true,
+					claimed_at: new Date()
+				}
+			});
+
+			// 4. Update user currencies
+			const updatedCurrencies = await (database.prisma as any).user_currencies.upsert({
+				where: { user_id: user.id },
+				create: {
+					user_id: user.id,
+					gold: goldReward,
+					gems: gemsReward
+				},
+				update: {
+					gold: { increment: goldReward },
+					gems: { increment: gemsReward }
+				}
+			});
+
+			return res.status(200).json({
+				success: true,
+				reward: { gold: goldReward, gems: gemsReward },
+				balances: { gold: updatedCurrencies.gold, gems: updatedCurrencies.gems }
+			});
+
+		} catch (err: any) {
+			logger.error("Claim reward error", err);
+			return res.status(500).json({ message: "Failed to claim reward" });
+		}
+	});
+
 	app.get("/guest/session", async (req, res) => {
 		const token = res.locals.cookie["guest-token"];
 
@@ -1010,7 +1163,22 @@ async function startServer() {
 		res.setHeader("Pragma", "no-cache");
 		res.setHeader("Expires", "0");
 
-		res.status(200).json(userModelToDto(user));
+		const dto = userModelToDto(user);
+		
+		try {
+			const currencies = await (database.prisma as any).user_currencies.findFirst({
+				where: { user_id: user.id }
+			});
+			if (currencies) {
+				dto.currencies = { gold: currencies.gold, gems: currencies.gems, tickets: currencies.tickets };
+			} else {
+				dto.currencies = { gold: 0, gems: 0, tickets: 0 };
+			}
+		} catch (e) {
+			dto.currencies = { gold: 0, gems: 0, tickets: 0 };
+		}
+
+		res.status(200).json(dto);
 	});
 
 	app.patch("/user/current", async (req, res) => {
