@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { CheckCircle, Gift, Lock } from "lucide-react";
+import { Lock, Gift } from "lucide-react";
 import { EventData } from "./types";
 import styles from "./EventPage.module.css";
 import { claimEventReward } from "../../services/eventApi";
@@ -18,7 +18,7 @@ function getDaysInEvent(startsAt: string | null, endsAt: string | null): Date[] 
     days.push(new Date(cur));
     cur.setDate(cur.getDate() + 1);
   }
-  return days.slice(0, 28); // max 28 days shown
+  return days.slice(0, 28);
 }
 
 function isSameDay(a: Date, b: Date) {
@@ -39,23 +39,16 @@ export const DailyLoginEvent: React.FC<Props> = ({ event }) => {
   });
 
   const claim = async (day: Date, dayIndex: number) => {
-    if (!token) {
-      alert("Vui lòng đăng nhập để điểm danh!");
-      return;
-    }
+    if (!token) { alert("Vui lòng đăng nhập để điểm danh!"); return; }
     const key = day.toDateString();
     if (claimed.includes(key)) return;
-
     try {
       const res = await claimEventReward(token, event.id, `daily_login_day_${dayIndex}`);
       const next = [...claimed, key];
       setClaimed(next);
       localStorage.setItem(storageKey, JSON.stringify(next));
       if (currentUser && res.balances) {
-        dispatch(ProfileCommands.setCurrentUser({
-          ...currentUser,
-          currencies: res.balances
-        }));
+        dispatch(ProfileCommands.setCurrentUser({ ...currentUser, currencies: res.balances }));
       }
       alert(`🎉 Điểm danh thành công! Nhận: ${res.reward.gold} 🪙, ${res.reward.gems} 💎`);
     } catch (err: any) {
@@ -68,10 +61,7 @@ export const DailyLoginEvent: React.FC<Props> = ({ event }) => {
     try {
       const res = await claimEventReward(token, event.id, `daily_login_milestone_${milestoneId}`);
       if (currentUser && res.balances) {
-        dispatch(ProfileCommands.setCurrentUser({
-          ...currentUser,
-          currencies: res.balances
-        }));
+        dispatch(ProfileCommands.setCurrentUser({ ...currentUser, currencies: res.balances }));
       }
       alert(`🎉 Nhận thành công! Nhận: ${res.reward.gold} 🪙, ${res.reward.gems} 💎`);
     } catch (err: any) {
@@ -79,7 +69,6 @@ export const DailyLoginEvent: React.FC<Props> = ({ event }) => {
     }
   };
 
-  // build reward schedule — cycle through event.rewards
   const getRewardForDay = (index: number) => {
     if (!event.rewards.length) return null;
     return event.rewards[index % event.rewards.length];
@@ -87,23 +76,38 @@ export const DailyLoginEvent: React.FC<Props> = ({ event }) => {
 
   const totalDays = days.length;
   const totalClaimed = claimed.length;
+  const pct = totalDays > 0 ? Math.round((totalClaimed / totalDays) * 100) : 0;
 
   return (
     <div>
-      {/* Progress summary */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 28 }}>
-        <div>
-          <div className={styles.sectionHeader} style={{ marginBottom: 4 }}>
-            <span>📅</span> Điểm Danh Hàng Ngày
+      {/* Header stat row */}
+      <div style={{ display: "flex", gap: 16, marginBottom: 32, flexWrap: "wrap" }}>
+        {/* Progress card */}
+        <div className={styles.card} style={{ flex: 2, minWidth: 220 }}>
+          <div className={styles.cardTitle} style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <span style={{ fontSize: 20 }}>📅</span> Điểm Danh Hàng Ngày
           </div>
-          <div style={{ color: "#64748b", fontSize: 14 }}>Đăng nhập mỗi ngày để nhận phần thưởng</div>
+          <div className={styles.cardDesc}>Đăng nhập mỗi ngày để nhận phần thưởng tích lũy</div>
+          <div className={styles.progressWrap}>
+            <div className={styles.progressTrack} style={{ height: 12 }}>
+              <div className={styles.progressFill} style={{ width: `${pct}%` }} />
+            </div>
+            <div className={styles.progressLabel}>
+              <span>✅ {totalClaimed} ngày đã điểm danh</span>
+              <span>{pct}%</span>
+            </div>
+          </div>
         </div>
-        <div style={{ textAlign: "right" }}>
-          <div style={{ fontSize: 28, fontWeight: 900, color: "var(--tc, #3b82f6)" }}>{totalClaimed}/{totalDays}</div>
-          <div style={{ fontSize: 12, color: "#64748b" }}>ngày đã điểm danh</div>
+        {/* Big counter */}
+        <div className={styles.card} style={{ flex: 1, minWidth: 120, alignItems: "center", justifyContent: "center", textAlign: "center" }}>
+          <div className={styles.statBig}>{totalClaimed}</div>
+          <div style={{ fontSize: 13, color: "rgba(240,230,210,0.4)", fontWeight: 600, letterSpacing: "0.3px" }}>
+            / {totalDays} ngày
+          </div>
         </div>
       </div>
 
+      {/* Calendar grid */}
       <div className={styles.calendarGrid}>
         {days.map((day, idx) => {
           const key = day.toDateString();
@@ -120,27 +124,38 @@ export const DailyLoginEvent: React.FC<Props> = ({ event }) => {
           else if (isFuture) cls += ` ${styles.future}`;
 
           return (
-            <div key={key} className={cls} onClick={() => isToday && !isClaimed && claim(day, idx)} title={isToday && !isClaimed ? "Click để điểm danh" : ""}>
+            <div
+              key={key}
+              className={cls}
+              onClick={() => isToday && !isClaimed && claim(day, idx)}
+              title={isToday && !isClaimed ? "Click để điểm danh" : ""}
+            >
               <span className={styles.dayLabel}>Ngày {idx + 1}</span>
               {isClaimed ? (
                 <span className={styles.checkMark}>✅</span>
               ) : isToday ? (
-                <span style={{ fontSize: 20 }}>🎁</span>
+                <span style={{ fontSize: 22 }}>🎁</span>
               ) : isFuture ? (
-                <Lock size={14} style={{ opacity: 0.3 }} />
+                <Lock size={13} style={{ opacity: 0.25 }} />
               ) : (
-                <span style={{ fontSize: 20, opacity: 0.3 }}>⬜</span>
+                <span style={{ fontSize: 18, opacity: 0.2 }}>⬜</span>
               )}
-              {reward && <span className={styles.dayReward}>{reward.amount}{reward.type === "gems" ? "💎" : "🪙"}</span>}
+              {reward && (
+                <span className={styles.dayReward}>
+                  {reward.amount}{reward.type === "gems" ? "💎" : "🪙"}
+                </span>
+              )}
             </div>
           );
         })}
       </div>
 
-      {/* Milestone rewards row */}
+      {/* Milestone rewards */}
       {event.rewards.length > 0 && (
-        <div style={{ marginTop: 40 }}>
-          <div className={styles.sectionHeader}><Gift size={22} /> Phần Thưởng Tích Luỹ</div>
+        <div style={{ marginTop: 44 }}>
+          <div className={styles.sectionHeader}>
+            <Gift size={20} /> Phần Thưởng Tích Luỹ
+          </div>
           <div className={styles.progressMilestones}>
             {event.rewards.map((r, i) => {
               const milestone = Math.ceil(totalDays / event.rewards.length) * (i + 1);
@@ -152,10 +167,21 @@ export const DailyLoginEvent: React.FC<Props> = ({ event }) => {
                     <div className={styles.milestoneName}>{r.title}</div>
                     <div className={styles.milestonePoints}>Yêu cầu: {milestone} ngày điểm danh</div>
                   </div>
-                  <div className={styles.milestoneReward}>{r.amount} {r.type === "gems" ? "💎" : "🪙"}</div>
+                  <div className={styles.milestoneReward}>
+                    {r.amount} {r.type === "gems" ? "💎" : "🪙"}
+                  </div>
                   {done
-                    ? <button className={`${styles.claimBtn}`} style={{ width: "auto", padding: "8px 16px" }} onClick={() => claimMilestone(r.id)}>Nhận</button>
-                    : <Lock size={16} className={styles.milestoneLock} />}
+                    ? (
+                      <button
+                        className={styles.claimBtn}
+                        style={{ width: "auto", padding: "8px 20px" }}
+                        onClick={() => claimMilestone(r.id)}
+                      >
+                        Nhận
+                      </button>
+                    ) : (
+                      <Lock size={15} className={styles.milestoneLock} />
+                    )}
                 </div>
               );
             })}
