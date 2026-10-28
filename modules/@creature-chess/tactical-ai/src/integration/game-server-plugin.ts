@@ -14,6 +14,7 @@ import { PositioningAdvice } from "../positioning-advisor/types";
 import { analyzeBattle } from "../post-battle-analyzer/analyzer";
 import { BattleReplayData } from "../post-battle-analyzer/types";
 import { getPositioningAdvisor } from "./advisor-instance";
+import { FormationRAGService } from "../tool/FormationRAGService";
 
 const RAG_SERVICE_URL = process.env.RAG_SERVICE_URL || "http://localhost:8003";
 
@@ -277,6 +278,33 @@ const handlePositioningRequest = async (
 	}
 };
 
+const handlePositioningRAGFlow = async (
+	data: PositioningRequest,
+	deps: TacticalAIPluginDeps,
+	callback: (result: {
+		success: boolean;
+		advice?: any;
+		error?: string;
+	}) => void
+) => {
+	try {
+		let enemyBoard = data.enemyBoard;
+		if (!enemyBoard || Object.keys(enemyBoard.pieces || {}).length === 0) {
+			enemyBoard = cloneBoardWithOwner(data.myBoard, "AWAY");
+		}
+
+		// Khởi tạo RAG Tool và xin ý kiến có kèm đấu thử
+		const ragService = new FormationRAGService();
+		const advice = await ragService.getAdviceWithSimulation(data.myBoard, enemyBoard);
+
+		// Trả kết quả chuẩn về cho Client
+		callback({ success: true, advice });
+	} catch (err: any) {
+		console.error("[RAG FLOW] Lỗi:", err.message);
+		callback({ success: false, error: err.message });
+	}
+};
+
 const handleCoachRequest = async (
 	data: CoachRequest,
 	callback: (result: {
@@ -532,6 +560,11 @@ export const registerTacticalAIEvents = (
 		(data: PositioningRequest, callback) => {
 			console.log("[TacticalAI] requestPositioningAdvice received");
 			const requestData = { ...data, playerId: socket.data.id.toString() };
+
+			// handlePositioningRAGFlow(requestData, deps, callback).catch(() => {
+			// 	callback({ success: false, error: "Unexpected error" });
+			// });
+
 			handlePositioningRequest(requestData, deps, callback).catch(() => {
 				callback({ success: false, error: "Unexpected error" });
 			});

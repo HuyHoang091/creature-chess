@@ -128,7 +128,6 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "1.0"
           memory: 2048M
 
   frontend:

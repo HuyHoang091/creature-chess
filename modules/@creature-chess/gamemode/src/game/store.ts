@@ -23,6 +23,7 @@ export const createGameStore = (context: GameSagaContext) => {
 			getDefaultMiddleware({
 				thunk: false,
 				serializableCheck: false,
+				immutableCheck: false,
 			}).concat(sagaMiddleware),
 	});
 

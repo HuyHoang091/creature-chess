@@ -249,6 +249,7 @@ export class CreepMatch {
 				getDefaultMiddleware({
 					thunk: false,
 					serializableCheck: false,
+					immutableCheck: false,
 				}).concat(sagaMiddleware),
 		});
 

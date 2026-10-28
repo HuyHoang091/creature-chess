@@ -59,6 +59,7 @@ export const entity = <
 			getDefaultMiddleware({
 				thunk: false,
 				serializableCheck: false,
+				immutableCheck: false,
 			}).concat(sagaMiddleware),
 	});
 

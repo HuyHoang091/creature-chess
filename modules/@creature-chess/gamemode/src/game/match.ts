@@ -233,6 +233,7 @@ export class Match {
 				getDefaultMiddleware({
 					thunk: false,
 					serializableCheck: false,
+					immutableCheck: false,
 				}).concat(sagaMiddleware),
 		});
 

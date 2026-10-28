@@ -7,6 +7,9 @@ _metrics/
 lib/
 bin/
 coverage/
+scripts/
+.claude/
+.agent
 
 *.d.ts
 *.d.ts.map
@@ -30,3 +33,7 @@ coverage/
 bao-cao/
 preview/
 v3.0/
+
+verify-rl-setup.js
+rag-build-benchmark-smoke.json
+load-test.js
